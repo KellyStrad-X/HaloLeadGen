@@ -4,13 +4,14 @@ import PhotoGallery from '@/components/PhotoGallery';
 import LeadForm from '@/components/LeadForm';
 
 interface CampaignPageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 export default async function CampaignPage({ params }: CampaignPageProps) {
-  const campaignData = await getCampaignBySlug(params.slug);
+  const { slug } = await params;
+  const campaignData = await getCampaignBySlug(slug);
 
   if (!campaignData) {
     notFound();
@@ -134,7 +135,8 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
 }
 
 export async function generateMetadata({ params }: CampaignPageProps) {
-  const campaignData = await getCampaignBySlug(params.slug);
+  const { slug } = await params;
+  const campaignData = await getCampaignBySlug(slug);
 
   if (!campaignData) {
     return {

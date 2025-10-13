@@ -16,6 +16,7 @@ import {
   limit,
   Timestamp,
   QueryDocumentSnapshot,
+  DocumentSnapshot,
   DocumentData,
 } from 'firebase/firestore';
 
@@ -23,8 +24,9 @@ import {
  * Type definitions for Firestore documents
  */
 
-export interface Contractor {
-  id: string; // Firestore auto-generated ID
+// Internal Firestore types (with Timestamp objects)
+interface ContractorDoc {
+  id: string;
   name: string;
   company: string;
   email: string;
@@ -32,19 +34,19 @@ export interface Contractor {
   createdAt: Timestamp;
 }
 
-export interface Campaign {
-  id: string; // Firestore auto-generated ID
-  contractorId: string; // Reference to contractor document
+interface CampaignDoc {
+  id: string;
+  contractorId: string;
   neighborhoodName: string;
   pageSlug: string;
-  qrCodeUrl: string | null; // Firebase Storage URL (not path)
+  qrCodeUrl: string | null;
   createdAt: Timestamp;
   status: 'active' | 'paused' | 'completed';
 }
 
-export interface Lead {
-  id: string; // Firestore auto-generated ID
-  campaignId: string; // Reference to campaign document
+interface LeadDoc {
+  id: string;
+  campaignId: string;
   name: string;
   address: string;
   email: string;
@@ -54,12 +56,52 @@ export interface Lead {
   status: 'new' | 'contacted' | 'qualified' | 'closed' | 'lost';
 }
 
-export interface Photo {
-  id: string; // Firestore auto-generated ID
-  campaignId: string; // Reference to campaign document
-  imageUrl: string; // Firebase Storage URL (not path)
+interface PhotoDoc {
+  id: string;
+  campaignId: string;
+  imageUrl: string;
   uploadOrder: number;
   uploadedAt: Timestamp;
+}
+
+// Exported serializable types (Timestamps converted to strings for Next.js)
+export interface Contractor {
+  id: string;
+  name: string;
+  company: string;
+  email: string;
+  phone: string;
+  createdAt: string; // ISO date string
+}
+
+export interface Campaign {
+  id: string;
+  contractorId: string;
+  neighborhoodName: string;
+  pageSlug: string;
+  qrCodeUrl: string | null;
+  createdAt: string; // ISO date string
+  status: 'active' | 'paused' | 'completed';
+}
+
+export interface Lead {
+  id: string;
+  campaignId: string;
+  name: string;
+  address: string;
+  email: string;
+  phone: string;
+  notes: string | null;
+  submittedAt: string; // ISO date string
+  status: 'new' | 'contacted' | 'qualified' | 'closed' | 'lost';
+}
+
+export interface Photo {
+  id: string;
+  campaignId: string;
+  imageUrl: string;
+  uploadOrder: number;
+  uploadedAt: string; // ISO date string
 }
 
 /**
@@ -73,12 +115,55 @@ export interface CampaignData extends Campaign {
 
 /**
  * Helper: Convert Firestore document to typed object
+ * Works with both QueryDocumentSnapshot and DocumentSnapshot
  */
-function docToData<T>(docSnap: QueryDocumentSnapshot<DocumentData>): T & { id: string } {
+function docToData<T>(
+  docSnap: QueryDocumentSnapshot<DocumentData> | DocumentSnapshot<DocumentData>
+): (T & { id: string }) | null {
+  if (!docSnap.exists()) {
+    return null;
+  }
   return {
     id: docSnap.id,
     ...docSnap.data(),
   } as T & { id: string };
+}
+
+/**
+ * Helper: Convert Firestore Timestamp to ISO string for serialization
+ */
+function serializeTimestamp(timestamp: Timestamp): string {
+  return timestamp.toDate().toISOString();
+}
+
+/**
+ * Helper: Serialize contractor doc for client
+ */
+function serializeContractor(doc: ContractorDoc): Contractor {
+  return {
+    ...doc,
+    createdAt: serializeTimestamp(doc.createdAt),
+  };
+}
+
+/**
+ * Helper: Serialize campaign doc for client
+ */
+function serializeCampaign(doc: CampaignDoc): Campaign {
+  return {
+    ...doc,
+    createdAt: serializeTimestamp(doc.createdAt),
+  };
+}
+
+/**
+ * Helper: Serialize photo doc for client
+ */
+function serializePhoto(doc: PhotoDoc): Photo {
+  return {
+    ...doc,
+    uploadedAt: serializeTimestamp(doc.uploadedAt),
+  };
 }
 
 /**
@@ -103,34 +188,45 @@ export async function getCampaignBySlug(slug: string): Promise<CampaignData | nu
     }
 
     const campaignDoc = campaignSnapshot.docs[0];
-    const campaign = docToData<Campaign>(campaignDoc);
+    const campaignData = docToData<CampaignDoc>(campaignDoc);
 
-    // Fetch contractor (separate query since Firestore doesn't have JOINs)
-    const contractorRef = doc(db, 'contractors', campaign.contractorId);
-    const contractorSnap = await getDoc(contractorRef);
-
-    if (!contractorSnap.exists()) {
-      console.error('Contractor not found for campaign:', campaign.id);
+    if (!campaignData) {
       return null;
     }
 
-    const contractor = docToData<Contractor>(contractorSnap);
+    // Fetch contractor (separate query since Firestore doesn't have JOINs)
+    const contractorRef = doc(db, 'contractors', campaignData.contractorId);
+    const contractorSnap = await getDoc(contractorRef);
+
+    if (!contractorSnap.exists()) {
+      console.error('Contractor not found for campaign:', campaignData.id);
+      return null;
+    }
+
+    const contractorData = docToData<ContractorDoc>(contractorSnap);
+
+    if (!contractorData) {
+      return null;
+    }
 
     // Fetch photos for this campaign
     const photosRef = collection(db, 'photos');
     const photosQuery = query(
       photosRef,
-      where('campaignId', '==', campaign.id),
+      where('campaignId', '==', campaignData.id),
       orderBy('uploadOrder', 'asc')
     );
 
     const photosSnapshot = await getDocs(photosQuery);
-    const photos = photosSnapshot.docs.map(doc => docToData<Photo>(doc));
+    const photosData = photosSnapshot.docs
+      .map(doc => docToData<PhotoDoc>(doc))
+      .filter((p): p is PhotoDoc => p !== null);
 
+    // Serialize all data for client components
     return {
-      ...campaign,
-      contractor,
-      photos,
+      ...serializeCampaign(campaignData),
+      contractor: serializeContractor(contractorData),
+      photos: photosData.map(serializePhoto),
     };
   } catch (error) {
     console.error('Error fetching campaign by slug:', error);
@@ -150,7 +246,14 @@ export async function getCampaignById(campaignId: string): Promise<Campaign | nu
       return null;
     }
 
-    return docToData<Campaign>(campaignSnap);
+    const campaignData = docToData<CampaignDoc>(campaignSnap);
+
+    if (!campaignData) {
+      return null;
+    }
+
+    // Serialize for client
+    return serializeCampaign(campaignData);
   } catch (error) {
     console.error('Error fetching campaign by ID:', error);
     return null;
@@ -177,6 +280,7 @@ export async function isDuplicateLead(
       where('campaignId', '==', campaignId),
       where('email', '==', email.toLowerCase()),
       where('submittedAt', '>', cutoffTime),
+      orderBy('submittedAt', 'desc'), // Required for range filter
       limit(1)
     );
 
@@ -184,6 +288,8 @@ export async function isDuplicateLead(
     return !snapshot.empty;
   } catch (error) {
     console.error('Error checking for duplicate lead:', error);
+    // Note: First run may prompt to create composite index in Firebase Console
+    // Index needed: campaigns + email + submittedAt
     return false; // Fail open - allow submission if check fails
   }
 }
