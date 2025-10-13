@@ -3,6 +3,13 @@
  * Run with: npx tsx database/cleanup-firestore.ts
  */
 
+// Load environment variables from .env.local
+import { config } from 'dotenv';
+import { resolve } from 'path';
+
+// Load .env.local file
+config({ path: resolve(process.cwd(), '.env.local') });
+
 import { db } from '../lib/firebase';
 import {
   collection,
@@ -40,6 +47,17 @@ async function cleanupCollection(collectionName: string) {
 
 async function cleanupFirestore() {
   console.log('🧹 Starting Firestore cleanup...\n');
+
+  // Show which Firebase project we're connecting to
+  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+  console.log(`📍 Connected to Firebase project: ${projectId || '⚠️  NOT SET'}\n`);
+
+  if (!projectId) {
+    console.error('❌ ERROR: Firebase project ID not found!');
+    console.error('   Make sure .env.local exists and contains NEXT_PUBLIC_FIREBASE_PROJECT_ID');
+    process.exit(1);
+  }
+
   console.log('This will delete ALL data from the following collections:');
   console.log('  - contractors');
   console.log('  - campaigns');
