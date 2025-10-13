@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCampaignById, isDuplicateLead, submitLead } from '@/lib/firestore';
+import { getCampaignById, getCampaignBySlug, isDuplicateLead, submitLead } from '@/lib/firestore';
+import { sendLeadNotification } from '@/lib/mailer';
 
 interface LeadSubmission {
   campaign_id: string; // Firestore uses string IDs
@@ -96,8 +97,37 @@ export async function POST(request: NextRequest) {
       notes: body.notes,
     });
 
-    // TODO: Send email notification to contractor (Sprint 4)
-    // For now, just log it (already logged in submitLead function)
+    // Send email notification to contractor (async, don't block response)
+    // Note: We need to get the full campaign with contractor info
+    const campaignWithData = await getCampaignBySlug(campaign.pageSlug);
+
+    if (campaignWithData) {
+      // Send email asynchronously (don't await)
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+      const landingPageUrl = `${baseUrl}/c/${campaign.pageSlug}`;
+
+      sendLeadNotification({
+        contractorName: campaignWithData.contractor.name,
+        contractorEmail: campaignWithData.contractor.email,
+        leadData: {
+          name: body.name,
+          email: body.email,
+          phone: body.phone,
+          address: body.address,
+          notes: body.notes,
+          submittedAt: new Date().toISOString(),
+        },
+        campaignData: {
+          neighborhoodName: campaign.neighborhoodName,
+        },
+        landingPageUrl,
+      }).catch(error => {
+        // Log error but don't fail the request
+        console.error('Failed to send email notification:', error);
+      });
+    } else {
+      console.warn('Could not fetch campaign data for email notification');
+    }
 
     return NextResponse.json(
       {
