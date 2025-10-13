@@ -10,6 +10,7 @@ import {
   getDoc,
   getDocs,
   addDoc,
+  updateDoc,
   query,
   where,
   orderBy,
@@ -373,4 +374,148 @@ export async function generateUniqueSlug(text: string): Promise<string> {
   }
 
   return slug;
+}
+
+/**
+ * Find or create contractor by email
+ * Returns contractor ID
+ */
+export async function findOrCreateContractor(contractorData: {
+  name: string;
+  company: string;
+  email: string;
+  phone: string;
+}): Promise<string> {
+  try {
+    // Check if contractor exists by email
+    const contractorsRef = collection(db, 'contractors');
+    const q = query(
+      contractorsRef,
+      where('email', '==', contractorData.email.toLowerCase()),
+      limit(1)
+    );
+
+    const snapshot = await getDocs(q);
+
+    if (!snapshot.empty) {
+      // Contractor exists, return existing ID
+      return snapshot.docs[0].id;
+    }
+
+    // Create new contractor
+    const newContractor = {
+      name: contractorData.name.trim(),
+      company: contractorData.company.trim(),
+      email: contractorData.email.trim().toLowerCase(),
+      phone: contractorData.phone,
+      createdAt: Timestamp.now(),
+    };
+
+    const docRef = await addDoc(contractorsRef, newContractor);
+
+    console.log('New contractor created:', {
+      contractorId: docRef.id,
+      email: contractorData.email,
+    });
+
+    return docRef.id;
+  } catch (error) {
+    console.error('Error finding/creating contractor:', error);
+    throw new Error('Failed to create contractor');
+  }
+}
+
+/**
+ * Create a new campaign
+ * Returns campaign ID
+ */
+export async function createCampaign(campaignData: {
+  contractorId: string;
+  neighborhoodName: string;
+}): Promise<string> {
+  try {
+    // Generate unique slug from neighborhood name
+    const slug = await generateUniqueSlug(campaignData.neighborhoodName);
+
+    const campaignsRef = collection(db, 'campaigns');
+
+    const newCampaign = {
+      contractorId: campaignData.contractorId,
+      neighborhoodName: campaignData.neighborhoodName.trim(),
+      pageSlug: slug,
+      qrCodeUrl: null, // Will be set after QR generation
+      createdAt: Timestamp.now(),
+      status: 'active' as const,
+    };
+
+    const docRef = await addDoc(campaignsRef, newCampaign);
+
+    console.log('New campaign created:', {
+      campaignId: docRef.id,
+      slug,
+      neighborhood: campaignData.neighborhoodName,
+    });
+
+    return docRef.id;
+  } catch (error) {
+    console.error('Error creating campaign:', error);
+    throw new Error('Failed to create campaign');
+  }
+}
+
+/**
+ * Add photo to campaign
+ * Returns photo ID
+ */
+export async function addPhoto(photoData: {
+  campaignId: string;
+  imageUrl: string;
+  uploadOrder: number;
+}): Promise<string> {
+  try {
+    const photosRef = collection(db, 'photos');
+
+    const newPhoto = {
+      campaignId: photoData.campaignId,
+      imageUrl: photoData.imageUrl,
+      uploadOrder: photoData.uploadOrder,
+      uploadedAt: Timestamp.now(),
+    };
+
+    const docRef = await addDoc(photosRef, newPhoto);
+
+    console.log('Photo added:', {
+      photoId: docRef.id,
+      campaignId: photoData.campaignId,
+      order: photoData.uploadOrder,
+    });
+
+    return docRef.id;
+  } catch (error) {
+    console.error('Error adding photo:', error);
+    throw new Error('Failed to add photo');
+  }
+}
+
+/**
+ * Update campaign QR code URL
+ */
+export async function updateCampaignQRCode(
+  campaignId: string,
+  qrCodeUrl: string
+): Promise<void> {
+  try {
+    const campaignRef = doc(db, 'campaigns', campaignId);
+    await updateDoc(campaignRef, {
+      qrCodeUrl,
+    });
+
+    console.log('Campaign QR code updated:', {
+      campaignId,
+      qrCodeUrl,
+    });
+  } catch (error) {
+    console.error('Error updating campaign QR code:', error);
+    throw new Error('Failed to update QR code');
+  }
 }
