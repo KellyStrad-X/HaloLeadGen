@@ -24,6 +24,8 @@ dist/
 *.sqlite3
 database/*.db
 database/*.sqlite
+*.db-wal
+*.db-shm
 
 # Uploads
 uploads/
