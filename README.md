@@ -182,9 +182,10 @@ npm run db:reset     # Reset database (delete and re-seed)
 - Database schema and seeding
 - Test data and queries verified
 
-### 🚧 Sprint 2: Landing Page (In Progress)
+### ✅ Sprint 2: Landing Page (Complete)
 - Dynamic campaign pages (`/c/[slug]`)
-- Photo gallery component
+- Dark theme with ice blue accents
+- Photo gallery with lightbox
 - Lead capture form with validation
 - API endpoint for form submission
 
