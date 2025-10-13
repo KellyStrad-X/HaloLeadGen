@@ -15,11 +15,20 @@ dotenv.config({ path: '.env.local' });
 
 // Initialize Firebase Admin
 if (getApps().length === 0) {
-  // For local development, we'll use the same config as client-side
-  // In production, you'd use a service account
+  // Use the server-side project ID (without NEXT_PUBLIC prefix)
+  const projectId = process.env.FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+
+  if (!projectId) {
+    console.error('❌ Error: FIREBASE_PROJECT_ID not found in .env.local');
+    console.error('Please add: FIREBASE_PROJECT_ID=your-project-id');
+    process.exit(1);
+  }
+
   initializeApp({
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    projectId,
   });
+
+  console.log(`✓ Firebase Admin initialized with project: ${projectId}\n`);
 }
 
 const db = getFirestore();
