@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getDb, type Campaign, type Contractor, type Photo } from '@/lib/db';
+import { getCampaignBySlug, type CampaignData } from '@/lib/firestore';
 import PhotoGallery from '@/components/PhotoGallery';
 import LeadForm from '@/components/LeadForm';
 
@@ -9,60 +9,8 @@ interface CampaignPageProps {
   };
 }
 
-interface CampaignData extends Campaign {
-  contractor: Contractor;
-  photos: Photo[];
-}
-
-async function getCampaignData(slug: string): Promise<CampaignData | null> {
-  const db = getDb();
-
-  // Fetch campaign by slug with contractor info
-  const campaign = db.prepare(`
-    SELECT
-      c.*,
-      co.name as contractor_name,
-      co.company as contractor_company,
-      co.email as contractor_email,
-      co.phone as contractor_phone
-    FROM campaigns c
-    JOIN contractors co ON c.contractor_id = co.id
-    WHERE c.page_slug = ? AND c.status = 'active'
-  `).get(slug) as any;
-
-  if (!campaign) {
-    return null;
-  }
-
-  // Fetch photos for this campaign
-  const photos = db.prepare(`
-    SELECT * FROM photos
-    WHERE campaign_id = ?
-    ORDER BY upload_order ASC
-  `).all(campaign.id) as Photo[];
-
-  return {
-    id: campaign.id,
-    contractor_id: campaign.contractor_id,
-    neighborhood_name: campaign.neighborhood_name,
-    page_slug: campaign.page_slug,
-    qr_code_path: campaign.qr_code_path,
-    created_at: campaign.created_at,
-    status: campaign.status,
-    contractor: {
-      id: campaign.contractor_id,
-      name: campaign.contractor_name,
-      company: campaign.contractor_company,
-      email: campaign.contractor_email,
-      phone: campaign.contractor_phone,
-      created_at: '',
-    },
-    photos,
-  };
-}
-
 export default async function CampaignPage({ params }: CampaignPageProps) {
-  const campaignData = await getCampaignData(params.slug);
+  const campaignData = await getCampaignBySlug(params.slug);
 
   if (!campaignData) {
     notFound();
@@ -96,7 +44,7 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
             <span className="text-halo-ice">Your Neighborhood</span>
           </h2>
           <p className="text-xl text-halo-light mb-2">
-            {campaignData.neighborhood_name}
+            {campaignData.neighborhoodName}
           </p>
           <p className="text-halo-medium max-w-2xl mx-auto">
             We've documented recent storm damage in your area. See if your roof might need inspection.
@@ -111,7 +59,7 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
             Storm Damage Documentation
           </h3>
           <p className="text-halo-medium text-center mb-8">
-            Recent photos from {campaignData.neighborhood_name}
+            Recent photos from {campaignData.neighborhoodName}
           </p>
 
           {campaignData.photos.length > 0 ? (
@@ -186,7 +134,7 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
 }
 
 export async function generateMetadata({ params }: CampaignPageProps) {
-  const campaignData = await getCampaignData(params.slug);
+  const campaignData = await getCampaignBySlug(params.slug);
 
   if (!campaignData) {
     return {
@@ -195,7 +143,7 @@ export async function generateMetadata({ params }: CampaignPageProps) {
   }
 
   return {
-    title: `Storm Damage - ${campaignData.neighborhood_name} | Halo`,
-    description: `View recent roof damage documentation from ${campaignData.neighborhood_name}. Request a free inspection from ${campaignData.contractor.company}.`,
+    title: `Storm Damage - ${campaignData.neighborhoodName} | Halo`,
+    description: `View recent roof damage documentation from ${campaignData.neighborhoodName}. Request a free inspection from ${campaignData.contractor.company}.`,
   };
 }

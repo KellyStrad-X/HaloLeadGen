@@ -3,7 +3,7 @@
 import { useState, FormEvent } from 'react';
 
 interface LeadFormProps {
-  campaignId: number;
+  campaignId: string; // Firestore uses string IDs
 }
 
 interface FormData {

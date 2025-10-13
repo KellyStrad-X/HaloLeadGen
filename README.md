@@ -130,5 +130,5 @@ This project is built using an AI-assisted development workflow with clearly def
 
 ---
 
-**Current Version:** 0.2.0
+**Current Version:** 0.3.0
 **Last Updated:** 2025-10-13

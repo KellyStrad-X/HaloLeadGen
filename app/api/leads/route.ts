@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb } from '@/lib/db';
+import { getCampaignById, isDuplicateLead, submitLead } from '@/lib/firestore';
 
 interface LeadSubmission {
-  campaign_id: number;
+  campaign_id: string; // Firestore uses string IDs
   name: string;
   address: string;
   email: string;
@@ -56,12 +56,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const db = getDb();
-
     // Check if campaign exists and is active
-    const campaign = db.prepare(`
-      SELECT id, status FROM campaigns WHERE id = ?
-    `).get(body.campaign_id) as { id: number; status: string } | undefined;
+    const campaign = await getCampaignById(body.campaign_id);
 
     if (!campaign) {
       return NextResponse.json(
@@ -78,45 +74,36 @@ export async function POST(request: NextRequest) {
     }
 
     // Check for duplicate submission (same email + campaign within 1 hour)
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-    const existingLead = db.prepare(`
-      SELECT id FROM leads
-      WHERE campaign_id = ? AND email = ? AND submitted_at > ?
-    `).get(body.campaign_id, body.email, oneHourAgo);
+    const isDuplicate = await isDuplicateLead(
+      body.campaign_id,
+      body.email.trim().toLowerCase()
+    );
 
-    if (existingLead) {
+    if (isDuplicate) {
       return NextResponse.json(
         { error: 'You have already submitted a request recently. We\'ll be in touch soon!' },
         { status: 409 }
       );
     }
 
-    // Insert lead into database
-    const result = db.prepare(`
-      INSERT INTO leads (campaign_id, name, address, email, phone, notes, status)
-      VALUES (?, ?, ?, ?, ?, ?, 'new')
-    `).run(
-      body.campaign_id,
-      body.name.trim(),
-      body.address.trim(),
-      body.email.trim().toLowerCase(),
-      body.phone,
-      body.notes?.trim() || null
-    );
+    // Insert lead into Firestore
+    const leadId = await submitLead({
+      campaignId: body.campaign_id,
+      name: body.name,
+      address: body.address,
+      email: body.email,
+      phone: body.phone,
+      notes: body.notes,
+    });
 
     // TODO: Send email notification to contractor (Sprint 4)
-    // For now, just log it
-    console.log('New lead submitted:', {
-      leadId: result.lastInsertRowid,
-      campaignId: body.campaign_id,
-      email: body.email,
-    });
+    // For now, just log it (already logged in submitLead function)
 
     return NextResponse.json(
       {
         success: true,
         message: 'Thank you! We\'ll contact you within 24 hours.',
-        leadId: result.lastInsertRowid,
+        leadId,
       },
       { status: 201 }
     );

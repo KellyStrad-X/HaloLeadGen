@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { type Photo } from '@/lib/db';
+import { type Photo } from '@/lib/firestore';
 
 interface PhotoGalleryProps {
   photos: Photo[];
@@ -55,7 +55,7 @@ export default function PhotoGallery({ photos }: PhotoGalleryProps) {
                 <div className="text-halo-ice text-4xl mb-2">📷</div>
                 <p className="text-halo-medium text-sm">Photo {index + 1}</p>
                 <p className="text-halo-medium text-xs mt-1">
-                  {photo.image_path.split('/').pop()}
+                  {photo.imageUrl.split('/').pop()}
                 </p>
               </div>
             </div>
@@ -151,7 +151,7 @@ export default function PhotoGallery({ photos }: PhotoGalleryProps) {
                   Photo {selectedPhoto + 1} of {photos.length}
                 </p>
                 <p className="text-halo-medium">
-                  {photos[selectedPhoto].image_path.split('/').pop()}
+                  {photos[selectedPhoto].imageUrl.split('/').pop()}
                 </p>
                 <p className="text-halo-medium text-sm mt-4">
                   Actual photos will be loaded from the uploads folder
