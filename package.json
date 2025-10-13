@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "seed:firestore": "tsx database/seeds/firestore-seed.ts",
+    "cleanup:firestore": "tsx database/cleanup-firestore.ts",
     "db:init": "tsx database/init.ts",
     "db:seed": "tsx database/init.ts --seed",
     "db:reset": "rm -f database/halo.db && npm run db:seed"
