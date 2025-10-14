@@ -1,48 +1,24 @@
 /**
- * Email utility using Nodemailer
+ * Email utility using SendGrid
  * Sends lead notifications to contractors
  */
 
-import nodemailer from 'nodemailer';
-import type { Transporter } from 'nodemailer';
+import sgMail from '@sendgrid/mail';
 
-// SMTP Configuration from environment variables
-const smtpConfig = {
-  host: process.env.SMTP_HOST || 'smtp.gmail.com',
-  port: parseInt(process.env.SMTP_PORT || '587', 10),
-  secure: false, // Use TLS (use STARTTLS)
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-  // Ensure proper authentication for Google Workspace
-  tls: {
-    rejectUnauthorized: true,
-  },
-};
+// SendGrid Configuration from environment variables
+const apiKey = process.env.SENDGRID_API_KEY;
+const fromEmail = process.env.SENDGRID_FROM_EMAIL || 'notifications@haloleadgen.com';
+const fromName = process.env.SENDGRID_FROM_NAME || 'Halo Lead Generation';
 
-// Email sender info
-const fromEmail = process.env.SMTP_FROM || process.env.SMTP_USER;
-const fromName = process.env.SMTP_FROM_NAME || 'Halo Lead Generation';
-
-/**
- * Create transporter instance (reusable)
- */
-let transporter: Transporter | null = null;
-
-function getTransporter(): Transporter {
-  if (!transporter) {
-    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-      throw new Error('SMTP credentials not configured. Check .env.local file.');
-    }
-
-    transporter = nodemailer.createTransport(smtpConfig);
-  }
-  return transporter;
+// Initialize SendGrid
+if (apiKey) {
+  sgMail.setApiKey(apiKey);
+} else {
+  console.warn('SENDGRID_API_KEY not configured. Email sending will fail.');
 }
 
 /**
- * Send email
+ * Send email via SendGrid
  */
 export async function sendEmail({
   to,
@@ -56,25 +32,42 @@ export async function sendEmail({
   text?: string;
 }): Promise<boolean> {
   try {
-    const transporter = getTransporter();
+    if (!apiKey) {
+      throw new Error('SendGrid API key not configured. Check .env.local file.');
+    }
 
-    const info = await transporter.sendMail({
-      from: `"${fromName}" <${fromEmail}>`,
+    const msg = {
       to,
+      from: {
+        email: fromEmail,
+        name: fromName,
+      },
       subject,
       html,
-      text: text || stripHtml(html), // Fallback to stripped HTML if no text provided
-    });
+      text: text || stripHtml(html),
+    };
 
-    console.log('Email sent successfully:', {
-      messageId: info.messageId,
+    const [response] = await sgMail.send(msg);
+
+    console.log('Email sent successfully via SendGrid:', {
+      statusCode: response.statusCode,
       to,
       subject,
     });
 
     return true;
   } catch (error) {
-    console.error('Error sending email:', error);
+    console.error('Error sending email via SendGrid:', error);
+
+    // Log additional details if available
+    if (error && typeof error === 'object' && 'response' in error) {
+      const sgError = error as any;
+      console.error('SendGrid error details:', {
+        statusCode: sgError.code,
+        body: sgError.response?.body,
+      });
+    }
+
     return false;
   }
 }
