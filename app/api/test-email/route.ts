@@ -37,6 +37,26 @@ export async function POST(request: NextRequest) {
             SMTP_PASS: !!process.env.SMTP_PASS,
             SMTP_HOST: !!process.env.SMTP_HOST,
             SMTP_PORT: !!process.env.SMTP_PORT,
+            SMTP_FROM: !!process.env.SMTP_FROM,
+          },
+        },
+        { status: 500 }
+      );
+    }
+
+    // CRITICAL: Check if SMTP_USER and SMTP_FROM match
+    const smtpUser = process.env.SMTP_USER;
+    const smtpFrom = process.env.SMTP_FROM || process.env.SMTP_USER;
+
+    if (smtpUser !== smtpFrom) {
+      return NextResponse.json(
+        {
+          error: 'SMTP configuration mismatch',
+          message: 'SMTP_USER and SMTP_FROM must be the same for Google Workspace DKIM to work',
+          details: {
+            SMTP_USER: smtpUser,
+            SMTP_FROM: smtpFrom,
+            match: smtpUser === smtpFrom,
           },
         },
         { status: 500 }
