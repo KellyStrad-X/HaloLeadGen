@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import { addPhoto, getCampaignById } from '@/lib/firestore';
-import { adminStorage } from '@/lib/firebase-admin';
+import { getAdminStorage } from '@/lib/firebase-admin';
 
 interface RouteParams {
   params: Promise<{
@@ -66,6 +66,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const filename = `photo-${uploadOrder}-${timestamp}-${randomStr}.${ext}`;
 
     // Upload to Firebase Storage using admin SDK
+    const adminStorage = getAdminStorage();
     const objectPath = `campaigns/${campaignId}/${filename}`;
     const file = adminStorage.file(objectPath);
     const photoBuffer = Buffer.from(await photo.arrayBuffer());

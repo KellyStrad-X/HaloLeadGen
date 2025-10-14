@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import QRCode from 'qrcode';
 import { getCampaignById, updateCampaignQRCode } from '@/lib/firestore';
-import { adminStorage } from '@/lib/firebase-admin';
+import { getAdminStorage } from '@/lib/firebase-admin';
 
 interface RouteParams {
   params: Promise<{
@@ -41,6 +41,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     });
 
     // Upload QR code to Firebase Storage
+    const adminStorage = getAdminStorage();
     const filename = `qr-${campaign.pageSlug}.png`;
     const objectPath = `qr-codes/${filename}`;
     const downloadToken = randomUUID();

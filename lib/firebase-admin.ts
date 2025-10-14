@@ -3,6 +3,7 @@ import {
   initializeApp,
   cert,
   ServiceAccount,
+  App,
 } from 'firebase-admin/app';
 import { getStorage } from 'firebase-admin/storage';
 
@@ -30,12 +31,30 @@ function getServiceAccount(): ServiceAccount {
   };
 }
 
-const app =
-  getApps().length === 0
-    ? initializeApp({
-        credential: cert(getServiceAccount()),
-        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-      })
-    : getApps()[0];
+// Lazy initialization - only initialize when actually needed
+let app: App | null = null;
 
-export const adminStorage = getStorage(app).bucket();
+function getAdminApp(): App {
+  if (app) {
+    return app;
+  }
+
+  // Check if already initialized
+  const existingApps = getApps();
+  if (existingApps.length > 0) {
+    app = existingApps[0];
+    return app;
+  }
+
+  // Initialize now (will throw if FIREBASE_SERVICE_ACCOUNT is missing)
+  app = initializeApp({
+    credential: cert(getServiceAccount()),
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  });
+
+  return app;
+}
+
+export function getAdminStorage() {
+  return getStorage(getAdminApp()).bucket();
+}
