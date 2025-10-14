@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
         photoCount: campaignWithData.photos.length,
       });
 
-      // Send email asynchronously (don't await)
+      // Send email notification (await to ensure completion before function terminates)
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
       const landingPageUrl = `${baseUrl}/c/${campaign.pageSlug}`;
 
@@ -123,32 +123,34 @@ export async function POST(request: NextRequest) {
         subject: `New Lead from ${campaign.neighborhoodName}`,
       });
 
-      sendLeadNotification({
-        contractorName: campaignWithData.contractor.name,
-        contractorEmail: campaignWithData.contractor.email,
-        leadData: {
-          name: body.name,
-          email: body.email,
-          phone: body.phone,
-          address: body.address,
-          notes: body.notes,
-          submittedAt: new Date().toISOString(),
-        },
-        campaignData: {
-          neighborhoodName: campaign.neighborhoodName,
-        },
-        landingPageUrl,
-      }).then(() => {
+      // Await email sending to ensure it completes before function terminates
+      try {
+        await sendLeadNotification({
+          contractorName: campaignWithData.contractor.name,
+          contractorEmail: campaignWithData.contractor.email,
+          leadData: {
+            name: body.name,
+            email: body.email,
+            phone: body.phone,
+            address: body.address,
+            notes: body.notes,
+            submittedAt: new Date().toISOString(),
+          },
+          campaignData: {
+            neighborhoodName: campaign.neighborhoodName,
+          },
+          landingPageUrl,
+        });
         console.log('[Lead Email] Email sent successfully');
-      }).catch(error => {
+      } catch (error) {
         // Log error but don't fail the request
         console.error('[Lead Email] Failed to send email notification:', error);
         console.error('[Lead Email] Error details:', {
-          message: error.message,
-          stack: error.stack,
-          name: error.name,
+          message: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined,
+          name: error instanceof Error ? error.name : undefined,
         });
-      });
+      }
     } else {
       console.error('[Lead Email] Could not fetch campaign data for email notification', {
         campaignId: campaign.id,
