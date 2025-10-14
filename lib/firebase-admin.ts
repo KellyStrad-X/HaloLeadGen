@@ -1,7 +1,12 @@
-import { getApps, initializeApp, cert } from 'firebase-admin/app';
+import {
+  getApps,
+  initializeApp,
+  cert,
+  ServiceAccount,
+} from 'firebase-admin/app';
 import { getStorage } from 'firebase-admin/storage';
 
-type ServiceAccount = {
+type FirebaseServiceAccountJson = {
   project_id: string;
   client_email: string;
   private_key: string;
@@ -16,11 +21,12 @@ function getServiceAccount(): ServiceAccount {
     );
   }
 
-  const parsed = JSON.parse(raw) as ServiceAccount;
+  const parsed = JSON.parse(raw) as FirebaseServiceAccountJson;
 
   return {
-    ...parsed,
-    private_key: parsed.private_key.replace(/\\n/g, '\n'),
+    projectId: parsed.project_id,
+    clientEmail: parsed.client_email,
+    privateKey: parsed.private_key.replace(/\\n/g, '\n'),
   };
 }
 
@@ -33,4 +39,3 @@ const app =
     : getApps()[0];
 
 export const adminStorage = getStorage(app).bucket();
-
