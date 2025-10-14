@@ -11,6 +11,7 @@ package-lock.json
 .env.local
 .env.production
 .env.development
+.env.*
 
 # Next.js
 .next/
@@ -54,6 +55,12 @@ coverage/
 *.pem
 .vercel
 .cache/
+*.service-account.json
+*-firebase-admin*.json
+firebase-adminsdk-*.json
+firebase-service-account*.json
+serviceAccountKey.json
+haloleadgen-*-firebase-adminsdk-*.json
 
 # Python (if used)
 __pycache__/

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { storage } from '@/lib/firebase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { randomUUID } from 'crypto';
 import { addPhoto, getCampaignById } from '@/lib/firestore';
+import { adminStorage } from '@/lib/firebase-admin';
 
 interface RouteParams {
   params: Promise<{
@@ -65,15 +65,25 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const ext = photo.name.split('.').pop() || 'jpg';
     const filename = `photo-${uploadOrder}-${timestamp}-${randomStr}.${ext}`;
 
-    // Upload to Firebase Storage
-    const storageRef = ref(storage, `campaigns/${campaignId}/${filename}`);
-    const photoBuffer = await photo.arrayBuffer();
-    const uploadResult = await uploadBytes(storageRef, photoBuffer, {
-      contentType: photo.type,
+    // Upload to Firebase Storage using admin SDK
+    const objectPath = `campaigns/${campaignId}/${filename}`;
+    const file = adminStorage.file(objectPath);
+    const photoBuffer = Buffer.from(await photo.arrayBuffer());
+    const downloadToken = randomUUID();
+
+    await file.save(photoBuffer, {
+      resumable: false,
+      metadata: {
+        contentType: photo.type,
+        metadata: {
+          firebaseStorageDownloadTokens: downloadToken,
+        },
+      },
     });
 
-    // Get download URL
-    const imageUrl = await getDownloadURL(uploadResult.ref);
+    const imageUrl = `https://firebasestorage.googleapis.com/v0/b/${adminStorage.name}/o/${encodeURIComponent(
+      objectPath
+    )}?alt=media&token=${downloadToken}`;
 
     // Save photo metadata to Firestore
     const photoId = await addPhoto({

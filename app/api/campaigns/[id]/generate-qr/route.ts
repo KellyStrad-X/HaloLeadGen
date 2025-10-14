@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { randomUUID } from 'crypto';
 import QRCode from 'qrcode';
-import { storage } from '@/lib/firebase';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getCampaignById, updateCampaignQRCode } from '@/lib/firestore';
+import { adminStorage } from '@/lib/firebase-admin';
 
 interface RouteParams {
   params: Promise<{
@@ -42,13 +42,23 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     // Upload QR code to Firebase Storage
     const filename = `qr-${campaign.pageSlug}.png`;
-    const storageRef = ref(storage, `qr-codes/${filename}`);
-    const uploadResult = await uploadBytes(storageRef, qrCodeBuffer, {
-      contentType: 'image/png',
+    const objectPath = `qr-codes/${filename}`;
+    const downloadToken = randomUUID();
+    const file = adminStorage.file(objectPath);
+
+    await file.save(qrCodeBuffer, {
+      resumable: false,
+      metadata: {
+        contentType: 'image/png',
+        metadata: {
+          firebaseStorageDownloadTokens: downloadToken,
+        },
+      },
     });
 
-    // Get download URL
-    const qrCodeUrl = await getDownloadURL(uploadResult.ref);
+    const qrCodeUrl = `https://firebasestorage.googleapis.com/v0/b/${adminStorage.name}/o/${encodeURIComponent(
+      objectPath
+    )}?alt=media&token=${downloadToken}`;
 
     // Update campaign with QR code URL
     await updateCampaignQRCode(campaignId, qrCodeUrl);
