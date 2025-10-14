@@ -99,12 +99,29 @@ export async function POST(request: NextRequest) {
 
     // Send email notification to contractor (async, don't block response)
     // Note: We need to get the full campaign with contractor info
+    console.log('[Lead Email] Starting email notification process', {
+      campaignId: campaign.id,
+      slug: campaign.pageSlug,
+      status: campaign.status,
+    });
+
     const campaignWithData = await getCampaignBySlug(campaign.pageSlug);
 
     if (campaignWithData) {
+      console.log('[Lead Email] Campaign data fetched successfully', {
+        contractorName: campaignWithData.contractor.name,
+        contractorEmail: campaignWithData.contractor.email,
+        photoCount: campaignWithData.photos.length,
+      });
+
       // Send email asynchronously (don't await)
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
       const landingPageUrl = `${baseUrl}/c/${campaign.pageSlug}`;
+
+      console.log('[Lead Email] Calling sendLeadNotification', {
+        to: campaignWithData.contractor.email,
+        subject: `New Lead from ${campaign.neighborhoodName}`,
+      });
 
       sendLeadNotification({
         contractorName: campaignWithData.contractor.name,
@@ -121,12 +138,22 @@ export async function POST(request: NextRequest) {
           neighborhoodName: campaign.neighborhoodName,
         },
         landingPageUrl,
+      }).then(() => {
+        console.log('[Lead Email] Email sent successfully');
       }).catch(error => {
         // Log error but don't fail the request
-        console.error('Failed to send email notification:', error);
+        console.error('[Lead Email] Failed to send email notification:', error);
+        console.error('[Lead Email] Error details:', {
+          message: error.message,
+          stack: error.stack,
+          name: error.name,
+        });
       });
     } else {
-      console.warn('Could not fetch campaign data for email notification');
+      console.error('[Lead Email] Could not fetch campaign data for email notification', {
+        campaignId: campaign.id,
+        slug: campaign.pageSlug,
+      });
     }
 
     return NextResponse.json(
