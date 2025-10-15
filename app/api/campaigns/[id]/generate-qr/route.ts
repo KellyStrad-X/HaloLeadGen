@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import QRCode from 'qrcode';
-import { getCampaignById, updateCampaignQRCode } from '@/lib/firestore';
 import { adminAuth, getAdminStorage } from '@/lib/firebase-admin';
+import {
+  getCampaignByIdAdmin,
+  updateCampaignQRCodeAdmin,
+} from '@/lib/firestore-admin';
 
 interface RouteParams {
   params: Promise<{
@@ -37,7 +40,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // Get campaign
-    const campaign = await getCampaignById(campaignId);
+    const campaign = await getCampaignByIdAdmin(campaignId);
     if (!campaign) {
       return NextResponse.json(
         { error: 'Campaign not found' },
@@ -91,7 +94,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     )}?alt=media&token=${downloadToken}`;
 
     // Update campaign with QR code URL
-    await updateCampaignQRCode(campaignId, qrCodeUrl);
+    await updateCampaignQRCodeAdmin(campaignId, qrCodeUrl);
 
     console.log('QR code generated:', {
       campaignId,

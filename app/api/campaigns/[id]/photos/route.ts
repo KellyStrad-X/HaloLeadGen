@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
-import { addPhoto, getCampaignById } from '@/lib/firestore';
 import { adminAuth, getAdminStorage } from '@/lib/firebase-admin';
+import { addPhotoAdmin, getCampaignByIdAdmin } from '@/lib/firestore-admin';
 
 interface RouteParams {
   params: Promise<{
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // Verify campaign exists
-    const campaign = await getCampaignById(campaignId);
+    const campaign = await getCampaignByIdAdmin(campaignId);
     if (!campaign) {
       return NextResponse.json(
         { error: 'Campaign not found' },
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     )}?alt=media&token=${downloadToken}`;
 
     // Save photo metadata to Firestore
-    const photoId = await addPhoto({
+    const photoId = await addPhotoAdmin({
       campaignId,
       imageUrl,
       uploadOrder: parseInt(uploadOrder, 10),

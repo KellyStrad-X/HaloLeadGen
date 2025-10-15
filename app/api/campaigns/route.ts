@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { collection, addDoc, Timestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import { generateSlug } from '@/lib/firestore';
-import { adminAuth, getAdminFirestore } from '@/lib/firebase-admin';
+import { NextRequest, NextResponse } from 'next/server';
+import { adminAuth } from '@/lib/firebase-admin';
+import { createCampaignAdmin } from '@/lib/firestore-admin';
 
 interface CampaignRequest {
   campaignName: string;
@@ -10,29 +9,6 @@ interface CampaignRequest {
   showcaseAddress: string;
   jobStatus: 'Completed' | 'Pending';
 }
-
-async function generateUniqueSlugWithAdmin(text: string): Promise<string> {
-  const adminDb = getAdminFirestore();
-  const baseSlug = generateSlug(text) || 'campaign';
-  let slug = baseSlug;
-  let counter = 1;
-
-  while (true) {
-    const snapshot = await adminDb
-      .collection('campaigns')
-      .where('pageSlug', '==', slug)
-      .limit(1)
-      .get();
-
-    if (snapshot.empty) {
-      return slug;
-    }
-
-    slug = `${baseSlug}-${counter}`;
-    counter += 1;
-  }
-}
-
 export async function POST(request: NextRequest) {
   try {
     // Verify authentication
@@ -58,8 +34,6 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = decodedToken.uid;
-
-    // Parse request body
     const body: CampaignRequest = await request.json();
 
     // Validate required fields
@@ -79,35 +53,18 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate unique slug from campaign name (using Admin SDK to bypass client permissions)
-    const slug = await generateUniqueSlugWithAdmin(body.campaignName);
-
-    // Create campaign
-    const campaignsRef = collection(db, 'campaigns');
-    const newCampaign = {
+    const { id: campaignId, slug } = await createCampaignAdmin({
       contractorId: userId,
-      campaignName: body.campaignName.trim(),
-      homeownerName: body.homeownerName?.trim() || null,
-      showcaseAddress: body.showcaseAddress.trim(),
+      campaignName: body.campaignName,
+      homeownerName: body.homeownerName,
+      showcaseAddress: body.showcaseAddress,
       jobStatus: body.jobStatus,
-      campaignStatus: 'Active' as const,
-      pageSlug: slug,
-      qrCodeUrl: null,
-      createdAt: Timestamp.now(),
-      updatedAt: Timestamp.now(),
-    };
-
-    const docRef = await addDoc(campaignsRef, newCampaign);
-
-    console.log('New campaign created:', {
-      campaignId: docRef.id,
-      contractorId: userId,
-      slug,
     });
 
     return NextResponse.json(
       {
         success: true,
-        campaignId: docRef.id,
+        campaignId,
       },
       { status: 201 }
     );

@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCampaignById, getCampaignBySlug, isDuplicateLead, submitLead } from '@/lib/firestore';
+import { getCampaignBySlug } from '@/lib/firestore';
+import {
+  getCampaignByIdAdmin,
+  isDuplicateLeadAdmin,
+  submitLeadAdmin,
+} from '@/lib/firestore-admin';
 import { sendLeadNotification } from '@/lib/mailer';
 
 interface LeadSubmission {
@@ -58,7 +63,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if campaign exists and is active
-    const campaign = await getCampaignById(body.campaign_id);
+    const campaign = await getCampaignByIdAdmin(body.campaign_id);
 
     if (!campaign) {
       return NextResponse.json(
@@ -75,7 +80,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check for duplicate submission (same email + campaign within 1 hour)
-    const isDuplicate = await isDuplicateLead(
+    const isDuplicate = await isDuplicateLeadAdmin(
       body.campaign_id,
       body.email.trim().toLowerCase()
     );
@@ -88,7 +93,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert lead into Firestore
-    const leadId = await submitLead({
+    const leadId = await submitLeadAdmin({
       campaignId: body.campaign_id,
       name: body.name,
       address: body.address,
