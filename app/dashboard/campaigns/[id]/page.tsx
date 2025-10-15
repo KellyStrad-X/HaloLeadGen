@@ -31,6 +31,7 @@ interface Lead {
   address: string | null;
   notes: string | null;
   submittedAt: string;
+  contractorStatus?: 'New' | 'Contacted' | 'Qualified' | 'Closed' | 'Lost';
 }
 
 export default function CampaignDetailsPage() {

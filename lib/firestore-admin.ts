@@ -522,6 +522,13 @@ export async function getDashboardCampaignDetailsAdmin(
       address: (data.address as string | null | undefined) ?? null,
       notes: (data.notes as string | null | undefined) ?? null,
       submittedAt: serializeTimestamp(data.submittedAt as Timestamp | undefined),
+      contractorStatus: (data.contractorStatus as
+        | 'New'
+        | 'Contacted'
+        | 'Qualified'
+        | 'Closed'
+        | 'Lost'
+        | undefined) ?? 'New',
     };
   });
 
