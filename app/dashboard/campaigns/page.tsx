@@ -1,21 +1,18 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useAuth } from '@/lib/auth-context';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import Link from 'next/link';
+import { useAuth } from '@/lib/auth-context';
 
 interface Campaign {
   id: string;
   campaignName: string;
-  showcaseAddress?: string;
-  jobStatus?: 'Completed' | 'Pending';
-  campaignStatus?: 'Active' | 'Inactive';
-  status?: 'active' | 'paused' | 'completed'; // Legacy field for backward compatibility
+  showcaseAddress: string | null;
+  jobStatus: 'Completed' | 'Pending' | null;
+  campaignStatus: 'Active' | 'Inactive';
   pageSlug: string;
-  createdAt: any;
-  leadCount?: number;
+  createdAt: string;
+  leadCount: number;
 }
 
 export default function CampaignsPage() {
@@ -24,53 +21,42 @@ export default function CampaignsPage() {
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<'date' | 'name' | 'leads'>('date');
   const [filterStatus, setFilterStatus] = useState<'all' | 'Active' | 'Inactive'>('all');
+  const [error, setError] = useState<string | null>(null);
 
-  const normalizeStatus = (campaign: Campaign): 'Active' | 'Inactive' => {
-    if (campaign.campaignStatus) {
-      return campaign.campaignStatus;
-    }
-
-    if (campaign.status === 'active') {
-      return 'Active';
-    }
-
-    return 'Inactive';
-  };
+  const normalizeStatus = (campaign: Campaign): 'Active' | 'Inactive' =>
+    campaign.campaignStatus;
 
   useEffect(() => {
     const fetchCampaigns = async () => {
-      if (!user) return;
+      if (!user) {
+        setCampaigns([]);
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
 
       try {
-        const campaignsRef = collection(db, 'campaigns');
-        const campaignsQuery = query(
-          campaignsRef,
-          where('contractorId', '==', user.uid),
-          orderBy('createdAt', 'desc')
-        );
-        const campaignsSnapshot = await getDocs(campaignsQuery);
+        const token = await user.getIdToken();
+        const response = await fetch('/api/dashboard/campaigns', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-        // Fetch lead counts for each campaign
-        const campaignsData = await Promise.all(
-          campaignsSnapshot.docs.map(async (doc) => {
-            const campaignData = doc.data();
+        if (!response.ok) {
+          const payload = await response.json().catch(() => ({}));
+          throw new Error(payload.error || 'Failed to load campaigns');
+        }
 
-            // Fetch leads count for this campaign
-            const leadsRef = collection(db, 'leads');
-            const leadsQuery = query(leadsRef, where('campaignId', '==', doc.id));
-            const leadsSnapshot = await getDocs(leadsQuery);
-
-            return {
-              id: doc.id,
-              ...campaignData,
-              leadCount: leadsSnapshot.size,
-            } as Campaign;
-          })
-        );
-
-        setCampaigns(campaignsData);
+        const data = await response.json();
+        setCampaigns(data.campaigns);
       } catch (error) {
         console.error('Error fetching campaigns:', error);
+        setError(
+          error instanceof Error ? error.message : 'Failed to load campaigns'
+        );
       } finally {
         setLoading(false);
       }
@@ -94,8 +80,8 @@ export default function CampaignsPage() {
         return (b.leadCount || 0) - (a.leadCount || 0);
       case 'date':
       default:
-        const aTime = a.createdAt?.toMillis() || 0;
-        const bTime = b.createdAt?.toMillis() || 0;
+        const aTime = new Date(a.createdAt || '').getTime();
+        const bTime = new Date(b.createdAt || '').getTime();
         return bTime - aTime;
     }
   });
@@ -110,6 +96,12 @@ export default function CampaignsPage() {
 
   return (
     <div className="space-y-6">
+      {error && (
+        <div className="bg-red-900/40 border border-red-600 text-red-200 px-4 py-3 rounded">
+          {error}
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -218,11 +210,11 @@ export default function CampaignsPage() {
                         >
                           {campaign.jobStatus || 'N/A'}
                         </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`px-2 py-1 text-xs font-semibold rounded ${
-                            status === 'Active'
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span
+                        className={`px-2 py-1 text-xs font-semibold rounded ${
+                          status === 'Active'
                               ? 'bg-cyan-900/50 text-cyan-300'
                               : 'bg-gray-700 text-gray-300'
                           }`}
@@ -235,11 +227,13 @@ export default function CampaignsPage() {
                           {campaign.leadCount || 0}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-400">
-                          {campaign.createdAt?.toDate().toLocaleDateString()}
-                        </div>
-                      </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-400">
+                        {campaign.createdAt
+                          ? new Date(campaign.createdAt).toLocaleDateString()
+                          : 'N/A'}
+                      </div>
+                    </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <div className="flex space-x-2">
                           <Link

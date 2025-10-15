@@ -48,6 +48,17 @@ export interface DashboardSummary {
   recentLeads: AdminLeadSummary[];
 }
 
+export interface DashboardCampaign {
+  id: string;
+  campaignName: string;
+  showcaseAddress: string | null;
+  jobStatus: JobStatus | null;
+  campaignStatus: CampaignStatus;
+  createdAt: string;
+  leadCount: number;
+  pageSlug: string;
+}
+
 function serializeTimestamp(timestamp?: Timestamp | null): string {
   if (!timestamp) {
     return new Date().toISOString();
@@ -418,4 +429,41 @@ export async function getDashboardSummaryAdmin(
     },
     recentLeads,
   };
+}
+
+export async function getDashboardCampaignsAdmin(
+  contractorId: string
+): Promise<DashboardCampaign[]> {
+  const adminDb = getAdminFirestore();
+
+  const campaignsSnapshot = await adminDb
+    .collection('campaigns')
+    .where('contractorId', '==', contractorId)
+    .orderBy('createdAt', 'desc')
+    .get();
+
+  const campaigns: DashboardCampaign[] = [];
+
+  for (const campaignDoc of campaignsSnapshot.docs) {
+    const campaign = toCampaignAdmin(campaignDoc);
+
+    const countSnapshot: AggregateQuerySnapshot = await adminDb
+      .collection('leads')
+      .where('campaignId', '==', campaignDoc.id)
+      .count()
+      .get();
+
+    campaigns.push({
+      id: campaign.id,
+      campaignName: campaign.campaignName,
+      showcaseAddress: campaign.showcaseAddress,
+      jobStatus: campaign.jobStatus,
+      campaignStatus: campaign.campaignStatus,
+      createdAt: campaign.createdAt,
+      leadCount: countSnapshot.data().count,
+      pageSlug: campaign.pageSlug,
+    });
+  }
+
+  return campaigns;
 }
