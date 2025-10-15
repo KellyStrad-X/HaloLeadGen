@@ -7,7 +7,6 @@ import {
   type Contractor,
   type Photo,
 } from './firestore';
-import type { AggregateQuerySnapshot } from 'firebase-admin/firestore';
 
 type JobStatus = 'Completed' | 'Pending';
 type CampaignStatus = 'Active' | 'Inactive';
@@ -399,7 +398,7 @@ export async function getDashboardSummaryAdmin(
   for (const campaignDoc of campaignsSnapshot.docs) {
     const campaignData = toCampaignAdmin(campaignDoc);
 
-    const countSnapshot: AggregateQuerySnapshot = await adminDb
+    const countSnapshot = await adminDb
       .collection('leads')
       .where('campaignId', '==', campaignDoc.id)
       .count()
@@ -461,7 +460,7 @@ export async function getDashboardCampaignsAdmin(
   for (const campaignDoc of campaignsSnapshot.docs) {
     const campaign = toCampaignAdmin(campaignDoc);
 
-    const countSnapshot: AggregateQuerySnapshot = await adminDb
+    const countSnapshot = await adminDb
       .collection('leads')
       .where('campaignId', '==', campaignDoc.id)
       .count()
