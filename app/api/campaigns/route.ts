@@ -1,14 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { collection, addDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { generateUniqueSlug } from '@/lib/firestore';
-import { adminAuth } from '@/lib/firebase-admin';
+import { generateSlug } from '@/lib/firestore';
+import { adminAuth, getAdminFirestore } from '@/lib/firebase-admin';
 
 interface CampaignRequest {
   campaignName: string;
   homeownerName?: string;
   showcaseAddress: string;
   jobStatus: 'Completed' | 'Pending';
+}
+
+async function generateUniqueSlugWithAdmin(text: string): Promise<string> {
+  const adminDb = getAdminFirestore();
+  const baseSlug = generateSlug(text) || 'campaign';
+  let slug = baseSlug;
+  let counter = 1;
+
+  while (true) {
+    const snapshot = await adminDb
+      .collection('campaigns')
+      .where('pageSlug', '==', slug)
+      .limit(1)
+      .get();
+
+    if (snapshot.empty) {
+      return slug;
+    }
+
+    slug = `${baseSlug}-${counter}`;
+    counter += 1;
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -56,8 +78,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Generate unique slug from campaign name
-    const slug = await generateUniqueSlug(body.campaignName);
+    // Generate unique slug from campaign name (using Admin SDK to bypass client permissions)
+    const slug = await generateUniqueSlugWithAdmin(body.campaignName);
 
     // Create campaign
     const campaignsRef = collection(db, 'campaigns');

@@ -7,6 +7,7 @@ import {
 } from 'firebase-admin/app';
 import { getStorage } from 'firebase-admin/storage';
 import { getAuth } from 'firebase-admin/auth';
+import { getFirestore } from 'firebase-admin/firestore';
 
 type FirebaseServiceAccountJson = {
   project_id: string;
@@ -62,6 +63,10 @@ export function getAdminStorage() {
 
 export function getAdminAuth() {
   return getAuth(getAdminApp());
+}
+
+export function getAdminFirestore() {
+  return getFirestore(getAdminApp());
 }
 
 // Export as constant for convenience
