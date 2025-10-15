@@ -1,0 +1,39 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Campaign photos: campaigns/{campaignId}/{filename}
+    match /campaigns/{campaignId}/{filename} {
+      // Allow authenticated users to upload photos for their campaigns
+      // Note: We validate ownership at the application level before calling storage
+      allow write: if isAuthenticated()
+                   && request.resource.size < 10 * 1024 * 1024  // Max 10MB per file
+                   && request.resource.contentType.matches('image/.*');  // Only images
+
+      // Allow public read access (for landing page display)
+      allow read: if true;
+    }
+
+    // QR codes: qrcodes/{campaignId}.png
+    match /qrcodes/{qrCodeFile} {
+      // Allow authenticated users to create QR codes
+      allow write: if isAuthenticated()
+                   && request.resource.size < 1 * 1024 * 1024  // Max 1MB
+                   && request.resource.contentType == 'image/png';
+
+      // Allow public read access
+      allow read: if true;
+    }
+
+    // Deny all other access by default
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
