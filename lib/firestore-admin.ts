@@ -7,6 +7,7 @@ import {
   type Contractor,
   type Photo,
 } from './firestore';
+import type { AggregateQuerySnapshot } from 'firebase-admin/firestore';
 
 type JobStatus = 'Completed' | 'Pending';
 type CampaignStatus = 'Active' | 'Inactive';
@@ -25,6 +26,26 @@ export interface AdminCampaign {
   createdAt?: Timestamp;
   updatedAt?: Timestamp;
   [key: string]: unknown;
+}
+
+export interface AdminLeadSummary {
+  id: string;
+  campaignId: string;
+  campaignName: string;
+  name: string;
+  email: string;
+  phone: string;
+  submittedAt: string;
+}
+
+export interface DashboardSummary {
+  stats: {
+    totalCampaigns: number;
+    activeCampaigns: number;
+    totalLeads: number;
+    recentLeads: number;
+  };
+  recentLeads: AdminLeadSummary[];
 }
 
 function serializeTimestamp(timestamp?: Timestamp | null): string {
@@ -329,5 +350,72 @@ export async function getCampaignDataBySlugAdmin(
     ...campaign,
     contractor,
     photos,
+  };
+}
+
+export async function getDashboardSummaryAdmin(
+  contractorId: string
+): Promise<DashboardSummary> {
+  const adminDb = getAdminFirestore();
+  const campaignsSnapshot = await adminDb
+    .collection('campaigns')
+    .where('contractorId', '==', contractorId)
+    .get();
+
+  const campaigns = campaignsSnapshot.docs.map(toCampaignAdmin);
+  const totalCampaigns = campaigns.length;
+  const activeCampaigns = campaigns.filter(
+    campaign => campaign.campaignStatus === 'Active'
+  ).length;
+
+  let totalLeads = 0;
+  const collectedLeads: AdminLeadSummary[] = [];
+
+  for (const campaignDoc of campaignsSnapshot.docs) {
+    const campaignData = toCampaignAdmin(campaignDoc);
+
+    const countSnapshot: AggregateQuerySnapshot = await adminDb
+      .collection('leads')
+      .where('campaignId', '==', campaignDoc.id)
+      .count()
+      .get();
+
+    totalLeads += countSnapshot.data().count;
+
+    const leadsSnapshot = await adminDb
+      .collection('leads')
+      .where('campaignId', '==', campaignDoc.id)
+      .orderBy('submittedAt', 'desc')
+      .limit(25)
+      .get();
+
+    for (const leadDoc of leadsSnapshot.docs) {
+      const leadData = leadDoc.data() || {};
+      collectedLeads.push({
+        id: leadDoc.id,
+        campaignId: campaignDoc.id,
+        campaignName: campaignData.campaignName,
+        name: (leadData.name as string) || '',
+        email: (leadData.email as string) || '',
+        phone: (leadData.phone as string) || '',
+        submittedAt: serializeTimestamp(leadData.submittedAt as Timestamp | undefined),
+      });
+    }
+  }
+
+  collectedLeads.sort((a, b) => {
+    return new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime();
+  });
+
+  const recentLeads = collectedLeads.slice(0, 5);
+
+  return {
+    stats: {
+      totalCampaigns,
+      activeCampaigns,
+      totalLeads,
+      recentLeads: recentLeads.length,
+    },
+    recentLeads,
   };
 }

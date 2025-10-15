@@ -1,10 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useAuth } from '@/lib/auth-context';
-import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import Link from 'next/link';
+import { useAuth } from '@/lib/auth-context';
 
 interface DashboardStats {
   totalCampaigns: number;
@@ -18,7 +16,8 @@ interface RecentLead {
   name: string;
   email: string;
   campaignId: string;
-  submittedAt: any;
+  campaignName: string;
+  submittedAt: string;
 }
 
 export default function DashboardPage() {
@@ -31,78 +30,54 @@ export default function DashboardPage() {
   });
   const [recentLeads, setRecentLeads] = useState<RecentLead[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      if (!user) return;
+    const fetchSummary = async () => {
+      if (!user) {
+        setStats({
+          totalCampaigns: 0,
+          activeCampaigns: 0,
+          totalLeads: 0,
+          recentLeads: 0,
+        });
+        setRecentLeads([]);
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
 
       try {
-        // Fetch campaigns
-        const campaignsRef = collection(db, 'campaigns');
-        const campaignsQuery = query(campaignsRef, where('contractorId', '==', user.uid));
-        const campaignsSnapshot = await getDocs(campaignsQuery);
+        const token = await user.getIdToken();
+        const response = await fetch('/api/dashboard/summary', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-        const totalCampaigns = campaignsSnapshot.size;
-        const activeCampaigns = campaignsSnapshot.docs.filter((docSnap) => {
-          const data = docSnap.data();
-          if (data.campaignStatus) {
-            return data.campaignStatus === 'Active';
-          }
-
-          return data.status === 'active';
-        }).length;
-
-        // Fetch all leads for this contractor's campaigns
-        const campaignIds = campaignsSnapshot.docs.map(doc => doc.id);
-        let totalLeads = 0;
-        const allLeads: RecentLead[] = [];
-
-        if (campaignIds.length > 0) {
-          const leadsRef = collection(db, 'leads');
-
-          // Fetch leads for each campaign
-          for (const campaignId of campaignIds) {
-            const leadsQuery = query(
-              leadsRef,
-              where('campaignId', '==', campaignId),
-              orderBy('submittedAt', 'desc')
-            );
-            const leadsSnapshot = await getDocs(leadsQuery);
-
-            leadsSnapshot.forEach(doc => {
-              allLeads.push({
-                id: doc.id,
-                ...doc.data(),
-              } as RecentLead);
-            });
-          }
-
-          totalLeads = allLeads.length;
-
-          // Sort by submission date and get recent leads
-          allLeads.sort((a, b) => {
-            const aTime = a.submittedAt?.toMillis() || 0;
-            const bTime = b.submittedAt?.toMillis() || 0;
-            return bTime - aTime;
-          });
-
-          setRecentLeads(allLeads.slice(0, 5));
+        if (!response.ok) {
+          const payload = await response.json().catch(() => ({}));
+          throw new Error(payload.error || 'Failed to load dashboard summary');
         }
 
-        setStats({
-          totalCampaigns,
-          activeCampaigns,
-          totalLeads,
-          recentLeads: Math.min(5, totalLeads),
-        });
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
+        const data = await response.json();
+        setStats(data.stats);
+        setRecentLeads(data.recentLeads);
+      } catch (err) {
+        console.error('Error fetching dashboard summary:', err);
+        setError(
+          err instanceof Error
+            ? err.message
+            : 'Failed to load dashboard summary'
+        );
       } finally {
         setLoading(false);
       }
     };
 
-    fetchDashboardData();
+    fetchSummary();
   }, [user]);
 
   if (loading) {
@@ -115,6 +90,12 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-8">
+      {error && (
+        <div className="bg-red-900/40 border border-red-600 text-red-200 px-4 py-3 rounded">
+          {error}
+        </div>
+      )}
+
       {/* Welcome Header */}
       <div>
         <h1 className="text-3xl font-bold text-white">
@@ -164,9 +145,10 @@ export default function DashboardPage() {
                   <div>
                     <p className="text-white font-medium">{lead.name}</p>
                     <p className="text-gray-400 text-sm">{lead.email}</p>
+                    <p className="text-gray-500 text-xs">{lead.campaignName}</p>
                   </div>
                   <span className="text-gray-500 text-xs">
-                    {lead.submittedAt?.toDate().toLocaleDateString()}
+                    {new Date(lead.submittedAt).toLocaleDateString()}
                   </span>
                 </div>
               ))}
