@@ -1,0 +1,35 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    match /campaigns/{campaignId}/{filename} {
+      allow read: if true;
+
+      allow write:
+        if isAuthenticated()
+        && firestore.get(
+          /databases/(default)/documents/campaigns/$(campaignId)
+        ).data.contractorId == request.auth.uid
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    match /qr-codes/{filename} {
+      allow read: if true;
+
+      allow write:
+        if isAuthenticated()
+        && request.resource.size < 1 * 1024 * 1024
+        && request.resource.contentType == 'image/png';
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
