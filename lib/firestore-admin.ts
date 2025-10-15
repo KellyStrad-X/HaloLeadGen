@@ -1,6 +1,12 @@
 import { Timestamp } from 'firebase-admin/firestore';
 import { getAdminFirestore } from './firebase-admin';
-import { generateSlug } from './firestore';
+import {
+  generateSlug,
+  type Campaign,
+  type CampaignData,
+  type Contractor,
+  type Photo,
+} from './firestore';
 
 type JobStatus = 'Completed' | 'Pending';
 type CampaignStatus = 'Active' | 'Inactive';
@@ -19,6 +25,95 @@ export interface AdminCampaign {
   createdAt?: Timestamp;
   updatedAt?: Timestamp;
   [key: string]: unknown;
+}
+
+function serializeTimestamp(timestamp?: Timestamp | null): string {
+  if (!timestamp) {
+    return new Date().toISOString();
+  }
+
+  return timestamp.toDate().toISOString();
+}
+
+function normalizeCampaignStatusAdmin(
+  data: Partial<AdminCampaign>
+): CampaignStatus {
+  const raw = (data.campaignStatus ?? data.status) as string | undefined;
+
+  if (!raw) {
+    return 'Active';
+  }
+
+  return raw.toLowerCase() === 'active' ? 'Active' : 'Inactive';
+}
+
+function toCampaignAdmin(doc: FirebaseFirestore.DocumentSnapshot): Campaign {
+  const data = (doc.data() || {}) as Partial<AdminCampaign>;
+  const campaignStatus = normalizeCampaignStatusAdmin(data);
+
+  const campaignName =
+    (data.campaignName && data.campaignName.trim()) ||
+    (data.neighborhoodName && data.neighborhoodName.trim()) ||
+    'Halo Campaign';
+
+  const showcaseAddress =
+    (data.showcaseAddress && data.showcaseAddress.trim()) ||
+    (data.neighborhoodName && data.neighborhoodName.trim()) ||
+    null;
+
+  const createdAt = serializeTimestamp(data.createdAt as Timestamp | undefined);
+  const updatedAtTimestamp = data.updatedAt as Timestamp | undefined;
+
+  return {
+    id: doc.id,
+    contractorId: data.contractorId || '',
+    campaignName,
+    neighborhoodName:
+      (data.neighborhoodName && data.neighborhoodName.trim()) ||
+      showcaseAddress ||
+      campaignName,
+    showcaseAddress,
+    homeownerName: data.homeownerName?.toString() || null,
+    jobStatus: (data.jobStatus as JobStatus | undefined) ?? null,
+    campaignStatus,
+    status: data.status as Campaign['status'],
+    pageSlug: data.pageSlug || generateSlug(campaignName),
+    qrCodeUrl: (data.qrCodeUrl as string | null | undefined) ?? null,
+    createdAt,
+    updatedAt: updatedAtTimestamp ? serializeTimestamp(updatedAtTimestamp) : null,
+  };
+}
+
+function toContractorAdmin(
+  doc: FirebaseFirestore.DocumentSnapshot
+): Contractor | null {
+  if (!doc.exists) {
+    return null;
+  }
+
+  const data = doc.data() || {};
+
+  return {
+    id: doc.id,
+    name: (data.name as string) || '',
+    company: (data.company as string) || '',
+    email: (data.email as string) || '',
+    phone: (data.phone as string) || '',
+    license: (data.license as string | null | undefined) ?? null,
+    createdAt: serializeTimestamp(data.createdAt as Timestamp | undefined),
+  };
+}
+
+function toPhotoAdmin(doc: FirebaseFirestore.DocumentSnapshot): Photo {
+  const data = doc.data() || {};
+
+  return {
+    id: doc.id,
+    campaignId: (data.campaignId as string) || '',
+    imageUrl: (data.imageUrl as string) || '',
+    uploadOrder: Number(data.uploadOrder ?? 0),
+    uploadedAt: serializeTimestamp(data.uploadedAt as Timestamp | undefined),
+  };
 }
 
 async function generateUniqueSlugAdmin(text: string): Promise<string> {
@@ -93,6 +188,19 @@ export async function getCampaignByIdAdmin(
     id: docSnap.id,
     ...(docSnap.data() as Record<string, unknown>),
   } as AdminCampaign;
+}
+
+export async function getCampaignByIdSerializedAdmin(
+  campaignId: string
+): Promise<Campaign | null> {
+  const adminDb = getAdminFirestore();
+  const docSnap = await adminDb.collection('campaigns').doc(campaignId).get();
+
+  if (!docSnap.exists) {
+    return null;
+  }
+
+  return toCampaignAdmin(docSnap);
 }
 
 export async function addPhotoAdmin({
@@ -177,4 +285,49 @@ export async function submitLeadAdmin({
   });
 
   return docRef.id;
+}
+
+export async function getCampaignDataBySlugAdmin(
+  slug: string
+): Promise<CampaignData | null> {
+  const adminDb = getAdminFirestore();
+  const snapshot = await adminDb
+    .collection('campaigns')
+    .where('pageSlug', '==', slug)
+    .limit(1)
+    .get();
+
+  if (snapshot.empty) {
+    return null;
+  }
+
+  const campaignDoc = snapshot.docs[0];
+  const campaign = toCampaignAdmin(campaignDoc);
+
+  if (campaign.campaignStatus !== 'Active') {
+    return null;
+  }
+
+  const contractorSnap = await adminDb
+    .collection('contractors')
+    .doc(campaign.contractorId)
+    .get();
+  const contractor = toContractorAdmin(contractorSnap);
+
+  const photosSnap = await adminDb
+    .collection('photos')
+    .where('campaignId', '==', campaign.id)
+    .orderBy('uploadOrder', 'asc')
+    .get();
+  const photos = photosSnap.docs.map(toPhotoAdmin);
+
+  if (!contractor) {
+    return null;
+  }
+
+  return {
+    ...campaign,
+    contractor,
+    photos,
+  };
 }

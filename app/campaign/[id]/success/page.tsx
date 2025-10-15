@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
-import { getCampaignById } from '@/lib/firestore';
 import SuccessPageClient from '@/components/SuccessPageClient';
+import { getCampaignByIdSerializedAdmin } from '@/lib/firestore-admin';
 
 interface SuccessPageProps {
   params: Promise<{
@@ -10,7 +10,7 @@ interface SuccessPageProps {
 
 export default async function CampaignSuccessPage({ params }: SuccessPageProps) {
   const { id } = await params;
-  const campaign = await getCampaignById(id);
+  const campaign = await getCampaignByIdSerializedAdmin(id);
 
   if (!campaign) {
     notFound();
@@ -25,7 +25,7 @@ export default async function CampaignSuccessPage({ params }: SuccessPageProps) 
 
 export async function generateMetadata({ params }: SuccessPageProps) {
   const { id } = await params;
-  const campaign = await getCampaignById(id);
+  const campaign = await getCampaignByIdSerializedAdmin(id);
 
   if (!campaign) {
     return {

@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
-import { getCampaignBySlug, type CampaignData } from '@/lib/firestore';
+import type { CampaignData } from '@/lib/firestore';
+import { getCampaignDataBySlugAdmin } from '@/lib/firestore-admin';
 import PhotoGallery from '@/components/PhotoGallery';
 import LeadForm from '@/components/LeadForm';
 
@@ -11,7 +12,7 @@ interface CampaignPageProps {
 
 export default async function CampaignPage({ params }: CampaignPageProps) {
   const { slug } = await params;
-  const campaignData = await getCampaignBySlug(slug);
+  const campaignData = await getCampaignDataBySlugAdmin(slug);
 
   if (!campaignData) {
     notFound();
@@ -147,7 +148,7 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
 
 export async function generateMetadata({ params }: CampaignPageProps) {
   const { slug } = await params;
-  const campaignData = await getCampaignBySlug(slug);
+  const campaignData = await getCampaignDataBySlugAdmin(slug);
 
   if (!campaignData) {
     return {

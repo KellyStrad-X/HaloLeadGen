@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCampaignBySlug } from '@/lib/firestore';
 import {
   getCampaignByIdAdmin,
   isDuplicateLeadAdmin,
+  getCampaignDataBySlugAdmin,
   submitLeadAdmin,
 } from '@/lib/firestore-admin';
 import { sendLeadNotification } from '@/lib/mailer';
@@ -110,7 +110,9 @@ export async function POST(request: NextRequest) {
       status: campaign.campaignStatus,
     });
 
-    const campaignWithData = await getCampaignBySlug(campaign.pageSlug);
+    const campaignWithData = await getCampaignDataBySlugAdmin(
+      campaign.pageSlug
+    );
 
     if (campaignWithData) {
       console.log('[Lead Email] Campaign data fetched successfully', {
