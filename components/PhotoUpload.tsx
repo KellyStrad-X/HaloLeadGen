@@ -2,6 +2,7 @@
 
 import { useState, useRef, DragEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth-context';
 
 interface PhotoUploadProps {
   campaignId: string;
@@ -19,6 +20,7 @@ export default function PhotoUpload({
   onUploadComplete,
 }: PhotoUploadProps) {
   const router = useRouter();
+  const { user } = useAuth();
   const [photos, setPhotos] = useState<PhotoFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -136,6 +138,14 @@ export default function PhotoUpload({
     setError(null);
 
     try {
+      if (!user) {
+        setError('You must be signed in to upload photos');
+        setIsUploading(false);
+        return;
+      }
+
+      const token = await user.getIdToken();
+
       // Upload photos one by one to show progress
       const uploadedUrls: string[] = [];
 
@@ -146,6 +156,9 @@ export default function PhotoUpload({
 
         const response = await fetch(`/api/campaigns/${campaignId}/photos`, {
           method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
           body: formData,
         });
 
@@ -164,6 +177,9 @@ export default function PhotoUpload({
       // Generate QR code
       const qrResponse = await fetch(`/api/campaigns/${campaignId}/generate-qr`, {
         method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       if (!qrResponse.ok) {

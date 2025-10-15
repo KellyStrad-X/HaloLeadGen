@@ -13,6 +13,11 @@ export default function SuccessPageClient({
   landingPageUrl,
 }: SuccessPageClientProps) {
   const [copied, setCopied] = useState(false);
+  const campaignName = campaign.campaignName || campaign.neighborhoodName;
+  const location =
+    campaign.showcaseAddress || campaign.neighborhoodName || campaignName;
+  const campaignStatusLabel = campaign.campaignStatus;
+  const jobStatusLabel = campaign.jobStatus || 'Pending';
 
   const handleCopyUrl = async () => {
     try {
@@ -76,7 +81,7 @@ export default function SuccessPageClient({
             Your Campaign is <span className="text-halo-ice">Live!</span>
           </h2>
           <p className="text-xl text-halo-light mb-2">
-            {campaign.neighborhoodName}
+            {location}
           </p>
           <p className="text-halo-medium max-w-2xl mx-auto">
             Your custom QR code and landing page are ready. Download your assets
@@ -94,15 +99,33 @@ export default function SuccessPageClient({
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="text-halo-medium mb-1">Neighborhood</p>
+                <p className="text-halo-medium mb-1">Campaign</p>
                 <p className="text-white font-semibold">
-                  {campaign.neighborhoodName}
+                  {campaignName}
                 </p>
               </div>
               <div>
-                <p className="text-halo-medium mb-1">Status</p>
-                <p className="text-green-400 font-semibold capitalize">
-                  {campaign.status}
+                <p className="text-halo-medium mb-1">Location</p>
+                <p className="text-white">
+                  {location}
+                </p>
+              </div>
+              <div>
+                <p className="text-halo-medium mb-1">Job Status</p>
+                <p className="text-cyan-300 font-semibold capitalize">
+                  {jobStatusLabel}
+                </p>
+              </div>
+              <div>
+                <p className="text-halo-medium mb-1">Campaign Status</p>
+                <p
+                  className={`font-semibold ${
+                    campaignStatusLabel === 'Active'
+                      ? 'text-green-400'
+                      : 'text-yellow-300'
+                  }`}
+                >
+                  {campaignStatusLabel}
                 </p>
               </div>
               <div>
@@ -134,14 +157,14 @@ export default function SuccessPageClient({
               </h3>
               <p className="text-halo-medium text-center mb-8">
                 Print this QR code and distribute it in{' '}
-                {campaign.neighborhoodName}
+                {location}
               </p>
 
               {/* QR Code Display */}
               <div className="bg-white p-8 rounded-lg w-fit mx-auto mb-6">
                 <img
                   src={campaign.qrCodeUrl}
-                  alt={`QR Code for ${campaign.neighborhoodName}`}
+                  alt={`QR Code for ${campaignName}`}
                   className="w-64 h-64 sm:w-80 sm:h-80"
                 />
               </div>
@@ -294,7 +317,7 @@ export default function SuccessPageClient({
                   Distribute in Target Area
                 </h4>
                 <p className="text-halo-light text-sm">
-                  Focus on {campaign.neighborhoodName}. Place materials where
+                Focus on {location}. Place materials where
                   homeowners will see them - front doors, mailboxes, community
                   boards.
                 </p>

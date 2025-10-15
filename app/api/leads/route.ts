@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (campaign.status !== 'active') {
+    if (campaign.campaignStatus !== 'Active') {
       return NextResponse.json(
         { error: 'This campaign is no longer accepting submissions' },
         { status: 400 }
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
     console.log('[Lead Email] Starting email notification process', {
       campaignId: campaign.id,
       slug: campaign.pageSlug,
-      status: campaign.status,
+      status: campaign.campaignStatus,
     });
 
     const campaignWithData = await getCampaignBySlug(campaign.pageSlug);
@@ -117,10 +117,16 @@ export async function POST(request: NextRequest) {
       // Send email notification (await to ensure completion before function terminates)
       const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
       const landingPageUrl = `${baseUrl}/c/${campaign.pageSlug}`;
+      const campaignTitle =
+        campaign.campaignName || campaign.neighborhoodName || 'Halo Campaign';
+      const campaignLocation =
+        campaign.showcaseAddress ||
+        campaign.neighborhoodName ||
+        campaignTitle;
 
       console.log('[Lead Email] Calling sendLeadNotification', {
         to: campaignWithData.contractor.email,
-        subject: `New Lead from ${campaign.neighborhoodName}`,
+        subject: `New Lead from ${campaignTitle}`,
       });
 
       // Await email sending to ensure it completes before function terminates
@@ -137,7 +143,10 @@ export async function POST(request: NextRequest) {
             submittedAt: new Date().toISOString(),
           },
           campaignData: {
-            neighborhoodName: campaign.neighborhoodName,
+            campaignName: campaignTitle,
+            showcaseAddress: campaignLocation,
+            campaignStatus: campaign.campaignStatus,
+            jobStatus: campaign.jobStatus || null,
           },
           landingPageUrl,
         });

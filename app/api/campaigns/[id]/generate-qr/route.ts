@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import QRCode from 'qrcode';
 import { getCampaignById, updateCampaignQRCode } from '@/lib/firestore';
-import { getAdminStorage } from '@/lib/firebase-admin';
+import { adminAuth, getAdminStorage } from '@/lib/firebase-admin';
 
 interface RouteParams {
   params: Promise<{
@@ -14,12 +14,41 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     const { id: campaignId } = await params;
 
+    // Verify authentication
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { error: 'Unauthorized - No auth token provided' },
+        { status: 401 }
+      );
+    }
+
+    const token = authHeader.split('Bearer ')[1];
+    let decodedToken;
+
+    try {
+      decodedToken = await adminAuth.verifyIdToken(token);
+    } catch (authError) {
+      console.error('Auth verification error (QR generate):', authError);
+      return NextResponse.json(
+        { error: 'Unauthorized - Invalid auth token' },
+        { status: 401 }
+      );
+    }
+
     // Get campaign
     const campaign = await getCampaignById(campaignId);
     if (!campaign) {
       return NextResponse.json(
         { error: 'Campaign not found' },
         { status: 404 }
+      );
+    }
+
+    if (campaign.contractorId !== decodedToken.uid) {
+      return NextResponse.json(
+        { error: 'Forbidden - You do not own this campaign' },
+        { status: 403 }
       );
     }
 

@@ -107,11 +107,16 @@ export async function sendLeadNotification({
     submittedAt: string;
   };
   campaignData: {
-    neighborhoodName: string;
+    campaignName: string;
+    showcaseAddress: string | null;
+    campaignStatus: 'Active' | 'Inactive';
+    jobStatus: 'Completed' | 'Pending' | null;
   };
   landingPageUrl: string;
 }): Promise<boolean> {
-  const subject = `New Lead from ${campaignData.neighborhoodName}`;
+  const location =
+    campaignData.showcaseAddress || campaignData.campaignName;
+  const subject = `New Lead from ${campaignData.campaignName}`;
 
   // Format submitted date
   const submittedDate = new Date(leadData.submittedAt).toLocaleString('en-US', {
@@ -146,7 +151,7 @@ export async function sendLeadNotification({
                 🎉 New Lead!
               </h1>
               <p style="margin: 10px 0 0 0; color: #e0e0e0; font-size: 16px;">
-                From your <strong>${campaignData.neighborhoodName}</strong> campaign
+                From your <strong>${campaignData.campaignName}</strong> campaign
               </p>
             </td>
           </tr>
@@ -241,7 +246,14 @@ export async function sendLeadNotification({
                       Campaign Details
                     </h3>
                     <p style="margin: 0; color: #666; font-size: 14px;">
-                      <strong>Neighborhood:</strong> ${campaignData.neighborhoodName}
+                      <strong>Campaign:</strong> ${campaignData.campaignName}<br />
+                      <strong>Location:</strong> ${location}
+                      <br /><strong>Status:</strong> ${campaignData.campaignStatus}
+                      ${
+                        campaignData.jobStatus
+                          ? `<br /><strong>Job Status:</strong> ${campaignData.jobStatus}`
+                          : ''
+                      }
                     </p>
                     <p style="margin: 8px 0 0 0; color: #666; font-size: 14px;">
                       <strong>Landing Page:</strong> <a href="${landingPageUrl}" style="color: #00d4ff; text-decoration: none;">${landingPageUrl}</a>

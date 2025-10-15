@@ -33,8 +33,11 @@ export async function generateMetadata({ params }: SuccessPageProps) {
     };
   }
 
+  const campaignTitle =
+    campaign.campaignName || campaign.neighborhoodName || 'Campaign';
+
   return {
-    title: `Campaign Created - ${campaign.neighborhoodName} | Halo`,
-    description: `Your campaign for ${campaign.neighborhoodName} is live!`,
+    title: `Campaign Created - ${campaignTitle} | Halo`,
+    description: `Your campaign for ${campaignTitle} is live!`,
   };
 }

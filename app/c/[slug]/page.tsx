@@ -17,6 +17,14 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
     notFound();
   }
 
+  const campaignName =
+    campaignData.campaignName || campaignData.neighborhoodName;
+  const location =
+    campaignData.showcaseAddress ||
+    campaignData.neighborhoodName ||
+    campaignName;
+  const jobStatusLabel = campaignData.jobStatus || 'Pending';
+
   return (
     <main className="min-h-screen bg-black">
       {/* Header */}
@@ -45,7 +53,10 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
             <span className="text-halo-ice">Your Neighborhood</span>
           </h2>
           <p className="text-xl text-halo-light mb-2">
-            {campaignData.neighborhoodName}
+            {location}
+          </p>
+          <p className="text-sm uppercase tracking-wide text-halo-medium">
+            Campaign: {campaignName} • Job Status: {jobStatusLabel}
           </p>
           <p className="text-halo-medium max-w-2xl mx-auto">
             We've documented recent storm damage in your area. See if your roof might need inspection.
@@ -60,7 +71,7 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
             Storm Damage Documentation
           </h3>
           <p className="text-halo-medium text-center mb-8">
-            Recent photos from {campaignData.neighborhoodName}
+            Recent photos from {location}
           </p>
 
           {campaignData.photos.length > 0 ? (
@@ -144,8 +155,15 @@ export async function generateMetadata({ params }: CampaignPageProps) {
     };
   }
 
+  const campaignName =
+    campaignData.campaignName || campaignData.neighborhoodName;
+  const location =
+    campaignData.showcaseAddress ||
+    campaignData.neighborhoodName ||
+    campaignName;
+
   return {
-    title: `Storm Damage - ${campaignData.neighborhoodName} | Halo`,
-    description: `View recent roof damage documentation from ${campaignData.neighborhoodName}. Request a free inspection from ${campaignData.contractor.company}.`,
+    title: `Storm Damage - ${campaignName} | Halo`,
+    description: `View recent roof damage documentation from ${location}. Request a free inspection from ${campaignData.contractor.company}.`,
   };
 }

@@ -6,6 +6,7 @@ import {
   App,
 } from 'firebase-admin/app';
 import { getStorage } from 'firebase-admin/storage';
+import { getAuth } from 'firebase-admin/auth';
 
 type FirebaseServiceAccountJson = {
   project_id: string;
@@ -58,3 +59,14 @@ function getAdminApp(): App {
 export function getAdminStorage() {
   return getStorage(getAdminApp()).bucket();
 }
+
+export function getAdminAuth() {
+  return getAuth(getAdminApp());
+}
+
+// Export as constant for convenience
+export const adminAuth = {
+  verifyIdToken: async (token: string) => {
+    return getAdminAuth().verifyIdToken(token);
+  },
+};

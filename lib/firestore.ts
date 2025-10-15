@@ -32,17 +32,24 @@ interface ContractorDoc {
   company: string;
   email: string;
   phone: string;
+  license?: string | null;
   createdAt: Timestamp;
 }
 
 interface CampaignDoc {
   id: string;
   contractorId: string;
-  neighborhoodName: string;
+  campaignName?: string;
+  homeownerName?: string | null;
+  showcaseAddress?: string | null;
+  jobStatus?: 'Completed' | 'Pending';
+  campaignStatus?: 'Active' | 'Inactive';
+  neighborhoodName?: string;
   pageSlug: string;
   qrCodeUrl: string | null;
   createdAt: Timestamp;
-  status: 'active' | 'paused' | 'completed';
+  updatedAt?: Timestamp;
+  status?: 'active' | 'paused' | 'completed';
 }
 
 interface LeadDoc {
@@ -72,17 +79,24 @@ export interface Contractor {
   company: string;
   email: string;
   phone: string;
+  license?: string | null;
   createdAt: string; // ISO date string
 }
 
 export interface Campaign {
   id: string;
   contractorId: string;
+  campaignName: string;
   neighborhoodName: string;
+  showcaseAddress: string | null;
+  homeownerName: string | null;
+  jobStatus: 'Completed' | 'Pending' | null;
+  campaignStatus: 'Active' | 'Inactive';
+  status?: 'active' | 'paused' | 'completed';
   pageSlug: string;
   qrCodeUrl: string | null;
   createdAt: string; // ISO date string
-  status: 'active' | 'paused' | 'completed';
+  updatedAt: string | null;
 }
 
 export interface Lead {
@@ -150,10 +164,55 @@ function serializeContractor(doc: ContractorDoc): Contractor {
 /**
  * Helper: Serialize campaign doc for client
  */
+function normalizeCampaignStatus(doc: CampaignDoc): 'Active' | 'Inactive' {
+  const rawStatus = doc.campaignStatus ?? doc.status;
+
+  if (!rawStatus) {
+    return 'Active';
+  }
+
+  const normalized = rawStatus.toString().toLowerCase();
+  if (normalized === 'active') {
+    return 'Active';
+  }
+
+  return 'Inactive';
+}
+
 function serializeCampaign(doc: CampaignDoc): Campaign {
+  const campaignName =
+    doc.campaignName?.trim() ||
+    doc.neighborhoodName?.trim() ||
+    'Halo Campaign';
+
+  const showcaseAddress =
+    doc.showcaseAddress?.trim() ||
+    doc.neighborhoodName?.trim() ||
+    null;
+
+  const neighborhoodName =
+    doc.neighborhoodName?.trim() ||
+    showcaseAddress ||
+    campaignName;
+
+  const homeownerName = doc.homeownerName?.trim() || null;
+  const jobStatus = doc.jobStatus ?? null;
+  const campaignStatus = normalizeCampaignStatus(doc);
+
   return {
-    ...doc,
+    id: doc.id,
+    contractorId: doc.contractorId,
+    campaignName,
+    neighborhoodName,
+    showcaseAddress,
+    homeownerName,
+    jobStatus,
+    campaignStatus,
+    status: doc.status,
+    pageSlug: doc.pageSlug,
+    qrCodeUrl: doc.qrCodeUrl,
     createdAt: serializeTimestamp(doc.createdAt),
+    updatedAt: doc.updatedAt ? serializeTimestamp(doc.updatedAt) : null,
   };
 }
 
@@ -178,7 +237,6 @@ export async function getCampaignBySlug(slug: string): Promise<CampaignData | nu
     const q = query(
       campaignsRef,
       where('pageSlug', '==', slug),
-      where('status', '==', 'active'),
       limit(1)
     );
 
@@ -192,6 +250,11 @@ export async function getCampaignBySlug(slug: string): Promise<CampaignData | nu
     const campaignData = docToData<CampaignDoc>(campaignDoc);
 
     if (!campaignData) {
+      return null;
+    }
+
+    const isActive = normalizeCampaignStatus(campaignData) === 'Active';
+    if (!isActive) {
       return null;
     }
 
@@ -431,21 +494,32 @@ export async function findOrCreateContractor(contractorData: {
  */
 export async function createCampaign(campaignData: {
   contractorId: string;
-  neighborhoodName: string;
+  campaignName: string;
+  showcaseAddress?: string | null;
+  homeownerName?: string | null;
+  jobStatus?: 'Completed' | 'Pending';
 }): Promise<string> {
   try {
     // Generate unique slug from neighborhood name
-    const slug = await generateUniqueSlug(campaignData.neighborhoodName);
+    const slug = await generateUniqueSlug(campaignData.campaignName);
+    const now = Timestamp.now();
+    const showcaseAddress = campaignData.showcaseAddress?.trim() || null;
+    const campaignName = campaignData.campaignName.trim();
 
     const campaignsRef = collection(db, 'campaigns');
 
     const newCampaign = {
       contractorId: campaignData.contractorId,
-      neighborhoodName: campaignData.neighborhoodName.trim(),
+      campaignName,
+      homeownerName: campaignData.homeownerName?.trim() || null,
+      showcaseAddress,
+      jobStatus: campaignData.jobStatus ?? 'Completed',
+      campaignStatus: 'Active' as const,
+      neighborhoodName: showcaseAddress || campaignName,
       pageSlug: slug,
       qrCodeUrl: null, // Will be set after QR generation
-      createdAt: Timestamp.now(),
-      status: 'active' as const,
+      createdAt: now,
+      updatedAt: now,
     };
 
     const docRef = await addDoc(campaignsRef, newCampaign);
@@ -453,7 +527,7 @@ export async function createCampaign(campaignData: {
     console.log('New campaign created:', {
       campaignId: docRef.id,
       slug,
-      neighborhood: campaignData.neighborhoodName,
+      campaign: campaignName,
     });
 
     return docRef.id;
@@ -508,6 +582,7 @@ export async function updateCampaignQRCode(
     const campaignRef = doc(db, 'campaigns', campaignId);
     await updateDoc(campaignRef, {
       qrCodeUrl,
+      updatedAt: Timestamp.now(),
     });
 
     console.log('Campaign QR code updated:', {

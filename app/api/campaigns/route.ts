@@ -1,73 +1,91 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  findOrCreateContractor,
-  createCampaign,
-} from '@/lib/firestore';
+import { collection, addDoc, Timestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { generateUniqueSlug } from '@/lib/firestore';
+import { adminAuth } from '@/lib/firebase-admin';
 
 interface CampaignRequest {
-  name: string;
-  company: string;
-  email: string;
-  phone: string;
-  neighborhoodName: string;
+  campaignName: string;
+  homeownerName?: string;
+  showcaseAddress: string;
+  jobStatus: 'Completed' | 'Pending';
 }
 
 export async function POST(request: NextRequest) {
   try {
+    // Verify authentication
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { error: 'Unauthorized - No auth token provided' },
+        { status: 401 }
+      );
+    }
+
+    const token = authHeader.split('Bearer ')[1];
+    let decodedToken;
+
+    try {
+      decodedToken = await adminAuth.verifyIdToken(token);
+    } catch (authError) {
+      console.error('Auth verification error:', authError);
+      return NextResponse.json(
+        { error: 'Unauthorized - Invalid auth token' },
+        { status: 401 }
+      );
+    }
+
+    const userId = decodedToken.uid;
+
+    // Parse request body
     const body: CampaignRequest = await request.json();
 
     // Validate required fields
-    if (
-      !body.name ||
-      !body.company ||
-      !body.email ||
-      !body.phone ||
-      !body.neighborhoodName
-    ) {
+    if (!body.campaignName || !body.showcaseAddress || !body.jobStatus) {
       return NextResponse.json(
-        { error: 'All fields are required' },
+        { error: 'Campaign name, address, and job status are required' },
         { status: 400 }
       );
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(body.email)) {
+    // Validate job status
+    if (body.jobStatus !== 'Completed' && body.jobStatus !== 'Pending') {
       return NextResponse.json(
-        { error: 'Invalid email address' },
+        { error: 'Job status must be either "Completed" or "Pending"' },
         { status: 400 }
       );
     }
 
-    // Validate neighborhood length
-    if (body.neighborhoodName.trim().length < 10) {
-      return NextResponse.json(
-        {
-          error:
-            'Neighborhood name must be specific (at least 10 characters)',
-        },
-        { status: 400 }
-      );
-    }
-
-    // Find or create contractor
-    const contractorId = await findOrCreateContractor({
-      name: body.name,
-      company: body.company,
-      email: body.email,
-      phone: body.phone,
-    });
+    // Generate unique slug from campaign name
+    const slug = await generateUniqueSlug(body.campaignName);
 
     // Create campaign
-    const campaignId = await createCampaign({
-      contractorId,
-      neighborhoodName: body.neighborhoodName,
+    const campaignsRef = collection(db, 'campaigns');
+    const newCampaign = {
+      contractorId: userId,
+      campaignName: body.campaignName.trim(),
+      homeownerName: body.homeownerName?.trim() || null,
+      showcaseAddress: body.showcaseAddress.trim(),
+      jobStatus: body.jobStatus,
+      campaignStatus: 'Active' as const,
+      pageSlug: slug,
+      qrCodeUrl: null,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    };
+
+    const docRef = await addDoc(campaignsRef, newCampaign);
+
+    console.log('New campaign created:', {
+      campaignId: docRef.id,
+      contractorId: userId,
+      slug,
     });
 
     return NextResponse.json(
       {
         success: true,
-        campaignId,
+        campaignId: docRef.id,
       },
       { status: 201 }
     );
