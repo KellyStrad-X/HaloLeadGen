@@ -59,6 +59,20 @@ export interface DashboardCampaign {
   pageSlug: string;
 }
 
+export interface DashboardCampaignDetails {
+  campaign: Campaign;
+  photos: Photo[];
+  leads: {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+    address: string | null;
+    notes: string | null;
+    submittedAt: string;
+  }[];
+}
+
 function serializeTimestamp(timestamp?: Timestamp | null): string {
   if (!timestamp) {
     return new Date().toISOString();
@@ -466,4 +480,54 @@ export async function getDashboardCampaignsAdmin(
   }
 
   return campaigns;
+}
+
+export async function getDashboardCampaignDetailsAdmin(
+  contractorId: string,
+  campaignId: string
+): Promise<DashboardCampaignDetails | null> {
+  const adminDb = getAdminFirestore();
+  const campaignDoc = await adminDb.collection('campaigns').doc(campaignId).get();
+
+  if (!campaignDoc.exists) {
+    return null;
+  }
+
+  const campaign = toCampaignAdmin(campaignDoc);
+
+  if (campaign.contractorId !== contractorId) {
+    return null;
+  }
+
+  const photosSnap = await adminDb
+    .collection('photos')
+    .where('campaignId', '==', campaignId)
+    .orderBy('uploadOrder', 'asc')
+    .get();
+  const photos = photosSnap.docs.map(toPhotoAdmin);
+
+  const leadsSnap = await adminDb
+    .collection('leads')
+    .where('campaignId', '==', campaignId)
+    .orderBy('submittedAt', 'desc')
+    .get();
+
+  const leads = leadsSnap.docs.map(leadDoc => {
+    const data = leadDoc.data() || {};
+    return {
+      id: leadDoc.id,
+      name: (data.name as string) || '',
+      email: (data.email as string) || '',
+      phone: (data.phone as string) || '',
+      address: (data.address as string | null | undefined) ?? null,
+      notes: (data.notes as string | null | undefined) ?? null,
+      submittedAt: serializeTimestamp(data.submittedAt as Timestamp | undefined),
+    };
+  });
+
+  return {
+    campaign,
+    photos,
+    leads,
+  };
 }

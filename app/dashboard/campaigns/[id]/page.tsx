@@ -2,22 +2,19 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { useAuth } from '@/lib/auth-context';
-import { doc, getDoc, collection, query, where, getDocs, orderBy } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useAuth } from '@/lib/auth-context';
 
 interface Campaign {
   id: string;
-  contractorId?: string;
   campaignName: string;
-  showcaseAddress?: string;
-  jobStatus?: 'Completed' | 'Pending';
-  campaignStatus?: 'Active' | 'Inactive';
+  showcaseAddress: string | null;
+  jobStatus: 'Completed' | 'Pending' | null;
+  campaignStatus: 'Active' | 'Inactive';
   pageSlug: string;
-  qrCodeUrl?: string;
-  createdAt: any;
+  qrCodeUrl: string | null;
+  createdAt: string;
 }
 
 interface Photo {
@@ -31,11 +28,9 @@ interface Lead {
   name: string;
   email: string;
   phone: string;
-  address?: string;
-  notes?: string;
-  submittedAt: any;
-  leadStatus?: 'Hot' | 'Cold';
-  contractorStatus?: 'New' | 'Contacted' | 'Qualified' | 'Closed' | 'Lost';
+  address: string | null;
+  notes: string | null;
+  submittedAt: string;
 }
 
 export default function CampaignDetailsPage() {
@@ -47,73 +42,51 @@ export default function CampaignDetailsPage() {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchCampaignDetails = async () => {
-      if (!user) return;
+    const fetchDetails = async () => {
+      if (!user) {
+        setCampaign(null);
+        setPhotos([]);
+        setLeads([]);
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+      setError(null);
 
       try {
-        // Fetch campaign
-        const campaignRef = doc(db, 'campaigns', campaignId);
-        const campaignSnap = await getDoc(campaignRef);
+        const token = await user.getIdToken();
+        const response = await fetch(`/api/dashboard/campaigns/${campaignId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-        if (!campaignSnap.exists()) {
-          setError('Campaign not found');
-          setLoading(false);
-          return;
+        if (!response.ok) {
+          const payload = await response.json().catch(() => ({}));
+          throw new Error(payload.error || 'Failed to load campaign details');
         }
 
-        const campaignData = {
-          id: campaignSnap.id,
-          ...campaignSnap.data(),
-        } as Campaign;
-
-        // Verify ownership
-        if (campaignData.contractorId && campaignData.contractorId !== user.uid) {
-          setError('You do not have permission to view this campaign');
-          setLoading(false);
-          return;
-        }
-
-        setCampaign(campaignData);
-
-        // Fetch photos
-        const photosRef = collection(db, 'photos');
-        const photosQuery = query(
-          photosRef,
-          where('campaignId', '==', campaignId),
-          orderBy('uploadOrder', 'asc')
-        );
-        const photosSnap = await getDocs(photosQuery);
-        const photosData = photosSnap.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        } as Photo));
-        setPhotos(photosData);
-
-        // Fetch leads
-        const leadsRef = collection(db, 'leads');
-        const leadsQuery = query(
-          leadsRef,
-          where('campaignId', '==', campaignId),
-          orderBy('submittedAt', 'desc')
-        );
-        const leadsSnap = await getDocs(leadsQuery);
-        const leadsData = leadsSnap.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data(),
-        } as Lead));
-        setLeads(leadsData);
+        const data = await response.json();
+        setCampaign(data.campaign);
+        setPhotos(data.photos);
+        setLeads(data.leads);
       } catch (err) {
         console.error('Error fetching campaign details:', err);
-        setError('Failed to load campaign details');
+        setError(
+          err instanceof Error
+            ? err.message
+            : 'Failed to load campaign details'
+        );
       } finally {
         setLoading(false);
       }
     };
 
-    fetchCampaignDetails();
+    fetchDetails();
   }, [campaignId, user]);
 
   if (loading) {
@@ -127,7 +100,9 @@ export default function CampaignDetailsPage() {
   if (error || !campaign) {
     return (
       <div className="text-center py-12">
-        <p className="text-red-400 text-lg mb-4">{error || 'Campaign not found'}</p>
+        <p className="text-red-400 text-lg mb-4">
+          {error || 'Campaign not found'}
+        </p>
         <Link
           href="/dashboard/campaigns"
           className="text-cyan-400 hover:text-cyan-300"
@@ -189,7 +164,9 @@ export default function CampaignDetailsPage() {
           <div>
             <p className="text-gray-400 text-sm mb-1">Created</p>
             <p className="text-white">
-              {campaign.createdAt?.toDate().toLocaleDateString()}
+              {campaign.createdAt
+                ? new Date(campaign.createdAt).toLocaleDateString()
+                : 'N/A'}
             </p>
           </div>
         </div>
@@ -313,7 +290,7 @@ export default function CampaignDetailsPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-400">
-                      {lead.submittedAt?.toDate().toLocaleDateString()}
+                    {new Date(lead.submittedAt).toLocaleDateString()}
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <div className="flex space-x-3">
