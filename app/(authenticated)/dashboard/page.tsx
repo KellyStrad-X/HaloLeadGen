@@ -91,7 +91,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
       {error && (
-        <div className="bg-red-900/40 border border-red-600 text-red-200 px-4 py-3 rounded">
+        <div className="bg-red-500/20 border border-red-400 text-red-300 px-4 py-3 rounded">
           {error}
         </div>
       )}
@@ -101,7 +101,7 @@ export default function DashboardPage() {
         <h1 className="text-3xl font-bold text-white">
           Welcome back, {user?.displayName || 'Contractor'}
         </h1>
-        <p className="text-gray-400 mt-2">
+        <p className="text-gray-300 mt-2">
           Here's an overview of your lead generation campaigns
         </p>
       </div>
@@ -133,21 +133,21 @@ export default function DashboardPage() {
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Recent Activity */}
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
+        <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-6 shadow-lg">
           <h2 className="text-xl font-semibold text-white mb-4">Recent Leads</h2>
           {recentLeads.length > 0 ? (
             <div className="space-y-3">
               {recentLeads.map((lead) => (
                 <div
                   key={lead.id}
-                  className="flex items-center justify-between py-3 border-b border-gray-800 last:border-0"
+                  className="flex items-center justify-between py-3 border-b border-slate-700 last:border-0"
                 >
                   <div>
                     <p className="text-white font-medium">{lead.name}</p>
-                    <p className="text-gray-400 text-sm">{lead.email}</p>
-                    <p className="text-gray-500 text-xs">{lead.campaignName}</p>
+                    <p className="text-gray-300 text-sm">{lead.email}</p>
+                    <p className="text-gray-400 text-xs">{lead.campaignName}</p>
                   </div>
-                  <span className="text-gray-500 text-xs">
+                  <span className="text-gray-400 text-xs">
                     {new Date(lead.submittedAt).toLocaleDateString()}
                   </span>
                 </div>
@@ -160,23 +160,23 @@ export default function DashboardPage() {
               </Link>
             </div>
           ) : (
-            <p className="text-gray-400 text-center py-8">No leads yet</p>
+            <p className="text-gray-300 text-center py-8">No leads yet</p>
           )}
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
+        <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-6 shadow-lg">
           <h2 className="text-xl font-semibold text-white mb-4">Quick Actions</h2>
           <div className="space-y-3">
             <Link
               href="/create-campaign"
-              className="block w-full bg-cyan-500 hover:bg-cyan-600 text-black font-semibold py-3 px-4 rounded-lg text-center transition-colors"
+              className="block w-full bg-cyan-500 hover:bg-cyan-600 text-black font-semibold py-3 px-4 rounded-lg text-center transition-colors shadow-md"
             >
               Create New Campaign
             </Link>
             <Link
               href="/dashboard/campaigns"
-              className="block w-full bg-gray-800 hover:bg-gray-700 text-white font-semibold py-3 px-4 rounded-lg text-center transition-colors"
+              className="block w-full bg-slate-700 hover:bg-slate-600 text-white font-semibold py-3 px-4 rounded-lg text-center transition-colors"
             >
               View All Campaigns
             </Link>
@@ -202,8 +202,8 @@ function StatCard({ title, value, color }: StatCardProps) {
   };
 
   return (
-    <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
-      <p className="text-gray-400 text-sm font-medium mb-2">{title}</p>
+    <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-6 shadow-lg">
+      <p className="text-gray-300 text-sm font-medium mb-2">{title}</p>
       <p className={`text-4xl font-bold ${colorClasses[color]}`}>{value}</p>
     </div>
   );

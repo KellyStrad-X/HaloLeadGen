@@ -17,7 +17,7 @@ export default function DashboardLayout({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <div className="text-cyan-400 text-xl">Loading...</div>
       </div>
     );
@@ -40,9 +40,9 @@ export default function DashboardLayout({
   ];
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-slate-900">
       {/* Header */}
-      <header className="bg-gray-900 border-b border-gray-800">
+      <header className="bg-slate-800 border-b border-slate-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
@@ -61,7 +61,7 @@ export default function DashboardLayout({
                   className={`text-sm font-medium transition-colors ${
                     pathname === link.href
                       ? 'text-cyan-400'
-                      : 'text-gray-300 hover:text-white'
+                      : 'text-gray-200 hover:text-white'
                   }`}
                 >
                   {link.label}
@@ -71,12 +71,12 @@ export default function DashboardLayout({
 
             {/* User Menu */}
             <div className="flex items-center space-x-4">
-              <span className="text-gray-300 text-sm hidden sm:block">
+              <span className="text-gray-200 text-sm hidden sm:block">
                 {user?.displayName || user?.email}
               </span>
               <button
                 onClick={handleLogout}
-                className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
               >
                 Logout
               </button>
@@ -85,7 +85,7 @@ export default function DashboardLayout({
         </div>
 
         {/* Mobile Navigation */}
-        <div className="md:hidden border-t border-gray-800">
+        <div className="md:hidden border-t border-slate-700">
           <nav className="px-4 py-3 space-y-2">
             {navLinks.map((link) => (
               <Link
@@ -93,8 +93,8 @@ export default function DashboardLayout({
                 href={link.href}
                 className={`block px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   pathname === link.href
-                    ? 'bg-gray-800 text-cyan-400'
-                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                    ? 'bg-slate-700 text-cyan-400'
+                    : 'text-gray-200 hover:bg-slate-700 hover:text-white'
                 }`}
               >
                 {link.label}

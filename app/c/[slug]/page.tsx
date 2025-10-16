@@ -27,9 +27,9 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
   const jobStatusLabel = campaignData.jobStatus || 'Pending';
 
   return (
-    <main className="min-h-screen bg-black">
+    <main className="min-h-screen bg-slate-900">
       {/* Header */}
-      <header className="border-b border-halo-dark-light">
+      <header className="border-b border-slate-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
@@ -46,7 +46,7 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
       </header>
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-b from-halo-dark to-black py-16 px-4">
+      <section className="bg-gradient-to-b from-slate-800 to-slate-900 py-16 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-4xl sm:text-5xl font-bold text-white mb-4">
             Real Roof Damage From
@@ -66,7 +66,7 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
       </section>
 
       {/* Photo Gallery */}
-      <section className="py-12 px-4 bg-halo-dark">
+      <section className="py-12 px-4 bg-slate-800">
         <div className="max-w-7xl mx-auto">
           <h3 className="text-2xl font-bold text-white mb-2 text-center">
             Storm Damage Documentation
@@ -86,9 +86,9 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
       </section>
 
       {/* Call to Action */}
-      <section className="py-8 px-4 bg-gradient-to-b from-halo-dark to-black">
+      <section className="py-8 px-4 bg-gradient-to-b from-slate-800 to-slate-900">
         <div className="max-w-2xl mx-auto text-center">
-          <div className="bg-halo-dark-light border border-halo-ice/20 rounded-lg p-6 mb-8">
+          <div className="bg-slate-800/60 border border-cyan-400/30 rounded-lg p-6 mb-8 shadow-lg">
             <h3 className="text-2xl font-bold text-white mb-3">
               Could Your Roof Be Affected?
             </h3>
@@ -118,7 +118,7 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
       </section>
 
       {/* Lead Form */}
-      <section className="py-12 px-4 bg-black">
+      <section className="py-12 px-4 bg-slate-900">
         <div className="max-w-2xl mx-auto">
           <h3 className="text-3xl font-bold text-white mb-2 text-center">
             Request Your <span className="text-halo-ice">Free Inspection</span>
@@ -132,7 +132,7 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-halo-dark-light py-8 px-4">
+      <footer className="border-t border-slate-700 py-8 px-4 bg-slate-800">
         <div className="max-w-7xl mx-auto text-center">
           <p className="text-halo-medium text-sm mb-2">
             Provided by {campaignData.contractor.company}

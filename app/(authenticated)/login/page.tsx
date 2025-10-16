@@ -38,27 +38,27 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center px-4">
+    <div className="min-h-screen bg-slate-900 flex items-center justify-center px-4">
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
           <h1 className="text-4xl font-bold text-white mb-2">
             Halo Lead Gen
           </h1>
-          <p className="text-gray-400">Sign in to your contractor dashboard</p>
+          <p className="text-gray-300">Sign in to your contractor dashboard</p>
         </div>
 
         {/* Login Form */}
-        <div className="bg-gray-900 rounded-lg shadow-xl p-8 border border-gray-800">
+        <div className="bg-slate-800/80 rounded-lg shadow-xl p-8 border border-slate-700">
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
-              <div className="bg-red-900/50 border border-red-700 text-red-200 px-4 py-3 rounded">
+              <div className="bg-red-500/20 border border-red-400 text-red-300 px-4 py-3 rounded">
                 {error}
               </div>
             )}
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-gray-200 mb-2">
                 Email Address
               </label>
               <input
@@ -67,14 +67,14 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                className="w-full px-4 py-3 bg-slate-900/60 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400"
                 placeholder="contractor@example.com"
                 disabled={loading}
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-200 mb-2">
                 Password
               </label>
               <input
@@ -83,7 +83,7 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                className="w-full px-4 py-3 bg-slate-900/60 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400"
                 placeholder="••••••••"
                 disabled={loading}
               />
@@ -111,7 +111,7 @@ export default function LoginPage() {
         </div>
 
         {/* Footer */}
-        <div className="text-center text-sm text-gray-400">
+        <div className="text-center text-sm text-gray-300">
           Don't have an account?{' '}
           <Link href="/signup" className="text-cyan-400 hover:text-cyan-300 transition-colors">
             Contact us

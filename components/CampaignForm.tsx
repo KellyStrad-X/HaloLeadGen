@@ -121,7 +121,7 @@ export default function CampaignForm() {
 
   // Render step 1: Campaign Info
   const renderStep1 = () => (
-    <div className="bg-gray-900 border border-gray-800 rounded-lg p-8">
+    <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-8 shadow-lg">
       <div className="mb-8">
         <div className="flex items-center justify-center mb-4">
           <div className="flex items-center space-x-2">
@@ -148,7 +148,7 @@ export default function CampaignForm() {
         <div>
           <label
             htmlFor="campaignName"
-            className="block text-sm font-medium text-gray-300 mb-2"
+            className="block text-sm font-medium text-gray-200 mb-2"
           >
             Campaign Name <span className="text-red-400">*</span>
           </label>
@@ -157,9 +157,9 @@ export default function CampaignForm() {
             id="campaignName"
             value={campaignInfo.campaignName}
             onChange={(e) => handleInputChange('campaignName', e.target.value)}
-            className={`w-full px-4 py-3 bg-gray-800 border ${
-              errors.campaignName ? 'border-red-500' : 'border-gray-700'
-            } rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent`}
+            className={`w-full px-4 py-3 bg-slate-900/60 border ${
+              errors.campaignName ? 'border-red-500' : 'border-slate-600'
+            } rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent`}
             placeholder="e.g., John Bryan's Campaign"
           />
           {errors.campaignName && (
@@ -174,7 +174,7 @@ export default function CampaignForm() {
         <div>
           <label
             htmlFor="homeownerName"
-            className="block text-sm font-medium text-gray-300 mb-2"
+            className="block text-sm font-medium text-gray-200 mb-2"
           >
             Homeowner Name (Optional)
           </label>
@@ -183,7 +183,7 @@ export default function CampaignForm() {
             id="homeownerName"
             value={campaignInfo.homeownerName}
             onChange={(e) => handleInputChange('homeownerName', e.target.value)}
-            className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+            className="w-full px-4 py-3 bg-slate-900/60 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
             placeholder="e.g., John Bryan"
           />
           <p className="mt-1 text-sm text-gray-500">
@@ -195,7 +195,7 @@ export default function CampaignForm() {
         <div>
           <label
             htmlFor="showcaseAddress"
-            className="block text-sm font-medium text-gray-300 mb-2"
+            className="block text-sm font-medium text-gray-200 mb-2"
           >
             Showcase Property Address <span className="text-red-400">*</span>
           </label>
@@ -204,9 +204,9 @@ export default function CampaignForm() {
             id="showcaseAddress"
             value={campaignInfo.showcaseAddress}
             onChange={(e) => handleInputChange('showcaseAddress', e.target.value)}
-            className={`w-full px-4 py-3 bg-gray-800 border ${
-              errors.showcaseAddress ? 'border-red-500' : 'border-gray-700'
-            } rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent`}
+            className={`w-full px-4 py-3 bg-slate-900/60 border ${
+              errors.showcaseAddress ? 'border-red-500' : 'border-slate-600'
+            } rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent`}
             placeholder="e.g., 123 Oak Street, Denver, CO 80202"
           />
           {errors.showcaseAddress && (
@@ -221,7 +221,7 @@ export default function CampaignForm() {
         <div>
           <label
             htmlFor="jobStatus"
-            className="block text-sm font-medium text-gray-300 mb-2"
+            className="block text-sm font-medium text-gray-200 mb-2"
           >
             Job Status <span className="text-red-400">*</span>
           </label>
@@ -229,7 +229,7 @@ export default function CampaignForm() {
             id="jobStatus"
             value={campaignInfo.jobStatus}
             onChange={(e) => handleInputChange('jobStatus', e.target.value as 'Completed' | 'Pending')}
-            className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+            className="w-full px-4 py-3 bg-slate-900/60 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
           >
             <option value="Completed">Completed - Work finished</option>
             <option value="Pending">Pending - Contract signed, work in progress</option>
@@ -260,7 +260,7 @@ export default function CampaignForm() {
 
   // Render step 2: Photo Upload
   const renderStep2 = () => (
-    <div className="bg-gray-900 border border-gray-800 rounded-lg p-8">
+    <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-8 shadow-lg">
       <div className="mb-8">
         <div className="flex items-center justify-center mb-4">
           <div className="flex items-center space-x-2">
