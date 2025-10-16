@@ -91,8 +91,7 @@ export default function Hero({ onSubmit }: HeroProps) {
               src={image}
               alt={`Roofing project ${index + 1}`}
               fill
-              className="object-cover object-center"
-              style={{ objectPosition: 'center 40%' }}
+              className="object-contain sm:object-cover object-center"
               priority={index === 0}
               sizes="100vw"
               onError={(e) => {
