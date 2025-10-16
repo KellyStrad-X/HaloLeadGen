@@ -45,19 +45,16 @@ export default function PhotoGallery({ photos }: PhotoGalleryProps) {
             onClick={() => openLightbox(index)}
             className="relative aspect-video overflow-hidden rounded-lg bg-halo-dark-light border border-halo-medium/30 hover:border-halo-ice/50 transition-all duration-300 group"
           >
+            <Image
+              src={photo.imageUrl}
+              alt={`Storm damage photo ${index + 1}`}
+              fill
+              className="object-cover"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10" />
             <div className="absolute bottom-3 left-3 right-3 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
               <p className="text-white text-sm font-medium">Click to enlarge</p>
-            </div>
-            {/* Placeholder for now - will be replaced with actual images */}
-            <div className="absolute inset-0 flex items-center justify-center bg-halo-dark-light">
-              <div className="text-center">
-                <div className="text-halo-ice text-4xl mb-2">📷</div>
-                <p className="text-halo-medium text-sm">Photo {index + 1}</p>
-                <p className="text-halo-medium text-xs mt-1">
-                  {photo.imageUrl.split('/').pop()}
-                </p>
-              </div>
             </div>
           </button>
         ))}
@@ -140,23 +137,18 @@ export default function PhotoGallery({ photos }: PhotoGalleryProps) {
 
           {/* Photo */}
           <div
-            className="max-w-6xl max-h-[90vh] relative"
+            className="relative max-w-6xl max-h-[90vh] w-full"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Placeholder for actual image */}
-            <div className="bg-halo-dark border border-halo-ice/30 rounded-lg p-12 min-h-[400px] flex items-center justify-center">
-              <div className="text-center">
-                <div className="text-halo-ice text-6xl mb-4">📷</div>
-                <p className="text-white text-xl font-medium mb-2">
-                  Photo {selectedPhoto + 1} of {photos.length}
-                </p>
-                <p className="text-halo-medium">
-                  {photos[selectedPhoto].imageUrl.split('/').pop()}
-                </p>
-                <p className="text-halo-medium text-sm mt-4">
-                  Actual photos will be loaded from the uploads folder
-                </p>
-              </div>
+            <div className="relative w-full h-[80vh]">
+              <Image
+                src={photos[selectedPhoto].imageUrl}
+                alt={`Storm damage photo ${selectedPhoto + 1}`}
+                fill
+                className="object-contain"
+                sizes="100vw"
+                priority
+              />
             </div>
 
             {/* Photo counter */}
