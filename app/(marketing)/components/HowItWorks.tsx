@@ -18,11 +18,11 @@ export default function HowItWorks() {
   ];
 
   return (
-    <section className="bg-gray-900 text-white py-20 px-4 sm:px-6 lg:px-8">
+    <section className="bg-slate-800 text-white py-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold mb-4">How It Works</h2>
-          <p className="text-xl text-gray-400">
+          <p className="text-xl text-gray-300">
             Turn your completed jobs into neighborhood marketing campaigns in minutes
           </p>
         </div>
@@ -31,13 +31,13 @@ export default function HowItWorks() {
           {steps.map((step) => (
             <div
               key={step.number}
-              className="bg-black border border-gray-800 rounded-lg p-8 text-center hover:border-cyan-400 transition-colors"
+              className="bg-slate-700/50 border border-slate-600 rounded-lg p-8 text-center hover:border-cyan-400 hover:shadow-lg transition-all"
             >
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-cyan-400 text-black text-2xl font-bold rounded-full mb-6">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-cyan-400 text-black text-2xl font-bold rounded-full mb-6 shadow-lg">
                 {step.number}
               </div>
               <h3 className="text-xl font-bold mb-3">{step.title}</h3>
-              <p className="text-gray-400">{step.description}</p>
+              <p className="text-gray-300">{step.description}</p>
             </div>
           ))}
         </div>

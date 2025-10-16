@@ -54,14 +54,14 @@ export default function Hero({ onSubmit }: HeroProps) {
 
   if (success) {
     return (
-      <section className="bg-black text-white py-20 px-4 sm:px-6 lg:px-8">
+      <section className="bg-slate-900 text-white py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-block bg-cyan-400/10 border border-cyan-400 rounded-lg px-6 py-8">
+          <div className="inline-block bg-cyan-400/20 border-2 border-cyan-400 rounded-lg px-6 py-8 shadow-lg">
             <div className="text-6xl mb-4">✓</div>
             <h2 className="text-3xl font-bold text-cyan-400 mb-4">
               Thanks for your interest!
             </h2>
-            <p className="text-gray-300 mb-6">
+            <p className="text-gray-200 mb-6">
               We'll be in touch soon with early access details.
             </p>
             <button
@@ -77,7 +77,7 @@ export default function Hero({ onSubmit }: HeroProps) {
   }
 
   return (
-    <section className="relative bg-black text-white py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
+    <section className="relative bg-slate-900 text-white py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
       {/* Background Slideshow */}
       <div className="absolute inset-0 z-0">
         {SLIDESHOW_IMAGES.map((image, index) => (
@@ -101,8 +101,8 @@ export default function Hero({ onSubmit }: HeroProps) {
             />
           </div>
         ))}
-        {/* Dark overlay for text readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/70 to-black/90" />
+        {/* Lighter overlay for text readability - reduced from 70-90% to 50-65% */}
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/65 via-slate-900/55 to-slate-900/70" />
       </div>
 
       <div className="max-w-4xl mx-auto relative z-10">
@@ -112,7 +112,7 @@ export default function Hero({ onSubmit }: HeroProps) {
             Turn every finished roof into{' '}
             <span className="text-cyan-400">the next five jobs</span>
           </h1>
-          <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+          <p className="text-xl text-gray-200 mb-8 max-w-2xl mx-auto">
             Proof-first marketing via QR codes + localized landing pages that showcase
             your work to nearby homeowners.
           </p>
@@ -120,20 +120,20 @@ export default function Hero({ onSubmit }: HeroProps) {
 
         {/* CTA Form */}
         <div className="max-w-md mx-auto">
-          <div className="bg-gray-900 border border-gray-800 rounded-lg p-8">
+          <div className="bg-slate-800/90 backdrop-blur-sm border border-slate-700 rounded-lg p-8 shadow-xl">
             <h3 className="text-2xl font-bold text-center mb-6">
               Get Early Access
             </h3>
 
             {error && (
-              <div className="bg-red-500/10 border border-red-500 text-red-400 px-4 py-3 rounded mb-6">
+              <div className="bg-red-500/20 border border-red-400 text-red-300 px-4 py-3 rounded mb-6">
                 {error}
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
+                <label htmlFor="name" className="block text-sm font-medium text-gray-200 mb-2">
                   Name *
                 </label>
                 <input
@@ -142,13 +142,13 @@ export default function Hero({ onSubmit }: HeroProps) {
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-4 py-2 bg-black border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400"
+                  className="w-full px-4 py-2 bg-slate-900/60 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/50"
                   placeholder="John Doe"
                 />
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-200 mb-2">
                   Email *
                 </label>
                 <input
@@ -157,13 +157,13 @@ export default function Hero({ onSubmit }: HeroProps) {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-2 bg-black border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400"
+                  className="w-full px-4 py-2 bg-slate-900/60 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/50"
                   placeholder="john@example.com"
                 />
               </div>
 
               <div>
-                <label htmlFor="phone" className="block text-sm font-medium text-gray-300 mb-2">
+                <label htmlFor="phone" className="block text-sm font-medium text-gray-200 mb-2">
                   Phone (optional)
                 </label>
                 <input
@@ -171,7 +171,7 @@ export default function Hero({ onSubmit }: HeroProps) {
                   id="phone"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full px-4 py-2 bg-black border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400"
+                  className="w-full px-4 py-2 bg-slate-900/60 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-400/50"
                   placeholder="(555) 123-4567"
                 />
               </div>
