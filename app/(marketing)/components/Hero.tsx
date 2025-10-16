@@ -78,6 +78,17 @@ export default function Hero({ onSubmit }: HeroProps) {
 
   return (
     <section className="relative bg-slate-900 text-white py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      {/* Logo watermark - top left */}
+      <div className="absolute top-6 left-6 z-20 opacity-80 hover:opacity-100 transition-opacity">
+        <Image
+          src="/halo-logo.png"
+          alt="Halo Lead Gen"
+          width={120}
+          height={40}
+          className="drop-shadow-lg"
+        />
+      </div>
+
       {/* Background Slideshow */}
       <div className="absolute inset-0 z-0">
         {SLIDESHOW_IMAGES.map((image, index) => (
@@ -186,11 +197,16 @@ export default function Hero({ onSubmit }: HeroProps) {
             </form>
           </div>
 
-          {/* Secondary CTA - Demo Placeholder */}
+          {/* Secondary CTA - Demo Link */}
           <div className="mt-6 text-center">
-            <p className="text-gray-500 text-sm">
-              Live Demo Coming Soon
-            </p>
+            <a
+              href="/campaign/oprzMrbNiDP5NNw8YQXS"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-cyan-400 hover:text-cyan-300 text-sm font-medium underline transition-colors"
+            >
+              View Live Demo Campaign →
+            </a>
           </div>
         </div>
       </div>
