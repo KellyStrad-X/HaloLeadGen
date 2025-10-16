@@ -3,7 +3,7 @@
 import { useRequireAuth } from '@/lib/use-require-auth';
 import { useAuth } from '@/lib/auth-context';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 export default function DashboardLayout({
   children,
@@ -13,6 +13,7 @@ export default function DashboardLayout({
   const { loading } = useRequireAuth();
   const { user, logout } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
 
   if (loading) {
     return (
@@ -25,6 +26,8 @@ export default function DashboardLayout({
   const handleLogout = async () => {
     try {
       await logout();
+      // Explicitly redirect after logout
+      router.push('/login');
     } catch (error) {
       console.error('Logout error:', error);
     }

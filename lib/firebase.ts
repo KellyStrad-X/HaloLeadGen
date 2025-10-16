@@ -50,7 +50,12 @@ export const db: Firestore = new Proxy({} as Firestore, {
       }
       dbInstance = getFirestore(firebaseApp);
     }
-    return (dbInstance as any)[prop];
+    const value = (dbInstance as any)[prop];
+    // Bind functions to the db instance to preserve 'this' context
+    if (typeof value === 'function') {
+      return value.bind(dbInstance);
+    }
+    return value;
   }
 });
 
@@ -63,7 +68,12 @@ export const storage: FirebaseStorage = new Proxy({} as FirebaseStorage, {
       }
       storageInstance = getStorage(firebaseApp);
     }
-    return (storageInstance as any)[prop];
+    const value = (storageInstance as any)[prop];
+    // Bind functions to the storage instance to preserve 'this' context
+    if (typeof value === 'function') {
+      return value.bind(storageInstance);
+    }
+    return value;
   }
 });
 
@@ -76,7 +86,12 @@ export const auth: Auth = new Proxy({} as Auth, {
       }
       authInstance = getAuth(firebaseApp);
     }
-    return (authInstance as any)[prop];
+    const value = (authInstance as any)[prop];
+    // Bind functions to the auth instance to preserve 'this' context
+    if (typeof value === 'function') {
+      return value.bind(authInstance);
+    }
+    return value;
   }
 });
 
