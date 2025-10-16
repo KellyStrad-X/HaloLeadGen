@@ -2,6 +2,7 @@
 
 import Hero from './components/Hero';
 import HowItWorks from './components/HowItWorks';
+import VideoDemo from './components/VideoDemo';
 import ProductShowcase from './components/ProductShowcase';
 import Footer from './components/Footer';
 
@@ -34,6 +35,7 @@ export default function LandingPage() {
     <main className="min-h-screen">
       <Hero onSubmit={handleFormSubmit} />
       <HowItWorks />
+      <VideoDemo />
       <ProductShowcase />
       <Footer />
     </main>

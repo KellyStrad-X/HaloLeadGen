@@ -1,0 +1,13 @@
+PLACEHOLDER - Add your slideshow images here
+
+The Hero component expects these files:
+- 1.jpg
+- 2.jpg
+- 3.jpg
+- 4.jpg
+- 5.jpg
+
+Until you add real photos, the slideshow will attempt to load these files.
+If they don't exist, you may see console errors (which is fine during development).
+
+Just drop your selected photos in this folder with those exact names and the slideshow will work!

@@ -1,10 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 interface HeroProps {
   onSubmit: (data: { name: string; email: string; phone?: string }) => Promise<void>;
 }
+
+// Slideshow images - just add/remove/replace files in public/hero-slideshow/
+const SLIDESHOW_IMAGES = [
+  '/hero-slideshow/1.jpg',
+  '/hero-slideshow/2.jpg',
+  '/hero-slideshow/3.jpg',
+  '/hero-slideshow/4.jpg',
+  '/hero-slideshow/5.jpg',
+];
 
 export default function Hero({ onSubmit }: HeroProps) {
   const [name, setName] = useState('');
@@ -13,6 +23,16 @@ export default function Hero({ onSubmit }: HeroProps) {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  // Auto-advance slideshow every 5 seconds
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % SLIDESHOW_IMAGES.length);
+    }, 5000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,8 +77,35 @@ export default function Hero({ onSubmit }: HeroProps) {
   }
 
   return (
-    <section className="bg-black text-white py-20 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
+    <section className="relative bg-black text-white py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
+      {/* Background Slideshow */}
+      <div className="absolute inset-0 z-0">
+        {SLIDESHOW_IMAGES.map((image, index) => (
+          <div
+            key={image}
+            className={`absolute inset-0 transition-opacity duration-1000 ${
+              index === currentSlide ? 'opacity-100' : 'opacity-0'
+            }`}
+          >
+            <Image
+              src={image}
+              alt={`Roofing project ${index + 1}`}
+              fill
+              className="object-cover"
+              priority={index === 0}
+              sizes="100vw"
+              onError={(e) => {
+                // Hide image if it fails to load
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+          </div>
+        ))}
+        {/* Dark overlay for text readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/70 to-black/90" />
+      </div>
+
+      <div className="max-w-4xl mx-auto relative z-10">
         {/* Hero Content */}
         <div className="text-center mb-12">
           <h1 className="text-5xl sm:text-6xl font-bold mb-6 leading-tight">
