@@ -77,7 +77,7 @@ export default function Hero({ onSubmit }: HeroProps) {
   }
 
   return (
-    <section className="relative bg-slate-900 text-white py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
+    <section className="relative bg-slate-900 text-white py-12 sm:py-20 px-4 sm:px-6 lg:px-8 overflow-hidden min-h-[600px] sm:min-h-[700px]">
       {/* Background Slideshow */}
       <div className="absolute inset-0 z-0">
         {SLIDESHOW_IMAGES.map((image, index) => (
@@ -91,7 +91,8 @@ export default function Hero({ onSubmit }: HeroProps) {
               src={image}
               alt={`Roofing project ${index + 1}`}
               fill
-              className="object-contain sm:object-cover object-center"
+              className="object-cover"
+              style={{ objectPosition: 'center center' }}
               priority={index === 0}
               sizes="100vw"
               onError={(e) => {
