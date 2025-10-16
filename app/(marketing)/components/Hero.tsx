@@ -78,17 +78,6 @@ export default function Hero({ onSubmit }: HeroProps) {
 
   return (
     <section className="relative bg-slate-900 text-white py-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
-      {/* Logo watermark - top left */}
-      <div className="absolute top-6 left-6 z-20 opacity-80 hover:opacity-100 transition-opacity">
-        <Image
-          src="/halo-logo.png"
-          alt="Halo Lead Gen"
-          width={200}
-          height={67}
-          className="drop-shadow-lg"
-        />
-      </div>
-
       {/* Background Slideshow */}
       <div className="absolute inset-0 z-0">
         {SLIDESHOW_IMAGES.map((image, index) => (
@@ -102,7 +91,8 @@ export default function Hero({ onSubmit }: HeroProps) {
               src={image}
               alt={`Roofing project ${index + 1}`}
               fill
-              className="object-cover"
+              className="object-cover object-center"
+              style={{ objectPosition: 'center 40%' }}
               priority={index === 0}
               sizes="100vw"
               onError={(e) => {
@@ -119,6 +109,17 @@ export default function Hero({ onSubmit }: HeroProps) {
       <div className="max-w-4xl mx-auto relative z-10">
         {/* Hero Content */}
         <div className="text-center mb-12">
+          {/* Logo */}
+          <div className="flex justify-center mb-8">
+            <Image
+              src="/halo-logo.png"
+              alt="Halo Lead Gen"
+              width={180}
+              height={60}
+              className="drop-shadow-2xl"
+            />
+          </div>
+
           <h1 className="text-5xl sm:text-6xl font-bold mb-6 leading-tight">
             Turn every finished roof into{' '}
             <span className="text-cyan-400">the next five jobs</span>
