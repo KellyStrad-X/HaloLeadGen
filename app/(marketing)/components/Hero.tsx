@@ -83,8 +83,8 @@ export default function Hero({ onSubmit }: HeroProps) {
         <Image
           src="/halo-logo.png"
           alt="Halo Lead Gen"
-          width={120}
-          height={40}
+          width={200}
+          height={67}
           className="drop-shadow-lg"
         />
       </div>
@@ -200,7 +200,7 @@ export default function Hero({ onSubmit }: HeroProps) {
           {/* Secondary CTA - Demo Link */}
           <div className="mt-6 text-center">
             <a
-              href="/campaign/oprzMrbNiDP5NNw8YQXS"
+              href="/c/demo-campaign"
               target="_blank"
               rel="noopener noreferrer"
               className="text-cyan-400 hover:text-cyan-300 text-sm font-medium underline transition-colors"
