@@ -66,7 +66,7 @@ export default function PhotoUpload({
   // Add files with validation
   const addFiles = (files: File[]) => {
     const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    const maxFileSize = 10 * 1024 * 1024; // 10MB
+    const maxFileSize = 50 * 1024 * 1024; // 50MB
 
     const validFiles = files.filter((file) => {
       if (!validImageTypes.includes(file.type)) {
@@ -74,7 +74,7 @@ export default function PhotoUpload({
         return false;
       }
       if (file.size > maxFileSize) {
-        setError(`${file.name} is too large (max 10MB)`);
+        setError(`${file.name} is too large (max 50MB)`);
         return false;
       }
       return true;
@@ -226,7 +226,7 @@ export default function PhotoUpload({
               {isDragging ? 'Drop photos here' : 'Drop photos or click to browse'}
             </p>
             <p className="text-sm text-halo-medium">
-              Supports JPG, PNG, WebP • Max 10MB per file
+              Supports JPG, PNG, WebP • Max 50MB per file
             </p>
             <p className="text-xs text-halo-medium mt-1">
               Upload as many photos as you need (10+ recommended)
