@@ -52,29 +52,26 @@ export default function Hero({ onSubmit }: HeroProps) {
     }
   };
 
-  if (success) {
-    return (
-      <section className="bg-slate-900 text-white py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-block bg-cyan-400/20 border-2 border-cyan-400 rounded-lg px-6 py-8 shadow-lg">
-            <div className="text-6xl mb-4">✓</div>
-            <h2 className="text-3xl font-bold text-cyan-400 mb-4">
-              Thanks for your interest!
-            </h2>
-            <p className="text-gray-200 mb-6">
-              We'll be in touch soon with early access details.
-            </p>
-            <button
-              onClick={() => setSuccess(false)}
-              className="text-cyan-400 hover:text-cyan-300 underline"
-            >
-              Submit another request
-            </button>
-          </div>
-        </div>
-      </section>
-    );
-  }
+  // Success state content (rendered within same section structure below)
+  const successContent = success ? (
+    <div className="max-w-md mx-auto">
+      <div className="bg-slate-800/90 backdrop-blur-sm border-2 border-cyan-400 rounded-lg p-8 shadow-xl text-center">
+        <div className="text-6xl mb-4">✓</div>
+        <h2 className="text-3xl font-bold text-cyan-400 mb-4">
+          Thanks for your interest!
+        </h2>
+        <p className="text-gray-200 mb-6">
+          We'll be in touch soon with early access details.
+        </p>
+        <button
+          onClick={() => setSuccess(false)}
+          className="text-cyan-400 hover:text-cyan-300 underline font-medium"
+        >
+          Submit another request
+        </button>
+      </div>
+    </div>
+  ) : null;
 
   return (
     <section className="relative bg-slate-900 text-white py-12 sm:py-20 px-4 sm:px-6 lg:px-8 overflow-hidden min-h-[600px] sm:min-h-[700px]">
@@ -130,20 +127,21 @@ export default function Hero({ onSubmit }: HeroProps) {
           </p>
         </div>
 
-        {/* CTA Form */}
-        <div className="max-w-md mx-auto">
-          <div className="bg-slate-800/90 backdrop-blur-sm border border-slate-700 rounded-lg p-8 shadow-xl">
-            <h3 className="text-2xl font-bold text-center mb-6">
-              Get Early Access
-            </h3>
+        {/* CTA Form or Success Message */}
+        {success ? successContent : (
+          <div className="max-w-md mx-auto">
+            <div className="bg-slate-800/90 backdrop-blur-sm border border-slate-700 rounded-lg p-8 shadow-xl">
+              <h3 className="text-2xl font-bold text-center mb-6">
+                Get Early Access
+              </h3>
 
-            {error && (
-              <div className="bg-red-500/20 border border-red-400 text-red-300 px-4 py-3 rounded mb-6">
-                {error}
-              </div>
-            )}
+              {error && (
+                <div className="bg-red-500/20 border border-red-400 text-red-300 px-4 py-3 rounded mb-6">
+                  {error}
+                </div>
+              )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-200 mb-2">
                   Name *
@@ -210,6 +208,7 @@ export default function Hero({ onSubmit }: HeroProps) {
             </a>
           </div>
         </div>
+        )}
       </div>
     </section>
   );
