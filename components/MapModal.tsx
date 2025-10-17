@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
-import { APIProvider, Map, AdvancedMarker, Pin } from '@vis.gl/react-google-maps';
+import { useEffect, useState } from 'react';
+import { APIProvider, Map, AdvancedMarker, Pin, InfoWindow } from '@vis.gl/react-google-maps';
 
 interface Location {
   lat: number;
@@ -15,6 +15,7 @@ interface Campaign {
   jobStatus: 'Completed' | 'Pending' | null;
   campaignStatus: 'Active' | 'Inactive';
   location?: Location | null;
+  leadCount?: number;
 }
 
 interface MapModalProps {
@@ -54,6 +55,7 @@ export default function MapModal({
 }: MapModalProps) {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
   const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID;
+  const [hoveredCampaign, setHoveredCampaign] = useState<string | null>(null);
 
   // Handle ESC key to close modal
   useEffect(() => {
@@ -142,18 +144,72 @@ export default function MapModal({
             >
               {campaigns.map((campaign) =>
                 campaign.location ? (
-                  <AdvancedMarker
-                    key={campaign.id}
-                    position={campaign.location}
-                    title={`${campaign.campaignName}\n${getStatusText(campaign)}\n${campaign.showcaseAddress || ''}`}
-                    onClick={() => onMarkerClick(campaign.id)}
-                  >
-                    <Pin
-                      background={getMarkerColor(campaign)}
-                      borderColor="#1e293b"
-                      glyphColor="#1e293b"
-                    />
-                  </AdvancedMarker>
+                  <div key={campaign.id}>
+                    <AdvancedMarker
+                      position={campaign.location}
+                      onClick={() => onMarkerClick(campaign.id)}
+                      onMouseEnter={() => setHoveredCampaign(campaign.id)}
+                      onMouseLeave={() => setHoveredCampaign(null)}
+                    >
+                      <Pin
+                        background={getMarkerColor(campaign)}
+                        borderColor="#1e293b"
+                        glyphColor="#1e293b"
+                      />
+                    </AdvancedMarker>
+
+                    {hoveredCampaign === campaign.id && (
+                      <InfoWindow
+                        position={campaign.location}
+                        onCloseClick={() => setHoveredCampaign(null)}
+                      >
+                        <div className="p-2 min-w-[200px]">
+                          <h3 className="font-bold text-gray-900 mb-2">
+                            {campaign.campaignName}
+                          </h3>
+                          <div className="space-y-1 text-sm">
+                            <div className="flex items-center gap-2">
+                              <span className="text-gray-600">Campaign:</span>
+                              <span
+                                className={`px-2 py-0.5 rounded text-xs font-semibold ${
+                                  campaign.campaignStatus === 'Active'
+                                    ? 'bg-cyan-100 text-cyan-700'
+                                    : 'bg-gray-100 text-gray-700'
+                                }`}
+                              >
+                                {campaign.campaignStatus}
+                              </span>
+                            </div>
+                            {campaign.jobStatus && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-gray-600">Job Status:</span>
+                                <span
+                                  className={`px-2 py-0.5 rounded text-xs font-semibold ${
+                                    campaign.jobStatus === 'Completed'
+                                      ? 'bg-green-100 text-green-700'
+                                      : 'bg-orange-100 text-orange-700'
+                                  }`}
+                                >
+                                  {campaign.jobStatus}
+                                </span>
+                              </div>
+                            )}
+                            <div className="flex items-center gap-2">
+                              <span className="text-gray-600">Leads:</span>
+                              <span className="font-semibold text-gray-900">
+                                {campaign.leadCount || 0}
+                              </span>
+                            </div>
+                            {campaign.showcaseAddress && (
+                              <div className="text-gray-500 text-xs mt-2 pt-2 border-t border-gray-200">
+                                {campaign.showcaseAddress}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </InfoWindow>
+                    )}
+                  </div>
                 ) : null
               )}
             </Map>
