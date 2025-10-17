@@ -56,6 +56,21 @@ export default function MapModal({
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
   const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID;
   const [hoveredCampaign, setHoveredCampaign] = useState<string | null>(null);
+  const [hoverTimeout, setHoverTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleMarkerHover = (campaignId: string) => {
+    if (hoverTimeout) {
+      clearTimeout(hoverTimeout);
+    }
+    setHoveredCampaign(campaignId);
+  };
+
+  const handleMarkerLeave = () => {
+    const timeout = setTimeout(() => {
+      setHoveredCampaign(null);
+    }, 100);
+    setHoverTimeout(timeout);
+  };
 
   // Handle ESC key to close modal
   useEffect(() => {
@@ -148,8 +163,8 @@ export default function MapModal({
                     <AdvancedMarker
                       position={campaign.location}
                       onClick={() => onMarkerClick(campaign.id)}
-                      onMouseEnter={() => setHoveredCampaign(campaign.id)}
-                      onMouseLeave={() => setHoveredCampaign(null)}
+                      onMouseEnter={() => handleMarkerHover(campaign.id)}
+                      onMouseLeave={handleMarkerLeave}
                     >
                       <Pin
                         background={getMarkerColor(campaign)}
@@ -162,6 +177,8 @@ export default function MapModal({
                       <InfoWindow
                         position={campaign.location}
                         onCloseClick={() => setHoveredCampaign(null)}
+                        onMouseEnter={() => handleMarkerHover(campaign.id)}
+                        onMouseLeave={handleMarkerLeave}
                       >
                         <div className="p-2 min-w-[200px]">
                           <h3 className="font-bold text-gray-900 mb-2">

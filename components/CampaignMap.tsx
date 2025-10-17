@@ -52,9 +52,26 @@ export default function CampaignMap() {
   const [mapZoom, setMapZoom] = useState(10);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [hoveredCampaign, setHoveredCampaign] = useState<string | null>(null);
+  const [hoverTimeout, setHoverTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
 
   const handleMarkerClick = (campaignId: string) => {
     router.push(`/dashboard/campaigns/${campaignId}`);
+  };
+
+  const handleMarkerHover = (campaignId: string) => {
+    // Clear any existing timeout
+    if (hoverTimeout) {
+      clearTimeout(hoverTimeout);
+    }
+    setHoveredCampaign(campaignId);
+  };
+
+  const handleMarkerLeave = () => {
+    // Add delay before hiding to prevent flicker
+    const timeout = setTimeout(() => {
+      setHoveredCampaign(null);
+    }, 100);
+    setHoverTimeout(timeout);
   };
 
   const fetchCampaigns = useCallback(async () => {
@@ -221,8 +238,8 @@ export default function CampaignMap() {
                     <AdvancedMarker
                       position={campaign.location}
                       onClick={() => handleMarkerClick(campaign.id)}
-                      onMouseEnter={() => setHoveredCampaign(campaign.id)}
-                      onMouseLeave={() => setHoveredCampaign(null)}
+                      onMouseEnter={() => handleMarkerHover(campaign.id)}
+                      onMouseLeave={handleMarkerLeave}
                     >
                       <Pin
                         background={getMarkerColor(campaign)}
@@ -235,6 +252,8 @@ export default function CampaignMap() {
                       <InfoWindow
                         position={campaign.location}
                         onCloseClick={() => setHoveredCampaign(null)}
+                        onMouseEnter={() => handleMarkerHover(campaign.id)}
+                        onMouseLeave={handleMarkerLeave}
                       >
                         <div className="p-2 min-w-[200px]">
                           <h3 className="font-bold text-gray-900 mb-2">
