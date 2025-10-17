@@ -243,15 +243,23 @@ export default function CampaignMap() {
                     >
                       <div className="relative cursor-pointer">
                         <svg width="40" height="50" viewBox="0 0 40 50" fill="none">
-                          {/* Outer pin shape */}
+                          <defs>
+                            {/* Define a mask with a hole in the center */}
+                            <mask id={`marker-mask-${campaign.id}`}>
+                              {/* White area is visible */}
+                              <rect x="0" y="0" width="40" height="50" fill="white" />
+                              {/* Black area is transparent (the hole) */}
+                              <circle cx="20" cy="14" r="6" fill="black" />
+                            </mask>
+                          </defs>
+                          {/* Outer pin shape with mask applied */}
                           <path
                             d="M20 0C12.268 0 6 6.268 6 14c0 10.5 14 26 14 26s14-15.5 14-26c0-7.732-6.268-14-14-14z"
                             fill={getMarkerColor(campaign)}
                             stroke="#ffffff"
                             strokeWidth="2"
+                            mask={`url(#marker-mask-${campaign.id})`}
                           />
-                          {/* Inner hollow circle (cut out) */}
-                          <circle cx="20" cy="14" r="6" fill="white" />
                         </svg>
                       </div>
                     </AdvancedMarker>
