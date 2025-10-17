@@ -1,9 +1,13 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { APIProvider, Map, Marker } from '@vis.gl/react-google-maps';
+import { APIProvider, Map, AdvancedMarker, Pin } from '@vis.gl/react-google-maps';
 import { useAuth } from '@/lib/auth-context';
-import { geocodeAddress, type Location } from '@/lib/geocoding';
+
+interface Location {
+  lat: number;
+  lng: number;
+}
 
 interface Campaign {
   id: string;
@@ -11,10 +15,26 @@ interface Campaign {
   showcaseAddress: string | null;
   jobStatus: 'Completed' | 'Pending' | null;
   campaignStatus: 'Active' | 'Inactive';
+  location?: Location | null;
 }
 
-interface CampaignWithLocation extends Campaign {
-  location: Location;
+// Get marker color based on campaign/job status
+function getMarkerColor(campaign: Campaign): string {
+  // Priority: Active campaigns (Cyan), Completed jobs (Green), Pending jobs (Orange), Inactive (Gray)
+  if (campaign.campaignStatus === 'Active') return '#00d4ff'; // Cyan
+  if (campaign.jobStatus === 'Completed') return '#22c55e'; // Green
+  if (campaign.jobStatus === 'Pending') return '#f97316'; // Orange
+  return '#6b7280'; // Gray (Inactive)
+}
+
+// Get status text for tooltip
+function getStatusText(campaign: Campaign): string {
+  const parts = [];
+  parts.push(`Campaign: ${campaign.campaignStatus}`);
+  if (campaign.jobStatus) {
+    parts.push(`Job: ${campaign.jobStatus}`);
+  }
+  return parts.join(' • ');
 }
 
 export default function CampaignMap() {
@@ -22,12 +42,12 @@ export default function CampaignMap() {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
   const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID;
 
-  const [campaigns, setCampaigns] = useState<CampaignWithLocation[]>([]);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [mapCenter, setMapCenter] = useState<Location>({ lat: 29.7604, lng: -95.3698 });
   const [mapZoom, setMapZoom] = useState(10);
 
-  const fetchAndGeocodeCampaigns = useCallback(async () => {
+  const fetchCampaigns = useCallback(async () => {
     if (!user || !apiKey) {
       setLoading(false);
       return;
@@ -50,49 +70,32 @@ export default function CampaignMap() {
       const data = await response.json();
       const allCampaigns: Campaign[] = data.campaigns;
 
-      // Filter campaigns that have addresses
-      const campaignsWithAddresses = allCampaigns.filter(
-        (c) => c.showcaseAddress && c.showcaseAddress.trim()
+      // Filter campaigns that have geocoded locations
+      const campaignsWithLocations = allCampaigns.filter(
+        (c) => c.location && c.location.lat && c.location.lng
       );
 
-      if (campaignsWithAddresses.length === 0) {
+      if (campaignsWithLocations.length === 0) {
         setLoading(false);
         return;
       }
 
-      // Geocode addresses
-      const geocodedCampaigns: CampaignWithLocation[] = [];
-
-      for (const campaign of campaignsWithAddresses) {
-        const result = await geocodeAddress(campaign.showcaseAddress!);
-
-        if (result) {
-          geocodedCampaigns.push({
-            ...campaign,
-            location: result.location,
-          });
-        }
-
-        // Rate limit: small delay between requests
-        await new Promise((resolve) => setTimeout(resolve, 100));
-      }
-
-      setCampaigns(geocodedCampaigns);
+      setCampaigns(campaignsWithLocations);
 
       // Calculate center and zoom to fit all markers
-      if (geocodedCampaigns.length > 0) {
-        const bounds = geocodedCampaigns.reduce(
+      if (campaignsWithLocations.length > 0) {
+        const bounds = campaignsWithLocations.reduce(
           (acc, c) => ({
-            minLat: Math.min(acc.minLat, c.location.lat),
-            maxLat: Math.max(acc.maxLat, c.location.lat),
-            minLng: Math.min(acc.minLng, c.location.lng),
-            maxLng: Math.max(acc.maxLng, c.location.lng),
+            minLat: Math.min(acc.minLat, c.location!.lat),
+            maxLat: Math.max(acc.maxLat, c.location!.lat),
+            minLng: Math.min(acc.minLng, c.location!.lng),
+            maxLng: Math.max(acc.maxLng, c.location!.lng),
           }),
           {
-            minLat: geocodedCampaigns[0].location.lat,
-            maxLat: geocodedCampaigns[0].location.lat,
-            minLng: geocodedCampaigns[0].location.lng,
-            maxLng: geocodedCampaigns[0].location.lng,
+            minLat: campaignsWithLocations[0].location!.lat,
+            maxLat: campaignsWithLocations[0].location!.lat,
+            minLng: campaignsWithLocations[0].location!.lng,
+            maxLng: campaignsWithLocations[0].location!.lng,
           }
         );
 
@@ -116,14 +119,14 @@ export default function CampaignMap() {
 
       setLoading(false);
     } catch (error) {
-      console.error('Error fetching/geocoding campaigns:', error);
+      console.error('Error fetching campaigns:', error);
       setLoading(false);
     }
   }, [user, apiKey]);
 
   useEffect(() => {
-    fetchAndGeocodeCampaigns();
-  }, [fetchAndGeocodeCampaigns]);
+    fetchCampaigns();
+  }, [fetchCampaigns]);
 
   if (!apiKey) {
     return (
@@ -150,23 +153,54 @@ export default function CampaignMap() {
   }
 
   return (
-    <div className="h-[400px] w-full rounded-lg overflow-hidden">
-      <APIProvider apiKey={apiKey}>
-        <Map
-          defaultCenter={mapCenter}
-          defaultZoom={mapZoom}
-          {...(mapId && { mapId })}
-          style={{ width: '100%', height: '100%' }}
-        >
-          {campaigns.map((campaign) => (
-            <Marker
-              key={campaign.id}
-              position={campaign.location}
-              title={campaign.campaignName}
-            />
-          ))}
-        </Map>
-      </APIProvider>
+    <div className="space-y-3">
+      {/* Legend */}
+      <div className="flex flex-wrap gap-4 text-sm">
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-cyan-400"></div>
+          <span className="text-gray-300">Active</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-green-400"></div>
+          <span className="text-gray-300">Completed</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-orange-400"></div>
+          <span className="text-gray-300">Pending</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 rounded-full bg-gray-400"></div>
+          <span className="text-gray-300">Inactive</span>
+        </div>
+      </div>
+
+      {/* Map */}
+      <div className="h-[400px] w-full rounded-lg overflow-hidden">
+        <APIProvider apiKey={apiKey}>
+          <Map
+            defaultCenter={mapCenter}
+            defaultZoom={mapZoom}
+            {...(mapId && { mapId })}
+            style={{ width: '100%', height: '100%' }}
+          >
+            {campaigns.map((campaign) => (
+              campaign.location && (
+                <AdvancedMarker
+                  key={campaign.id}
+                  position={campaign.location}
+                  title={`${campaign.campaignName}\n${getStatusText(campaign)}\n${campaign.showcaseAddress || ''}`}
+                >
+                  <Pin
+                    background={getMarkerColor(campaign)}
+                    borderColor="#1e293b"
+                    glyphColor="#1e293b"
+                  />
+                </AdvancedMarker>
+              )
+            ))}
+          </Map>
+        </APIProvider>
+      </div>
     </div>
   );
 }

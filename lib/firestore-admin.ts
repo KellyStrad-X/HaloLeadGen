@@ -7,6 +7,7 @@ import {
   type Contractor,
   type Photo,
 } from './firestore';
+import { geocodeAddressServer, type Location } from './geocoding';
 
 type JobStatus = 'Completed' | 'Pending';
 type CampaignStatus = 'Active' | 'Inactive';
@@ -24,6 +25,12 @@ export interface AdminCampaign {
   qrCodeUrl?: string | null;
   createdAt?: Timestamp;
   updatedAt?: Timestamp;
+  geocodedLocation?: {
+    lat: number;
+    lng: number;
+    geocodedAt: Timestamp;
+    address: string; // Address that was geocoded (for cache invalidation)
+  } | null;
   [key: string]: unknown;
 }
 
@@ -56,6 +63,7 @@ export interface DashboardCampaign {
   createdAt: string;
   leadCount: number;
   pageSlug: string;
+  location?: Location | null;
 }
 
 export interface DashboardCampaignDetails {
@@ -459,12 +467,44 @@ export async function getDashboardCampaignsAdmin(
 
   for (const campaignDoc of campaignsSnapshot.docs) {
     const campaign = toCampaignAdmin(campaignDoc);
+    const data = campaignDoc.data() as Partial<AdminCampaign>;
 
     const countSnapshot = await adminDb
       .collection('leads')
       .where('campaignId', '==', campaignDoc.id)
       .count()
       .get();
+
+    // Check for cached geocoded location
+    let location: Location | null = null;
+
+    if (campaign.showcaseAddress) {
+      const cached = data.geocodedLocation;
+
+      // Use cache if address hasn't changed
+      if (cached && cached.address === campaign.showcaseAddress) {
+        location = {
+          lat: cached.lat,
+          lng: cached.lng,
+        };
+      } else {
+        // Geocode and cache the result
+        const geocodeResult = await geocodeAddressServer(campaign.showcaseAddress);
+        if (geocodeResult) {
+          location = geocodeResult.location;
+
+          // Save to Firestore for future requests
+          await campaignDoc.ref.update({
+            geocodedLocation: {
+              lat: location.lat,
+              lng: location.lng,
+              geocodedAt: Timestamp.now(),
+              address: campaign.showcaseAddress,
+            },
+          });
+        }
+      }
+    }
 
     campaigns.push({
       id: campaign.id,
@@ -475,6 +515,7 @@ export async function getDashboardCampaignsAdmin(
       createdAt: campaign.createdAt,
       leadCount: countSnapshot.data().count,
       pageSlug: campaign.pageSlug,
+      location,
     });
   }
 

@@ -1,5 +1,6 @@
 /**
  * Geocoding utilities for Google Maps integration
+ * SERVER-SIDE ONLY - Do not import in client components
  */
 
 export interface Location {
@@ -13,20 +14,22 @@ export interface GeocodeResult {
 }
 
 /**
- * Geocode an address using Google Geocoding API
+ * SERVER-SIDE geocoding using Google Geocoding API
+ * Uses server-only API key (NOT exposed to client bundle)
  * Returns null if geocoding fails or address is invalid
  */
-export async function geocodeAddress(
+export async function geocodeAddressServer(
   address: string
 ): Promise<GeocodeResult | null> {
   if (!address || !address.trim()) {
     return null;
   }
 
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  // Use server-only API key (NOT NEXT_PUBLIC_ - this keeps it out of client bundle)
+  const apiKey = process.env.GOOGLE_MAPS_API_KEY;
 
   if (!apiKey) {
-    console.error('Google Maps API key not configured');
+    console.error('Server-side Google Maps API key not configured (GOOGLE_MAPS_API_KEY)');
     return null;
   }
 
@@ -61,27 +64,4 @@ export async function geocodeAddress(
     console.error('Error geocoding address:', error);
     return null;
   }
-}
-
-/**
- * Batch geocode multiple addresses with rate limiting
- * Processes addresses sequentially with delay to avoid hitting API limits
- */
-export async function batchGeocodeAddresses(
-  addresses: { id: string; address: string }[]
-): Promise<Map<string, GeocodeResult>> {
-  const results = new Map<string, GeocodeResult>();
-
-  for (const { id, address } of addresses) {
-    const result = await geocodeAddress(address);
-
-    if (result) {
-      results.set(id, result);
-    }
-
-    // Rate limit: 50 requests per second max, we'll do 10/sec to be safe
-    await new Promise(resolve => setTimeout(resolve, 100));
-  }
-
-  return results;
 }
