@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
-import { useDashboardTab } from '../layout';
+import { useDashboardTab } from './layout';
 import CampaignMap from '@/components/CampaignMap';
 import CampaignsTab from '@/components/CampaignsTab';
 import AnalyticsTab from '@/components/AnalyticsTab';
