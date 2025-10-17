@@ -166,16 +166,25 @@ export default function MapModal({
                       onMouseEnter={() => handleMarkerHover(campaign.id)}
                       onMouseLeave={handleMarkerLeave}
                     >
-                      <Pin
-                        background={getMarkerColor(campaign)}
-                        borderColor="#1e293b"
-                        glyphColor="#1e293b"
-                      />
+                      <div className="relative cursor-pointer">
+                        <svg width="40" height="50" viewBox="0 0 40 50" fill="none">
+                          {/* Outer pin shape */}
+                          <path
+                            d="M20 0C12.268 0 6 6.268 6 14c0 10.5 14 26 14 26s14-15.5 14-26c0-7.732-6.268-14-14-14z"
+                            fill={getMarkerColor(campaign)}
+                            stroke="#ffffff"
+                            strokeWidth="2"
+                          />
+                          {/* Inner hollow circle (cut out) */}
+                          <circle cx="20" cy="14" r="6" fill="white" />
+                        </svg>
+                      </div>
                     </AdvancedMarker>
 
                     {hoveredCampaign === campaign.id && (
                       <InfoWindow
                         position={campaign.location}
+                        pixelOffset={[0, -40]}
                         onCloseClick={() => setHoveredCampaign(null)}
                         onMouseEnter={() => handleMarkerHover(campaign.id)}
                         onMouseLeave={handleMarkerLeave}
