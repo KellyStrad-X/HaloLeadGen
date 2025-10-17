@@ -3,10 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
-import { useDashboardTab } from '../layout';
 import CampaignMap from '@/components/CampaignMap';
-import CampaignsTab from '@/components/CampaignsTab';
-import AnalyticsTab from '@/components/AnalyticsTab';
 
 interface DashboardStats {
   totalCampaigns: number;
@@ -38,7 +35,6 @@ interface RecentCampaign {
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const { activeTab } = useDashboardTab();
   const [stats, setStats] = useState<DashboardStats>({
     totalCampaigns: 0,
     activeCampaigns: 0,
@@ -99,16 +95,6 @@ export default function DashboardPage() {
     fetchSummary();
   }, [user]);
 
-  // Render different content based on active tab
-  if (activeTab === 'analytics') {
-    return <AnalyticsTab />;
-  }
-
-  if (activeTab === 'campaigns') {
-    return <CampaignsTab />;
-  }
-
-  // Overview tab (default)
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
