@@ -9,11 +9,11 @@ interface HeroProps {
 
 // Slideshow images - just add/remove/replace files in public/hero-slideshow/
 const SLIDESHOW_IMAGES = [
-  '/hero-slideshow/1.jpg',
-  '/hero-slideshow/2.jpg',
-  '/hero-slideshow/3.jpg',
-  '/hero-slideshow/4.jpg',
-  '/hero-slideshow/5.jpg',
+  '/hero-slideshow/1.JPG',
+  '/hero-slideshow/2.JPG',
+  '/hero-slideshow/3.JPG',
+  '/hero-slideshow/4.JPG',
+  '/hero-slideshow/5.JPG',
 ];
 
 export default function Hero({ onSubmit }: HeroProps) {
