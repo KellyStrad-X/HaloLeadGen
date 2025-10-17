@@ -237,15 +237,19 @@ export default function CampaignMap() {
                   <div key={campaign.id}>
                     <AdvancedMarker
                       position={campaign.location}
-                      onClick={() => handleMarkerClick(campaign.id)}
                       onMouseEnter={() => handleMarkerHover(campaign.id)}
                       onMouseLeave={handleMarkerLeave}
                     >
-                      <Pin
-                        background={getMarkerColor(campaign)}
-                        borderColor="#1e293b"
-                        glyphColor="#1e293b"
-                      />
+                      <div
+                        onClick={() => handleMarkerClick(campaign.id)}
+                        className="cursor-pointer"
+                      >
+                        <Pin
+                          background={getMarkerColor(campaign)}
+                          borderColor="#ffffff"
+                          glyphColor="transparent"
+                        />
+                      </div>
                     </AdvancedMarker>
 
                     {hoveredCampaign === campaign.id && (
@@ -255,7 +259,10 @@ export default function CampaignMap() {
                         onMouseEnter={() => handleMarkerHover(campaign.id)}
                         onMouseLeave={handleMarkerLeave}
                       >
-                        <div className="p-2 min-w-[200px]">
+                        <div
+                          className="p-2 min-w-[200px] cursor-pointer"
+                          onClick={() => handleMarkerClick(campaign.id)}
+                        >
                           <h3 className="font-bold text-gray-900 mb-2">
                             {campaign.campaignName}
                           </h3>
