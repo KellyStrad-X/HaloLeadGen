@@ -33,12 +33,6 @@ export default function DashboardLayout({
     }
   };
 
-  const navLinks = [
-    { href: '/dashboard', label: 'Dashboard' },
-    { href: '/dashboard/campaigns', label: 'Campaigns' },
-    { href: '/create-campaign', label: 'Create Campaign' },
-  ];
-
   return (
     <div className="min-h-screen bg-slate-900">
       {/* Header */}
@@ -47,26 +41,37 @@ export default function DashboardLayout({
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
             <div className="flex items-center">
-              <Link href="/dashboard" className="text-2xl font-bold text-white">
-                Halo Lead Gen
+              <Link href="/dashboard" className="flex items-center">
+                <img
+                  src="/halo-logo.png"
+                  alt="Halo Lead Gen"
+                  className="h-8 w-auto"
+                />
               </Link>
             </div>
 
-            {/* Navigation */}
-            <nav className="hidden md:flex space-x-8">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`text-sm font-medium transition-colors ${
-                    pathname === link.href
-                      ? 'text-cyan-400'
-                      : 'text-gray-200 hover:text-white'
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              ))}
+            {/* Center Navigation */}
+            <nav className="hidden md:flex items-center space-x-6">
+              <Link
+                href="/dashboard"
+                className={`text-sm font-medium transition-colors ${
+                  pathname === '/dashboard'
+                    ? 'text-cyan-400'
+                    : 'text-gray-300 hover:text-white'
+                }`}
+              >
+                Dashboard
+              </Link>
+              <Link
+                href="/dashboard/analytics"
+                className={`text-sm font-medium transition-colors ${
+                  pathname === '/dashboard/analytics'
+                    ? 'text-cyan-400'
+                    : 'text-gray-300 hover:text-white'
+                }`}
+              >
+                Analytics
+              </Link>
             </nav>
 
             {/* Quick Actions & User Menu */}
@@ -90,7 +95,7 @@ export default function DashboardLayout({
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                     </svg>
-                    View All
+                    All Campaigns
                   </Link>
                 </>
               )}
@@ -111,19 +116,38 @@ export default function DashboardLayout({
         {/* Mobile Navigation */}
         <div className="md:hidden border-t border-slate-700">
           <nav className="px-4 py-3 space-y-2">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`block px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  pathname === link.href
-                    ? 'bg-slate-700 text-cyan-400'
-                    : 'text-gray-200 hover:bg-slate-700 hover:text-white'
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
+            <Link
+              href="/dashboard"
+              className={`block px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                pathname === '/dashboard'
+                  ? 'bg-slate-700 text-cyan-400'
+                  : 'text-gray-200 hover:bg-slate-700 hover:text-white'
+              }`}
+            >
+              Dashboard
+            </Link>
+            <Link
+              href="/dashboard/analytics"
+              className={`block px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                pathname === '/dashboard/analytics'
+                  ? 'bg-slate-700 text-cyan-400'
+                  : 'text-gray-200 hover:bg-slate-700 hover:text-white'
+              }`}
+            >
+              Analytics
+            </Link>
+            <Link
+              href="/create-campaign"
+              className="block px-3 py-2 rounded-lg text-sm font-medium text-gray-200 hover:bg-slate-700 hover:text-white transition-colors"
+            >
+              Create Campaign
+            </Link>
+            <Link
+              href="/dashboard/campaigns"
+              className="block px-3 py-2 rounded-lg text-sm font-medium text-gray-200 hover:bg-slate-700 hover:text-white transition-colors"
+            >
+              All Campaigns
+            </Link>
           </nav>
         </div>
       </header>
