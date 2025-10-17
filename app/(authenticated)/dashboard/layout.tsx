@@ -69,8 +69,32 @@ export default function DashboardLayout({
               ))}
             </nav>
 
-            {/* User Menu */}
-            <div className="flex items-center space-x-4">
+            {/* Quick Actions & User Menu */}
+            <div className="flex items-center space-x-3">
+              {/* Quick Actions - Only show on dashboard pages */}
+              {pathname?.startsWith('/dashboard') && (
+                <>
+                  <Link
+                    href="/create-campaign"
+                    className="hidden lg:flex items-center gap-2 bg-cyan-500 hover:bg-cyan-600 text-black px-3 py-2 rounded-lg text-sm font-semibold transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    New Campaign
+                  </Link>
+                  <Link
+                    href="/dashboard/campaigns"
+                    className="hidden lg:flex items-center gap-2 bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    View All
+                  </Link>
+                </>
+              )}
+
               <span className="text-gray-200 text-sm hidden sm:block">
                 {user?.displayName || user?.email}
               </span>

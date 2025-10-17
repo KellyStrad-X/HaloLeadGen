@@ -44,6 +44,18 @@ export interface AdminLeadSummary {
   submittedAt: string;
 }
 
+export interface RecentCampaignSummary {
+  id: string;
+  campaignName: string;
+  showcaseAddress: string | null;
+  jobStatus: JobStatus | null;
+  campaignStatus: CampaignStatus;
+  leadCount: number;
+  pageSlug: string;
+  createdAt: string;
+  hasNewLeads: boolean; // Has leads in last 7 days
+}
+
 export interface DashboardSummary {
   stats: {
     totalCampaigns: number;
@@ -52,6 +64,7 @@ export interface DashboardSummary {
     recentLeads: number;
   };
   recentLeads: AdminLeadSummary[];
+  recentCampaigns: RecentCampaignSummary[];
 }
 
 export interface DashboardCampaign {
@@ -402,6 +415,12 @@ export async function getDashboardSummaryAdmin(
 
   let totalLeads = 0;
   const collectedLeads: AdminLeadSummary[] = [];
+  const campaignSummaries: RecentCampaignSummary[] = [];
+
+  // Calculate time 7 days ago for "new leads" check
+  const sevenDaysAgo = Timestamp.fromDate(
+    new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+  );
 
   for (const campaignDoc of campaignsSnapshot.docs) {
     const campaignData = toCampaignAdmin(campaignDoc);
@@ -412,7 +431,31 @@ export async function getDashboardSummaryAdmin(
       .count()
       .get();
 
-    totalLeads += countSnapshot.data().count;
+    const leadCount = countSnapshot.data().count;
+    totalLeads += leadCount;
+
+    // Check for new leads in the last 7 days
+    const recentLeadsSnapshot = await adminDb
+      .collection('leads')
+      .where('campaignId', '==', campaignDoc.id)
+      .where('submittedAt', '>', sevenDaysAgo)
+      .limit(1)
+      .get();
+
+    const hasNewLeads = !recentLeadsSnapshot.empty;
+
+    // Add to campaign summaries
+    campaignSummaries.push({
+      id: campaignDoc.id,
+      campaignName: campaignData.campaignName,
+      showcaseAddress: campaignData.showcaseAddress,
+      jobStatus: campaignData.jobStatus,
+      campaignStatus: campaignData.campaignStatus,
+      leadCount,
+      pageSlug: campaignData.pageSlug,
+      createdAt: campaignData.createdAt,
+      hasNewLeads,
+    });
 
     const leadsSnapshot = await adminDb
       .collection('leads')
@@ -441,6 +484,22 @@ export async function getDashboardSummaryAdmin(
 
   const recentLeads = collectedLeads.slice(0, 5);
 
+  // Sort campaigns intelligently:
+  // 1. Campaigns with new leads first
+  // 2. Then by lead count (descending)
+  // 3. Then by creation date (newest first)
+  campaignSummaries.sort((a, b) => {
+    if (a.hasNewLeads !== b.hasNewLeads) {
+      return a.hasNewLeads ? -1 : 1;
+    }
+    if (a.leadCount !== b.leadCount) {
+      return b.leadCount - a.leadCount;
+    }
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+
+  const recentCampaigns = campaignSummaries.slice(0, 6); // Top 6 campaigns
+
   return {
     stats: {
       totalCampaigns,
@@ -449,6 +508,7 @@ export async function getDashboardSummaryAdmin(
       recentLeads: recentLeads.length,
     },
     recentLeads,
+    recentCampaigns,
   };
 }
 

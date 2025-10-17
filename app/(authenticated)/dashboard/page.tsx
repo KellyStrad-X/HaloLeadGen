@@ -21,6 +21,18 @@ interface RecentLead {
   submittedAt: string;
 }
 
+interface RecentCampaign {
+  id: string;
+  campaignName: string;
+  showcaseAddress: string | null;
+  jobStatus: 'Completed' | 'Pending' | null;
+  campaignStatus: 'Active' | 'Inactive';
+  leadCount: number;
+  pageSlug: string;
+  createdAt: string;
+  hasNewLeads: boolean;
+}
+
 export default function DashboardPage() {
   const { user } = useAuth();
   const [stats, setStats] = useState<DashboardStats>({
@@ -30,6 +42,7 @@ export default function DashboardPage() {
     recentLeads: 0,
   });
   const [recentLeads, setRecentLeads] = useState<RecentLead[]>([]);
+  const [recentCampaigns, setRecentCampaigns] = useState<RecentCampaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -66,6 +79,7 @@ export default function DashboardPage() {
         const data = await response.json();
         setStats(data.stats);
         setRecentLeads(data.recentLeads);
+        setRecentCampaigns(data.recentCampaigns || []);
       } catch (err) {
         console.error('Error fetching dashboard summary:', err);
         setError(
@@ -137,9 +151,9 @@ export default function DashboardPage() {
         <CampaignMap />
       </div>
 
-      {/* Quick Actions */}
+      {/* Recent Leads & Campaigns */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Recent Activity */}
+        {/* Recent Leads */}
         <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-6 shadow-lg">
           <h2 className="text-xl font-semibold text-white mb-4">Recent Leads</h2>
           {recentLeads.length > 0 ? (
@@ -171,23 +185,81 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Quick Actions */}
+        {/* Recent Campaigns */}
         <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-6 shadow-lg">
-          <h2 className="text-xl font-semibold text-white mb-4">Quick Actions</h2>
-          <div className="space-y-3">
-            <Link
-              href="/create-campaign"
-              className="block w-full bg-cyan-500 hover:bg-cyan-600 text-black font-semibold py-3 px-4 rounded-lg text-center transition-colors shadow-md"
-            >
-              Create New Campaign
-            </Link>
-            <Link
-              href="/dashboard/campaigns"
-              className="block w-full bg-slate-700 hover:bg-slate-600 text-white font-semibold py-3 px-4 rounded-lg text-center transition-colors"
-            >
-              View All Campaigns
-            </Link>
-          </div>
+          <h2 className="text-xl font-semibold text-white mb-4">Recent Campaigns</h2>
+          {recentCampaigns.length > 0 ? (
+            <div className="space-y-3">
+              {recentCampaigns.map((campaign) => (
+                <Link
+                  key={campaign.id}
+                  href={`/dashboard/campaigns/${campaign.id}`}
+                  className="block py-3 border-b border-slate-700 last:border-0 hover:bg-slate-700/30 -mx-2 px-2 rounded transition-colors"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-white font-medium truncate">{campaign.campaignName}</p>
+                        {campaign.hasNewLeads && (
+                          <span className="flex-shrink-0 inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-semibold bg-cyan-500/20 text-cyan-400">
+                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
+                            </svg>
+                            New
+                          </span>
+                        )}
+                      </div>
+                      {campaign.showcaseAddress && (
+                        <p className="text-gray-400 text-xs mt-1 truncate">{campaign.showcaseAddress}</p>
+                      )}
+                      <div className="flex items-center gap-3 mt-1">
+                        <span
+                          className={`px-2 py-0.5 rounded text-xs font-semibold ${
+                            campaign.campaignStatus === 'Active'
+                              ? 'bg-cyan-500/20 text-cyan-400'
+                              : 'bg-gray-500/20 text-gray-400'
+                          }`}
+                        >
+                          {campaign.campaignStatus}
+                        </span>
+                        {campaign.jobStatus && (
+                          <span
+                            className={`px-2 py-0.5 rounded text-xs font-semibold ${
+                              campaign.jobStatus === 'Completed'
+                                ? 'bg-green-500/20 text-green-400'
+                                : 'bg-orange-500/20 text-orange-400'
+                            }`}
+                          >
+                            {campaign.jobStatus}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex-shrink-0 text-right ml-3">
+                      <p className="text-white font-bold">{campaign.leadCount}</p>
+                      <p className="text-gray-400 text-xs">leads</p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+              <Link
+                href="/dashboard/campaigns"
+                className="block text-center text-cyan-400 hover:text-cyan-300 text-sm font-medium mt-4"
+              >
+                View All Campaigns →
+              </Link>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-gray-300 mb-4">No campaigns yet</p>
+              <Link
+                href="/create-campaign"
+                className="inline-block bg-cyan-500 hover:bg-cyan-600 text-black font-semibold py-2 px-4 rounded-lg transition-colors"
+              >
+                Create Your First Campaign
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </div>
