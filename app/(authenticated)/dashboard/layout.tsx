@@ -39,40 +39,40 @@ export default function DashboardLayout({
       <header className="bg-slate-800 border-b border-slate-700">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            {/* Logo */}
-            <div className="flex items-center">
+            {/* Logo & Navigation */}
+            <div className="flex items-center gap-8">
               <Link href="/dashboard" className="flex items-center">
                 <img
                   src="/halo-logo.png"
                   alt="Halo Lead Gen"
-                  className="h-8 w-auto"
+                  className="h-16 w-auto"
                 />
               </Link>
-            </div>
 
-            {/* Center Navigation */}
-            <nav className="hidden md:flex items-center space-x-6">
-              <Link
-                href="/dashboard"
-                className={`text-sm font-medium transition-colors ${
-                  pathname === '/dashboard'
-                    ? 'text-cyan-400'
-                    : 'text-gray-300 hover:text-white'
-                }`}
-              >
-                Dashboard
-              </Link>
-              <Link
-                href="/dashboard/analytics"
-                className={`text-sm font-medium transition-colors ${
-                  pathname === '/dashboard/analytics'
-                    ? 'text-cyan-400'
-                    : 'text-gray-300 hover:text-white'
-                }`}
-              >
-                Analytics
-              </Link>
-            </nav>
+              {/* Main Navigation */}
+              <nav className="hidden md:flex items-center gap-3">
+                <Link
+                  href="/dashboard"
+                  className={`px-4 py-2 rounded-lg text-base font-medium transition-colors ${
+                    pathname === '/dashboard'
+                      ? 'bg-cyan-500/20 text-cyan-400'
+                      : 'text-gray-300 hover:bg-slate-700 hover:text-white'
+                  }`}
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  href="/dashboard/analytics"
+                  className={`px-4 py-2 rounded-lg text-base font-medium transition-colors ${
+                    pathname === '/dashboard/analytics'
+                      ? 'bg-cyan-500/20 text-cyan-400'
+                      : 'text-gray-300 hover:bg-slate-700 hover:text-white'
+                  }`}
+                >
+                  Analytics
+                </Link>
+              </nav>
+            </div>
 
             {/* Quick Actions & User Menu */}
             <div className="flex items-center space-x-3">
