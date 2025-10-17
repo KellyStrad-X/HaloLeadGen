@@ -4,6 +4,7 @@ import { APIProvider, Map, Marker } from '@vis.gl/react-google-maps';
 
 export default function CampaignMap() {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
+  const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID;
 
   // Houston, TX center point
   const center = { lat: 29.7604, lng: -95.3698 };
@@ -22,7 +23,7 @@ export default function CampaignMap() {
         <Map
           defaultCenter={center}
           defaultZoom={10}
-          mapId="campaign-map"
+          {...(mapId && { mapId })}
           style={{ width: '100%', height: '100%' }}
         >
           <Marker position={center} />
