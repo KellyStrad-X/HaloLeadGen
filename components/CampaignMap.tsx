@@ -1,8 +1,10 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { APIProvider, Map, AdvancedMarker, Pin } from '@vis.gl/react-google-maps';
 import { useAuth } from '@/lib/auth-context';
+import MapModal from './MapModal';
 
 interface Location {
   lat: number;
@@ -39,6 +41,7 @@ function getStatusText(campaign: Campaign): string {
 
 export default function CampaignMap() {
   const { user } = useAuth();
+  const router = useRouter();
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
   const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID;
 
@@ -46,6 +49,11 @@ export default function CampaignMap() {
   const [loading, setLoading] = useState(true);
   const [mapCenter, setMapCenter] = useState<Location>({ lat: 29.7604, lng: -95.3698 });
   const [mapZoom, setMapZoom] = useState(10);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleMarkerClick = (campaignId: string) => {
+    router.push(`/dashboard/campaigns/${campaignId}`);
+  };
 
   const fetchCampaigns = useCallback(async () => {
     if (!user || !apiKey) {
@@ -153,54 +161,88 @@ export default function CampaignMap() {
   }
 
   return (
-    <div className="space-y-3">
-      {/* Legend */}
-      <div className="flex flex-wrap gap-4 text-sm">
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-cyan-400"></div>
-          <span className="text-gray-300">Active</span>
+    <>
+      <div className="space-y-3">
+        {/* Legend and Expand Button */}
+        <div className="flex items-center justify-between">
+          <div className="flex flex-wrap gap-4 text-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-cyan-400"></div>
+              <span className="text-gray-300">Active</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-green-400"></div>
+              <span className="text-gray-300">Completed</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-orange-400"></div>
+              <span className="text-gray-300">Pending</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-gray-400"></div>
+              <span className="text-gray-300">Inactive</span>
+            </div>
+          </div>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-2 text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
+              />
+            </svg>
+            Expand
+          </button>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-green-400"></div>
-          <span className="text-gray-300">Completed</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-orange-400"></div>
-          <span className="text-gray-300">Pending</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-gray-400"></div>
-          <span className="text-gray-300">Inactive</span>
+
+        {/* Map */}
+        <div className="h-[400px] w-full rounded-lg overflow-hidden">
+          <APIProvider apiKey={apiKey}>
+            <Map
+              defaultCenter={mapCenter}
+              defaultZoom={mapZoom}
+              {...(mapId && { mapId })}
+              style={{ width: '100%', height: '100%' }}
+            >
+              {campaigns.map((campaign) =>
+                campaign.location ? (
+                  <AdvancedMarker
+                    key={campaign.id}
+                    position={campaign.location}
+                    title={`${campaign.campaignName}\n${getStatusText(campaign)}\n${campaign.showcaseAddress || ''}`}
+                    onClick={() => handleMarkerClick(campaign.id)}
+                  >
+                    <Pin
+                      background={getMarkerColor(campaign)}
+                      borderColor="#1e293b"
+                      glyphColor="#1e293b"
+                    />
+                  </AdvancedMarker>
+                ) : null
+              )}
+            </Map>
+          </APIProvider>
         </div>
       </div>
 
-      {/* Map */}
-      <div className="h-[400px] w-full rounded-lg overflow-hidden">
-        <APIProvider apiKey={apiKey}>
-          <Map
-            defaultCenter={mapCenter}
-            defaultZoom={mapZoom}
-            {...(mapId && { mapId })}
-            style={{ width: '100%', height: '100%' }}
-          >
-            {campaigns.map((campaign) => (
-              campaign.location && (
-                <AdvancedMarker
-                  key={campaign.id}
-                  position={campaign.location}
-                  title={`${campaign.campaignName}\n${getStatusText(campaign)}\n${campaign.showcaseAddress || ''}`}
-                >
-                  <Pin
-                    background={getMarkerColor(campaign)}
-                    borderColor="#1e293b"
-                    glyphColor="#1e293b"
-                  />
-                </AdvancedMarker>
-              )
-            ))}
-          </Map>
-        </APIProvider>
-      </div>
-    </div>
+      {/* Full-Screen Modal */}
+      <MapModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        campaigns={campaigns}
+        center={mapCenter}
+        zoom={mapZoom}
+        onMarkerClick={handleMarkerClick}
+      />
+    </>
   );
 }
