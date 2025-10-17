@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
+import CampaignMap from '@/components/CampaignMap';
 
 interface DashboardStats {
   totalCampaigns: number;
@@ -128,6 +129,12 @@ export default function DashboardPage() {
           value={stats.recentLeads}
           color="purple"
         />
+      </div>
+
+      {/* Campaign Map */}
+      <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-6 shadow-lg">
+        <h2 className="text-xl font-semibold text-white mb-4">Campaign Locations</h2>
+        <CampaignMap />
       </div>
 
       {/* Quick Actions */}
