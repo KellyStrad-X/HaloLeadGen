@@ -504,9 +504,17 @@ function BadgesTab({ selectedBadges, setSelectedBadges }: any) {
                   }
                 `}
               >
-                {/* Placeholder badge image */}
-                <div className="h-16 w-full mb-3 bg-slate-600 rounded flex items-center justify-center">
-                  <span className="text-2xl">🏆</span>
+                {/* Badge image placeholder */}
+                <div className="h-16 w-full mb-3 bg-slate-600 rounded flex items-center justify-center overflow-hidden">
+                  <img
+                    src={`/trust-badges/${badge.id}.png`}
+                    alt={badge.name}
+                    className="w-full h-full object-contain"
+                    onError={(e) => {
+                      // Hide image if it fails to load (no file exists yet)
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
                 </div>
 
                 <p className="text-xs text-center text-gray-300 font-medium leading-tight">
@@ -530,7 +538,7 @@ function BadgesTab({ selectedBadges, setSelectedBadges }: any) {
       {/* Helper text */}
       <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-4">
         <p className="text-sm text-cyan-300">
-          <strong>Note:</strong> Badge images are placeholders (🏆). You can replace them later with actual badge images in <code className="bg-slate-700 px-1 rounded">/public/trust-badges/</code>
+          <strong>Note:</strong> Add badge images as PNG files to <code className="bg-slate-700 px-1 rounded">/public/trust-badges/</code> using the badge ID as the filename (e.g., <code className="bg-slate-700 px-1 rounded">gaf-master-elite.png</code>). Empty boxes will show until images are added.
         </p>
       </div>
     </div>
