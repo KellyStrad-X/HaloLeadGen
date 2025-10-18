@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/auth-context';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, createContext, useContext } from 'react';
+import BrandingSettingsModal from '@/components/BrandingSettingsModal';
 
 type DashboardTab = 'overview' | 'analytics' | 'campaigns';
 
@@ -33,6 +34,7 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<DashboardTab>('overview');
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
 
   if (loading) {
     return (
@@ -114,14 +116,25 @@ export default function DashboardLayout({
               {/* Quick Actions - Only show on dashboard */}
               {showTabs && (
                 <>
+                  <button
+                    onClick={() => setShowSettingsModal(true)}
+                    className="hidden sm:flex items-center gap-2 border border-slate-600 hover:bg-slate-700 text-gray-200 px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span className="hidden lg:inline">Branding</span>
+                  </button>
+
                   <Link
                     href="/create-campaign"
-                    className="hidden lg:flex items-center gap-2 bg-cyan-500 hover:bg-cyan-600 text-black px-3 py-2 rounded-lg text-sm font-semibold transition-colors"
+                    className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-600 text-black px-3 py-2 rounded-lg text-sm font-semibold transition-colors"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                     </svg>
-                    New Campaign
+                    <span className="hidden lg:inline">New Campaign</span>
                   </Link>
                 </>
               )}
@@ -239,6 +252,12 @@ export default function DashboardLayout({
           </div>
         </div>
       </footer>
+
+      {/* Branding Settings Modal */}
+      <BrandingSettingsModal
+        isOpen={showSettingsModal}
+        onClose={() => setShowSettingsModal(false)}
+      />
     </div>
     </DashboardContext.Provider>
   );
