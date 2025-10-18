@@ -164,36 +164,36 @@ export default function BrandingSettingsModal({ isOpen, onClose }: BrandingSetti
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+        className="fixed inset-0 bg-black bg-opacity-70 transition-opacity"
         onClick={onClose}
       />
 
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
         <div
-          className="relative bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
+          className="relative bg-slate-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-            <h2 className="text-2xl font-bold text-gray-900">Branding Settings</h2>
+          <div className="flex items-center justify-between border-b border-slate-700 px-6 py-4">
+            <h2 className="text-2xl font-bold text-white">Settings</h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-gray-400 hover:text-gray-300 transition-colors"
             >
               <X className="w-6 h-6" />
             </button>
           </div>
 
           {/* Tabs */}
-          <div className="border-b border-gray-200 px-6">
+          <div className="border-b border-slate-700 px-6">
             <nav className="flex gap-8">
               <button
                 onClick={() => setActiveTab('company')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === 'company'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    ? 'border-cyan-400 text-cyan-400'
+                    : 'border-transparent text-gray-400 hover:text-gray-300'
                 }`}
               >
                 Company
@@ -202,8 +202,8 @@ export default function BrandingSettingsModal({ isOpen, onClose }: BrandingSetti
                 onClick={() => setActiveTab('badges')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === 'badges'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    ? 'border-cyan-400 text-cyan-400'
+                    : 'border-transparent text-gray-400 hover:text-gray-300'
                 }`}
               >
                 Trust Badges
@@ -212,8 +212,8 @@ export default function BrandingSettingsModal({ isOpen, onClose }: BrandingSetti
                 onClick={() => setActiveTab('team')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === 'team'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    ? 'border-cyan-400 text-cyan-400'
+                    : 'border-transparent text-gray-400 hover:text-gray-300'
                 }`}
               >
                 Meet the Team
@@ -254,17 +254,17 @@ export default function BrandingSettingsModal({ isOpen, onClose }: BrandingSetti
           </div>
 
           {/* Footer */}
-          <div className="border-t border-gray-200 px-6 py-4 bg-gray-50 flex justify-end gap-3">
+          <div className="border-t border-slate-700 px-6 py-4 bg-slate-900 flex justify-end gap-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+              className="px-4 py-2 border border-slate-600 rounded-lg text-gray-300 hover:bg-slate-700 transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-2 bg-cyan-500 text-black rounded-lg hover:bg-cyan-600 disabled:bg-slate-600 disabled:text-slate-400 disabled:cursor-not-allowed transition-colors font-semibold"
             >
               {isSaving ? 'Saving...' : 'Save Changes'}
             </button>
@@ -309,14 +309,14 @@ function CompanyTab({
     <div className="space-y-8">
       {/* Logo Upload */}
       <div>
-        <label className="block font-medium text-gray-900 mb-1">Company Logo</label>
-        <p className="text-sm text-gray-500 mb-3">
+        <label className="block font-medium text-white mb-1">Company Logo</label>
+        <p className="text-sm text-gray-400 mb-3">
           Appears on your QR landing pages (recommended: 400x100px, max 2MB)
         </p>
 
         {logoUrl ? (
           <div className="relative inline-block">
-            <div className="w-64 h-32 border border-gray-300 rounded-lg p-4 bg-white">
+            <div className="w-64 h-32 border border-slate-600 rounded-lg p-4 bg-slate-700">
               <img
                 src={logoUrl}
                 alt="Logo preview"
@@ -331,14 +331,14 @@ function CompanyTab({
             </button>
           </div>
         ) : (
-          <label className="border-2 border-dashed border-gray-300 rounded-lg p-8 cursor-pointer hover:border-blue-500 transition-colors block w-64 text-center">
+          <label className="border-2 border-dashed border-slate-600 rounded-lg p-8 cursor-pointer hover:border-cyan-400 transition-colors block w-64 text-center bg-slate-700">
             <input
               type="file"
               accept="image/*"
               onChange={handleLogoUpload}
               className="hidden"
             />
-            <div className="text-gray-500">
+            <div className="text-gray-400">
               <div className="mb-2 text-4xl">📤</div>
               <span className="text-sm">Click to upload logo</span>
             </div>
@@ -348,10 +348,10 @@ function CompanyTab({
 
       {/* Tagline */}
       <div>
-        <label className="block font-medium text-gray-900 mb-1">
-          Company Tagline <span className="text-gray-500 font-normal">(Optional)</span>
+        <label className="block font-medium text-white mb-1">
+          Company Tagline <span className="text-gray-400 font-normal">(Optional)</span>
         </label>
-        <p className="text-sm text-gray-500 mb-3">
+        <p className="text-sm text-gray-400 mb-3">
           Shown below your company name on QR pages
         </p>
         <input
@@ -360,17 +360,17 @@ function CompanyTab({
           placeholder="e.g., Your trusted roofing experts since 1995"
           value={tagline}
           onChange={(e) => setTagline(e.target.value)}
-          className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
         />
-        <p className="text-xs text-gray-400 mt-1">{tagline.length}/100</p>
+        <p className="text-xs text-gray-500 mt-1">{tagline.length}/100</p>
       </div>
 
       {/* Brand Colors */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Primary Color */}
         <div>
-          <label className="block font-medium text-gray-900 mb-1">Primary Color</label>
-          <p className="text-sm text-gray-500 mb-3">
+          <label className="block font-medium text-white mb-1">Primary Color</label>
+          <p className="text-sm text-gray-400 mb-3">
             Used for headlines, buttons, and links
           </p>
           <div className="flex items-center gap-3">
@@ -378,24 +378,24 @@ function CompanyTab({
               type="color"
               value={primaryColor}
               onChange={(e) => setPrimaryColor(e.target.value)}
-              className="w-14 h-14 rounded-lg border border-gray-300 cursor-pointer"
+              className="w-14 h-14 rounded-lg border border-slate-600 cursor-pointer bg-slate-700"
             />
             <input
               type="text"
               value={primaryColor}
               onChange={(e) => setPrimaryColor(e.target.value)}
               placeholder="#2563eb"
-              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white font-mono text-sm focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
             />
           </div>
         </div>
 
         {/* Secondary Color */}
         <div>
-          <label className="block font-medium text-gray-900 mb-1">
-            Secondary Color <span className="text-gray-500 font-normal">(Optional)</span>
+          <label className="block font-medium text-white mb-1">
+            Secondary Color <span className="text-gray-400 font-normal">(Optional)</span>
           </label>
-          <p className="text-sm text-gray-500 mb-3">
+          <p className="text-sm text-gray-400 mb-3">
             Used for accents and highlights
           </p>
           <div className="flex items-center gap-3">
@@ -403,22 +403,22 @@ function CompanyTab({
               type="color"
               value={secondaryColor}
               onChange={(e) => setSecondaryColor(e.target.value)}
-              className="w-14 h-14 rounded-lg border border-gray-300 cursor-pointer"
+              className="w-14 h-14 rounded-lg border border-slate-600 cursor-pointer bg-slate-700"
             />
             <input
               type="text"
               value={secondaryColor}
               onChange={(e) => setSecondaryColor(e.target.value)}
               placeholder="#10b981"
-              className="flex-1 border border-gray-300 rounded-lg px-3 py-2 font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white font-mono text-sm focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
             />
           </div>
         </div>
       </div>
 
       {/* Live Preview */}
-      <div className="border border-gray-200 rounded-lg p-6 bg-gray-50">
-        <p className="text-sm text-gray-600 mb-4 font-medium">Preview:</p>
+      <div className="border border-slate-600 rounded-lg p-6 bg-slate-900">
+        <p className="text-sm text-gray-400 mb-4 font-medium">Preview:</p>
         <div className="space-y-4">
           <h3
             className="text-3xl font-bold"
@@ -466,18 +466,18 @@ function BadgesTab({ selectedBadges, setSelectedBadges }: any) {
   return (
     <div className="space-y-6">
       <div>
-        <label className="block font-medium text-gray-900 mb-1">
+        <label className="block font-medium text-white mb-1">
           Select Your Certifications
         </label>
-        <p className="text-sm text-gray-500 mb-4">
+        <p className="text-sm text-gray-400 mb-4">
           Choose 3-6 badges to display on your QR landing pages
         </p>
 
         {/* Selected count */}
-        <div className="mb-6 text-sm text-gray-600">
-          Selected: <strong className="text-blue-600">{selectedBadges.length}/6</strong>
+        <div className="mb-6 text-sm text-gray-300">
+          Selected: <strong className="text-cyan-400">{selectedBadges.length}/6</strong>
           {selectedBadges.length < 3 && (
-            <span className="ml-2 text-orange-600">(Select at least 3)</span>
+            <span className="ml-2 text-orange-400">(Select at least 3)</span>
           )}
         </div>
 
@@ -495,8 +495,8 @@ function BadgesTab({ selectedBadges, setSelectedBadges }: any) {
                 className={`
                   relative border-2 rounded-lg p-4 transition-all
                   ${isSelected
-                    ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200'
-                    : 'border-gray-200 hover:border-gray-300 bg-white'
+                    ? 'border-cyan-400 bg-cyan-500/10 ring-2 ring-cyan-400/30'
+                    : 'border-slate-600 hover:border-slate-500 bg-slate-700'
                   }
                   ${isDisabled
                     ? 'opacity-40 cursor-not-allowed'
@@ -505,18 +505,18 @@ function BadgesTab({ selectedBadges, setSelectedBadges }: any) {
                 `}
               >
                 {/* Placeholder badge image */}
-                <div className="h-16 w-full mb-3 bg-gray-100 rounded flex items-center justify-center">
+                <div className="h-16 w-full mb-3 bg-slate-600 rounded flex items-center justify-center">
                   <span className="text-2xl">🏆</span>
                 </div>
 
-                <p className="text-xs text-center text-gray-700 font-medium leading-tight">
+                <p className="text-xs text-center text-gray-300 font-medium leading-tight">
                   {badge.name}
                 </p>
 
                 {/* Checkmark if selected */}
                 {isSelected && (
-                  <div className="absolute top-2 right-2 bg-blue-500 rounded-full p-1">
-                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="absolute top-2 right-2 bg-cyan-500 rounded-full p-1">
+                    <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
@@ -528,9 +528,9 @@ function BadgesTab({ selectedBadges, setSelectedBadges }: any) {
       </div>
 
       {/* Helper text */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <p className="text-sm text-blue-800">
-          <strong>Note:</strong> Badge images are placeholders (🏆). You can replace them later with actual badge images in <code className="bg-blue-100 px-1 rounded">/public/trust-badges/</code>
+      <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-4">
+        <p className="text-sm text-cyan-300">
+          <strong>Note:</strong> Badge images are placeholders (🏆). You can replace them later with actual badge images in <code className="bg-slate-700 px-1 rounded">/public/trust-badges/</code>
         </p>
       </div>
     </div>
@@ -586,8 +586,8 @@ function TeamTab({ teamMembers, setTeamMembers }: any) {
   return (
     <div className="space-y-6">
       <div>
-        <label className="block font-medium text-gray-900 mb-1">Team Members</label>
-        <p className="text-sm text-gray-500 mb-4">
+        <label className="block font-medium text-white mb-1">Team Members</label>
+        <p className="text-sm text-gray-400 mb-4">
           Showcase 1-2 key team members on your QR landing pages
         </p>
 
@@ -596,7 +596,7 @@ function TeamTab({ teamMembers, setTeamMembers }: any) {
           {teamMembers.map((member: any) => (
             <div
               key={member.id}
-              className="border border-gray-200 rounded-lg p-4 bg-gray-50"
+              className="border border-slate-600 rounded-lg p-4 bg-slate-700"
             >
               <div className="flex items-start gap-4">
                 {/* Photo */}
@@ -606,7 +606,7 @@ function TeamTab({ teamMembers, setTeamMembers }: any) {
                       <img
                         src={member.photoUrl}
                         alt={member.name || 'Team member'}
-                        className="w-full h-full rounded-full object-cover border-2 border-gray-300"
+                        className="w-full h-full rounded-full object-cover border-2 border-slate-500"
                       />
                       <button
                         onClick={() => removeMemberPhoto(member.id)}
@@ -617,7 +617,7 @@ function TeamTab({ teamMembers, setTeamMembers }: any) {
                       </button>
                     </div>
                   ) : (
-                    <label className="w-20 h-20 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-blue-500 bg-white">
+                    <label className="w-20 h-20 rounded-full border-2 border-dashed border-slate-500 flex items-center justify-center cursor-pointer hover:border-cyan-400 bg-slate-600">
                       <input
                         type="file"
                         accept="image/*"
@@ -636,14 +636,14 @@ function TeamTab({ teamMembers, setTeamMembers }: any) {
                     placeholder="Full Name"
                     value={member.name}
                     onChange={(e) => updateMember(member.id, 'name', e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
                   />
                   <input
                     type="text"
                     placeholder="Title (e.g., Owner, Lead Installer)"
                     value={member.title}
                     onChange={(e) => updateMember(member.id, 'title', e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
                   />
                   <div className="grid grid-cols-2 gap-2">
                     <input
@@ -651,7 +651,7 @@ function TeamTab({ teamMembers, setTeamMembers }: any) {
                       placeholder="Years Experience"
                       value={member.yearsExperience}
                       onChange={(e) => updateMember(member.id, 'yearsExperience', e.target.value)}
-                      className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
                     />
                     <input
                       type="text"
@@ -664,7 +664,7 @@ function TeamTab({ teamMembers, setTeamMembers }: any) {
                           e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean)
                         )
                       }
-                      className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
                     />
                   </div>
                 </div>
@@ -672,7 +672,7 @@ function TeamTab({ teamMembers, setTeamMembers }: any) {
                 {/* Remove button */}
                 <button
                   onClick={() => removeMember(member.id)}
-                  className="text-red-500 hover:text-red-700 p-1"
+                  className="text-red-400 hover:text-red-300 p-1"
                   type="button"
                 >
                   <X className="w-5 h-5" />
@@ -687,14 +687,14 @@ function TeamTab({ teamMembers, setTeamMembers }: any) {
           <button
             onClick={addTeamMember}
             type="button"
-            className="w-full border-2 border-dashed border-gray-300 rounded-lg py-4 text-gray-500 hover:border-blue-500 hover:text-blue-500 transition-colors"
+            className="w-full border-2 border-dashed border-slate-600 rounded-lg py-4 text-gray-400 hover:border-cyan-400 hover:text-cyan-400 transition-colors"
           >
             + Add Team Member ({teamMembers.length}/2)
           </button>
         )}
 
         {teamMembers.length === 0 && (
-          <p className="text-sm text-gray-500 text-center mt-4">
+          <p className="text-sm text-gray-400 text-center mt-4">
             No team members added yet. Click the button above to add your first team member.
           </p>
         )}
