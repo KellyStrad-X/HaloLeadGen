@@ -194,10 +194,12 @@ export default function MapModal({
                         position={campaign.location}
                         pixelOffset={[0, -40]}
                         onCloseClick={() => setHoveredCampaign(null)}
-                        onMouseEnter={() => handleMarkerHover(campaign.id)}
-                        onMouseLeave={handleMarkerLeave}
                       >
-                        <div className="p-2 min-w-[200px]">
+                        <div
+                          className="p-2 min-w-[200px]"
+                          onMouseEnter={() => handleMarkerHover(campaign.id)}
+                          onMouseLeave={handleMarkerLeave}
+                        >
                           <h3 className="font-bold text-gray-900 mb-2">
                             {campaign.campaignName}
                           </h3>

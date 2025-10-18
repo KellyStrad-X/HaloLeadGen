@@ -1,8 +1,10 @@
 import { notFound } from 'next/navigation';
 import type { CampaignData } from '@/lib/firestore';
-import { getCampaignDataBySlugAdmin } from '@/lib/firestore-admin';
+import { getCampaignDataBySlugAdmin, getContractorBrandingAdmin } from '@/lib/firestore-admin';
 import PhotoGallery from '@/components/PhotoGallery';
 import LeadForm from '@/components/LeadForm';
+import TrustBadges from '@/components/TrustBadges';
+import MeetTheCrew from '@/components/MeetTheCrew';
 
 interface CampaignPageProps {
   params: Promise<{
@@ -18,6 +20,9 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
     notFound();
   }
 
+  // Fetch contractor branding
+  const branding = await getContractorBrandingAdmin(campaignData.contractorId);
+
   const location =
     campaignData.showcaseAddress ||
     campaignData.neighborhoodName ||
@@ -26,22 +31,36 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
   const contractorName = campaignData.contractor.company || campaignData.contractor.name || 'Local Contractor';
   const contractorPhone = campaignData.contractor.phone?.trim();
 
+  // Branding defaults
+  const primaryColor = branding?.primaryColor || '#2563eb';
+  const tagline = branding?.tagline || 'Professional roofing services from your local experts';
+
   return (
     <main className="min-h-screen bg-white">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">
-                {contractorName}
-              </h1>
+            <div className="flex items-center gap-4">
+              {branding?.companyLogo && (
+                <img
+                  src={branding.companyLogo}
+                  alt={contractorName}
+                  className="h-12 w-auto object-contain"
+                />
+              )}
+              {!branding?.companyLogo && (
+                <h1 className="text-xl font-bold text-gray-900">
+                  {contractorName}
+                </h1>
+              )}
             </div>
             {contractorPhone && (
               <div className="text-right">
                 <a
                   href={`tel:${contractorPhone}`}
-                  className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+                  className="text-sm font-semibold hover:opacity-80 transition-opacity"
+                  style={{ color: primaryColor }}
                 >
                   {contractorPhone}
                 </a>
@@ -57,10 +76,10 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
           <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 mb-4 leading-tight">
             Free Roof Inspections
             <br />
-            <span className="text-blue-600">{location}</span>
+            <span style={{ color: primaryColor }}>{location}</span>
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            Professional roofing services from your local experts
+            {tagline}
           </p>
 
           {/* Trust Signals - Inline */}
@@ -80,6 +99,11 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
           </div>
         </div>
       </section>
+
+      {/* Trust Badges */}
+      {branding?.trustBadges && branding.trustBadges.length > 0 && (
+        <TrustBadges badges={branding.trustBadges} />
+      )}
 
       {/* Photo Gallery */}
       <section className="py-12 px-4 bg-white">
@@ -109,6 +133,11 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
           )}
         </div>
       </section>
+
+      {/* Meet the Crew */}
+      {branding?.crewMembers && branding.crewMembers.length > 0 && (
+        <MeetTheCrew members={branding.crewMembers} tagline={branding.tagline} />
+      )}
 
       {/* Call to Action */}
       <section className="py-12 px-4 bg-gray-50">
@@ -146,13 +175,13 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
       <section className="py-16 px-4 bg-white">
         <div className="max-w-2xl mx-auto">
           <h2 className="text-4xl font-bold text-gray-900 mb-3 text-center">
-            Request Your <span className="text-blue-600">Free Inspection</span>
+            Request Your <span style={{ color: primaryColor }}>Free Inspection</span>
           </h2>
           <p className="text-gray-600 text-center mb-10">
             Fill out the form below and we'll contact you within 24 hours
           </p>
 
-          <LeadForm campaignId={campaignData.id} />
+          <LeadForm campaignId={campaignData.id} primaryColor={primaryColor} />
         </div>
       </section>
 

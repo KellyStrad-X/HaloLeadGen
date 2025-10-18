@@ -4,6 +4,7 @@ import { useState, FormEvent } from 'react';
 
 interface LeadFormProps {
   campaignId: string; // Firestore uses string IDs
+  primaryColor?: string; // Optional contractor branding color
 }
 
 interface FormData {
@@ -21,7 +22,7 @@ interface FormErrors {
   phone?: string;
 }
 
-export default function LeadForm({ campaignId }: LeadFormProps) {
+export default function LeadForm({ campaignId, primaryColor = '#2563eb' }: LeadFormProps) {
   const [formData, setFormData] = useState<FormData>({
     name: '',
     address: '',
@@ -152,7 +153,8 @@ export default function LeadForm({ campaignId }: LeadFormProps) {
         </div>
         <button
           onClick={() => setSubmitStatus('idle')}
-          className="text-blue-600 hover:text-blue-700 font-medium transition-colors text-sm"
+          style={{ color: primaryColor }}
+          className="hover:opacity-80 font-medium transition-opacity text-sm"
         >
           Submit another request
         </button>
@@ -179,9 +181,12 @@ export default function LeadForm({ campaignId }: LeadFormProps) {
             id="name"
             value={formData.name}
             onChange={(e) => handleChange('name', e.target.value)}
+            style={{
+              '--tw-ring-color': primaryColor,
+            } as React.CSSProperties}
             className={`w-full px-4 py-3 bg-white border ${
               errors.name ? 'border-red-500' : 'border-gray-300'
-            } rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
+            } rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all`}
             placeholder="John Smith"
             disabled={isSubmitting}
           />
@@ -200,9 +205,12 @@ export default function LeadForm({ campaignId }: LeadFormProps) {
             id="address"
             value={formData.address}
             onChange={(e) => handleChange('address', e.target.value)}
+            style={{
+              '--tw-ring-color': primaryColor,
+            } as React.CSSProperties}
             className={`w-full px-4 py-3 bg-white border ${
               errors.address ? 'border-red-500' : 'border-gray-300'
-            } rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
+            } rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all`}
             placeholder="123 Oak Street, Dallas TX 75001"
             disabled={isSubmitting}
           />
@@ -221,9 +229,12 @@ export default function LeadForm({ campaignId }: LeadFormProps) {
             id="email"
             value={formData.email}
             onChange={(e) => handleChange('email', e.target.value)}
+            style={{
+              '--tw-ring-color': primaryColor,
+            } as React.CSSProperties}
             className={`w-full px-4 py-3 bg-white border ${
               errors.email ? 'border-red-500' : 'border-gray-300'
-            } rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
+            } rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all`}
             placeholder="john@example.com"
             disabled={isSubmitting}
           />
@@ -242,9 +253,12 @@ export default function LeadForm({ campaignId }: LeadFormProps) {
             id="phone"
             value={formData.phone}
             onChange={(e) => handleChange('phone', e.target.value)}
+            style={{
+              '--tw-ring-color': primaryColor,
+            } as React.CSSProperties}
             className={`w-full px-4 py-3 bg-white border ${
               errors.phone ? 'border-red-500' : 'border-gray-300'
-            } rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
+            } rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all`}
             placeholder="(214) 555-1234"
             disabled={isSubmitting}
           />
@@ -263,7 +277,10 @@ export default function LeadForm({ campaignId }: LeadFormProps) {
             value={formData.notes}
             onChange={(e) => handleChange('notes', e.target.value)}
             rows={4}
-            className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
+            style={{
+              '--tw-ring-color': primaryColor,
+            } as React.CSSProperties}
+            className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:border-transparent transition-all resize-none"
             placeholder="Tell us about any specific concerns or questions..."
             disabled={isSubmitting}
           />
@@ -273,7 +290,10 @@ export default function LeadForm({ campaignId }: LeadFormProps) {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-4 px-6 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-[1.02] disabled:hover:scale-100"
+          style={{
+            backgroundColor: isSubmitting ? '#9ca3af' : primaryColor,
+          }}
+          className="w-full disabled:cursor-not-allowed text-white font-bold py-4 px-6 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-[1.02] disabled:hover:scale-100 hover:opacity-90"
         >
           {isSubmitting ? (
             <span className="flex items-center justify-center">

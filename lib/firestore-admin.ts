@@ -638,3 +638,50 @@ export async function getDashboardCampaignDetailsAdmin(
     leads,
   };
 }
+
+// Contractor Branding Types
+export interface CrewMember {
+  id: string;
+  name: string;
+  title: string;
+  photoUrl: string;
+  yearsExperience?: string;
+  certifications?: string[];
+}
+
+export interface ContractorBranding {
+  companyLogo?: string;
+  tagline?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
+  trustBadges?: string[];
+  crewMembers?: CrewMember[];
+}
+
+/**
+ * Fetch contractor branding settings for QR landing page
+ */
+export async function getContractorBrandingAdmin(
+  contractorId: string
+): Promise<ContractorBranding | null> {
+  const adminDb = getAdminFirestore();
+  const brandingDoc = await adminDb
+    .collection('contractor_branding')
+    .doc(contractorId)
+    .get();
+
+  if (!brandingDoc.exists) {
+    return null;
+  }
+
+  const data = brandingDoc.data() || {};
+
+  return {
+    companyLogo: (data.companyLogo as string | undefined) || undefined,
+    tagline: (data.tagline as string | undefined) || undefined,
+    primaryColor: (data.primaryColor as string | undefined) || undefined,
+    secondaryColor: (data.secondaryColor as string | undefined) || undefined,
+    trustBadges: (data.trustBadges as string[] | undefined) || undefined,
+    crewMembers: (data.crewMembers as CrewMember[] | undefined) || undefined,
+  };
+}
