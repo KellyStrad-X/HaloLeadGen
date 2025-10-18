@@ -52,7 +52,7 @@ export default function LandingPage() {
     <main className="min-h-screen">
       {/* Sticky Navigation Header */}
       <header className="sticky top-0 z-50 bg-slate-900 border-b border-slate-700 shadow-lg">
-        <div className="max-w-7xl mx-auto pl-1 pr-2 sm:px-4 lg:pl-4 lg:pr-6 py-0.5 md:py-1">
+        <div className="w-full pl-1 pr-2 sm:pl-2 lg:pl-6 lg:pr-8 py-0.5 md:py-1">
           <div className="flex items-center justify-between">
             {/* Logo */}
             <div className="flex items-center">
