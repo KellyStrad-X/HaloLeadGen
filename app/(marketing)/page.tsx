@@ -51,7 +51,7 @@ export default function LandingPage() {
   return (
     <main className="min-h-screen">
       {/* Sticky Navigation Header */}
-      <header className="sticky top-0 z-50 bg-slate-900 border-b border-slate-700 shadow-lg">
+      <header className="sticky top-0 z-50 bg-neutral-900 border-b border-neutral-700 shadow-lg">
         <div className="w-full pl-1 pr-2 sm:pl-2 lg:pl-6 lg:pr-8 py-0.5 md:py-1">
           <div className="flex items-center justify-between">
             {/* Logo */}
@@ -115,7 +115,7 @@ export default function LandingPage() {
 
         {/* Mobile Menu Dropdown */}
         <div
-          className={`md:hidden bg-slate-800 border-t border-slate-700 overflow-hidden transition-all duration-300 ease-in-out ${
+          className={`md:hidden bg-neutral-800 border-t border-neutral-700 overflow-hidden transition-all duration-300 ease-in-out ${
             mobileMenuOpen ? 'max-h-48 opacity-100' : 'max-h-0 opacity-0'
           }`}
         >
@@ -125,7 +125,7 @@ export default function LandingPage() {
                 scrollToSection('how-it-works');
                 setMobileMenuOpen(false);
               }}
-              className="text-gray-300 hover:text-cyan-400 hover:bg-slate-700 transition-colors px-4 py-3 text-left font-medium"
+              className="text-gray-300 hover:text-cyan-400 hover:bg-neutral-700 transition-colors px-4 py-3 text-left font-medium"
             >
               How It Works
             </button>
@@ -134,7 +134,7 @@ export default function LandingPage() {
                 scrollToSection('demo-video');
                 setMobileMenuOpen(false);
               }}
-              className="text-gray-300 hover:text-cyan-400 hover:bg-slate-700 transition-colors px-4 py-3 text-left font-medium"
+              className="text-gray-300 hover:text-cyan-400 hover:bg-neutral-700 transition-colors px-4 py-3 text-left font-medium"
             >
               Demo Video
             </button>
@@ -143,7 +143,7 @@ export default function LandingPage() {
                 scrollToSection('dashboard-preview');
                 setMobileMenuOpen(false);
               }}
-              className="text-gray-300 hover:text-cyan-400 hover:bg-slate-700 transition-colors px-4 py-3 text-left font-medium"
+              className="text-gray-300 hover:text-cyan-400 hover:bg-neutral-700 transition-colors px-4 py-3 text-left font-medium"
             >
               Dashboard Preview
             </button>

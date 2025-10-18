@@ -290,14 +290,66 @@ function CompanyTab({
 }: any) {
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
+    if (!file) return;
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Logo file must be under 2MB');
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please upload an image file (PNG, JPG, etc.)');
+      return;
+    }
+
+    // Load image to check dimensions
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+
+      const { width, height } = img;
+
+      // Recommend dimensions but allow flexibility
+      // Warn if aspect ratio is way off (should be roughly horizontal)
+      if (width < height) {
+        const proceed = confirm(
+          `Warning: This logo appears to be vertical (${width}x${height}px).\n\n` +
+          `Recommended: Horizontal logos work best (e.g., 400x100px).\n\n` +
+          `Continue anyway?`
+        );
+        if (!proceed) return;
+      }
+
+      // Warn if logo is too large (will be displayed at max 100px width)
+      if (width > 800 || height > 200) {
+        const proceed = confirm(
+          `This logo is quite large (${width}x${height}px).\n\n` +
+          `It will be displayed at max 100px width on your pages.\n\n` +
+          `For best quality, consider using an image around 400x100px.\n\n` +
+          `Continue anyway?`
+        );
+        if (!proceed) return;
+      }
+
+      // If all checks pass, read the file
       setLogoFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setLogoUrl(reader.result as string);
       };
       reader.readAsDataURL(file);
-    }
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      alert('Failed to load image. Please try a different file.');
+    };
+
+    img.src = objectUrl;
   };
 
   const removeLogo = () => {
@@ -311,7 +363,7 @@ function CompanyTab({
       <div>
         <label className="block font-medium text-white mb-1">Company Logo</label>
         <p className="text-sm text-gray-400 mb-3">
-          Appears on your QR landing pages (recommended: 400x100px, max 2MB)
+          Appears on your QR landing pages at 100px width. Best quality: horizontal logos around 400x100px, max 2MB.
         </p>
 
         {logoUrl ? (

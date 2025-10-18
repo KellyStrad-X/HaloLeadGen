@@ -40,7 +40,7 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
   return (
     <main className="min-h-screen bg-white">
       {/* Header - Dark, ultra-thin, sticky */}
-      <header className="sticky top-0 z-50 bg-slate-900 border-b border-slate-700 shadow-lg">
+      <header className="sticky top-0 z-50 bg-neutral-900 border-b border-neutral-700 shadow-lg">
         <div className="w-full pl-1 pr-2 sm:pl-2 lg:pl-6 lg:pr-8 py-0.5 md:py-1">
           <div className="flex items-center justify-between">
             {/* Logo - Far left */}
@@ -65,7 +65,7 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
               {contractorEmail && (
                 <a
                   href={`mailto:${contractorEmail}`}
-                  className="p-2 rounded-lg hover:bg-slate-800 transition-colors text-cyan-400 hover:text-cyan-300"
+                  className="p-2 rounded-lg hover:bg-neutral-800 transition-colors text-cyan-400 hover:text-cyan-300"
                   aria-label="Email contractor"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -76,7 +76,7 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
               {contractorPhone && (
                 <a
                   href={`tel:${contractorPhone}`}
-                  className="p-2 rounded-lg hover:bg-slate-800 transition-colors text-cyan-400 hover:text-cyan-300"
+                  className="p-2 rounded-lg hover:bg-neutral-800 transition-colors text-cyan-400 hover:text-cyan-300"
                   aria-label="Call contractor"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
