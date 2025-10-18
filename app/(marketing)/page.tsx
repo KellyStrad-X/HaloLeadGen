@@ -52,7 +52,7 @@ export default function LandingPage() {
     <main className="min-h-screen">
       {/* Sticky Navigation Header */}
       <header className="sticky top-0 z-50 bg-slate-900 border-b border-slate-700 shadow-lg">
-        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 py-1">
+        <div className="max-w-7xl mx-auto pl-1 pr-2 sm:px-4 lg:pl-4 lg:pr-6 py-0.5 md:py-1">
           <div className="flex items-center justify-between">
             {/* Logo */}
             <div className="flex items-center">
@@ -114,39 +114,41 @@ export default function LandingPage() {
         </div>
 
         {/* Mobile Menu Dropdown */}
-        {mobileMenuOpen && (
-          <div className="md:hidden bg-slate-800 border-t border-slate-700">
-            <nav className="flex flex-col py-2">
-              <button
-                onClick={() => {
-                  scrollToSection('how-it-works');
-                  setMobileMenuOpen(false);
-                }}
-                className="text-gray-300 hover:text-cyan-400 hover:bg-slate-700 transition-colors px-4 py-3 text-left font-medium"
-              >
-                How It Works
-              </button>
-              <button
-                onClick={() => {
-                  scrollToSection('demo-video');
-                  setMobileMenuOpen(false);
-                }}
-                className="text-gray-300 hover:text-cyan-400 hover:bg-slate-700 transition-colors px-4 py-3 text-left font-medium"
-              >
-                Demo Video
-              </button>
-              <button
-                onClick={() => {
-                  scrollToSection('dashboard-preview');
-                  setMobileMenuOpen(false);
-                }}
-                className="text-gray-300 hover:text-cyan-400 hover:bg-slate-700 transition-colors px-4 py-3 text-left font-medium"
-              >
-                Dashboard Preview
-              </button>
-            </nav>
-          </div>
-        )}
+        <div
+          className={`md:hidden bg-slate-800 border-t border-slate-700 overflow-hidden transition-all duration-300 ease-in-out ${
+            mobileMenuOpen ? 'max-h-48 opacity-100' : 'max-h-0 opacity-0'
+          }`}
+        >
+          <nav className="flex flex-col py-2">
+            <button
+              onClick={() => {
+                scrollToSection('how-it-works');
+                setMobileMenuOpen(false);
+              }}
+              className="text-gray-300 hover:text-cyan-400 hover:bg-slate-700 transition-colors px-4 py-3 text-left font-medium"
+            >
+              How It Works
+            </button>
+            <button
+              onClick={() => {
+                scrollToSection('demo-video');
+                setMobileMenuOpen(false);
+              }}
+              className="text-gray-300 hover:text-cyan-400 hover:bg-slate-700 transition-colors px-4 py-3 text-left font-medium"
+            >
+              Demo Video
+            </button>
+            <button
+              onClick={() => {
+                scrollToSection('dashboard-preview');
+                setMobileMenuOpen(false);
+              }}
+              className="text-gray-300 hover:text-cyan-400 hover:bg-slate-700 transition-colors px-4 py-3 text-left font-medium"
+            >
+              Dashboard Preview
+            </button>
+          </nav>
+        </div>
       </header>
 
       <MarketingHero onSubmit={handleFormSubmit} />
