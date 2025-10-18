@@ -39,36 +39,35 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
 
   return (
     <main className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      {/* Header - Dark, ultra-thin, sticky */}
+      <header className="sticky top-0 z-50 bg-slate-900 border-b border-slate-700 shadow-lg">
+        <div className="w-full pl-1 pr-2 sm:pl-2 lg:pl-6 lg:pr-8 py-0.5 md:py-1">
           <div className="flex items-center justify-between">
-            {/* Mobile: Centered logo, Desktop: Left-aligned */}
-            <div className="flex-1 flex justify-center sm:justify-start">
+            {/* Logo - Far left */}
+            <div className="flex items-center">
               {branding?.companyLogo && (
                 <img
                   src={branding.companyLogo}
                   alt={contractorName}
-                  className="h-12 w-auto object-contain"
+                  className="h-8 w-auto object-contain"
                 />
               )}
               {!branding?.companyLogo && (
-                <h1 className="text-xl font-bold text-gray-900">
+                <h1 className="text-lg font-bold text-gray-100">
                   {contractorName}
                 </h1>
               )}
             </div>
 
-            {/* Contact Buttons */}
+            {/* Contact Buttons - Far right */}
             <div className="flex items-center gap-2">
               {contractorEmail && (
                 <a
                   href={`mailto:${contractorEmail}`}
-                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                  style={{ color: primaryColor }}
+                  className="p-2 rounded-lg hover:bg-slate-800 transition-colors text-cyan-400 hover:text-cyan-300"
                   aria-label="Email contractor"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
                 </a>
@@ -76,11 +75,10 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
               {contractorPhone && (
                 <a
                   href={`tel:${contractorPhone}`}
-                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                  style={{ color: primaryColor }}
+                  className="p-2 rounded-lg hover:bg-slate-800 transition-colors text-cyan-400 hover:text-cyan-300"
                   aria-label="Call contractor"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                   </svg>
                 </a>
@@ -93,26 +91,26 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
       {/* Hero Section with Background Carousel */}
       <CampaignHero>
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 mb-4 leading-tight drop-shadow-lg">
+          <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 mb-4 leading-tight drop-shadow-[0_2px_8px_rgba(255,255,255,0.9)]">
             Free Roof Inspections
             <br />
             <span style={{ color: primaryColor }}>{location}</span>
           </h1>
-          <p className="text-xl text-gray-800 mb-8 max-w-2xl mx-auto drop-shadow">
+          <p className="text-xl text-gray-800 font-bold mb-8 max-w-2xl mx-auto drop-shadow-[0_2px_4px_rgba(255,255,255,0.8)]">
             {tagline}
           </p>
 
           {/* Trust Signals - Inline */}
           <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-900">
-            <div className="flex items-center gap-2 bg-white/60 backdrop-blur-sm px-4 py-2 rounded-full">
+            <div className="flex items-center gap-2 bg-white/60 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg">
               <span className="text-green-600 text-lg">✓</span>
               <span className="font-semibold">Licensed & Insured</span>
             </div>
-            <div className="flex items-center gap-2 bg-white/60 backdrop-blur-sm px-4 py-2 rounded-full">
+            <div className="flex items-center gap-2 bg-white/60 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg">
               <span className="text-green-600 text-lg">✓</span>
               <span className="font-semibold">Free Inspection</span>
             </div>
-            <div className="flex items-center gap-2 bg-white/60 backdrop-blur-sm px-4 py-2 rounded-full">
+            <div className="flex items-center gap-2 bg-white/60 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg">
               <span className="text-green-600 text-lg">✓</span>
               <span className="font-semibold">Insurance Assistance</span>
             </div>
