@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Image from 'next/image';
 import MarketingHero from './components/MarketingHero';
 import HowItWorks from './components/HowItWorks';
@@ -8,6 +9,7 @@ import ProductShowcase from './components/ProductShowcase';
 import Footer from './components/Footer';
 
 export default function LandingPage() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const handleFormSubmit = async (data: {
     name: string;
     email: string;
@@ -50,43 +52,101 @@ export default function LandingPage() {
     <main className="min-h-screen">
       {/* Sticky Navigation Header */}
       <header className="sticky top-0 z-50 bg-slate-900 border-b border-slate-700 shadow-lg">
-        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 py-2">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 py-1">
           <div className="flex items-center justify-between">
             {/* Logo */}
             <div className="flex items-center">
               <Image
                 src="/halo-logo.png"
                 alt="Halo Lead Gen"
-                width={140}
-                height={47}
+                width={100}
+                height={34}
                 className="cursor-pointer"
-                style={{ width: '140px', height: 'auto' }}
+                style={{ width: '100px', height: 'auto' }}
               />
             </div>
 
-            {/* Navigation Links */}
+            {/* Desktop Navigation Links */}
             <nav className="hidden md:flex items-center gap-6">
               <button
                 onClick={() => scrollToSection('how-it-works')}
-                className="text-gray-300 hover:text-cyan-400 transition-colors font-medium"
+                className="text-gray-300 hover:text-cyan-400 transition-colors text-sm font-medium"
               >
                 How It Works
               </button>
               <button
                 onClick={() => scrollToSection('demo-video')}
-                className="text-gray-300 hover:text-cyan-400 transition-colors font-medium"
+                className="text-gray-300 hover:text-cyan-400 transition-colors text-sm font-medium"
               >
                 Demo Video
               </button>
               <button
                 onClick={() => scrollToSection('dashboard-preview')}
-                className="text-gray-300 hover:text-cyan-400 transition-colors font-medium"
+                className="text-gray-300 hover:text-cyan-400 transition-colors text-sm font-medium"
+              >
+                Dashboard Preview
+              </button>
+            </nav>
+
+            {/* Mobile Hamburger Menu */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden text-gray-300 hover:text-cyan-400 p-2"
+              aria-label="Toggle menu"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                {mobileMenuOpen ? (
+                  <path d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Menu Dropdown */}
+        {mobileMenuOpen && (
+          <div className="md:hidden bg-slate-800 border-t border-slate-700">
+            <nav className="flex flex-col py-2">
+              <button
+                onClick={() => {
+                  scrollToSection('how-it-works');
+                  setMobileMenuOpen(false);
+                }}
+                className="text-gray-300 hover:text-cyan-400 hover:bg-slate-700 transition-colors px-4 py-3 text-left font-medium"
+              >
+                How It Works
+              </button>
+              <button
+                onClick={() => {
+                  scrollToSection('demo-video');
+                  setMobileMenuOpen(false);
+                }}
+                className="text-gray-300 hover:text-cyan-400 hover:bg-slate-700 transition-colors px-4 py-3 text-left font-medium"
+              >
+                Demo Video
+              </button>
+              <button
+                onClick={() => {
+                  scrollToSection('dashboard-preview');
+                  setMobileMenuOpen(false);
+                }}
+                className="text-gray-300 hover:text-cyan-400 hover:bg-slate-700 transition-colors px-4 py-3 text-left font-medium"
               >
                 Dashboard Preview
               </button>
             </nav>
           </div>
-        </div>
+        )}
       </header>
 
       <MarketingHero onSubmit={handleFormSubmit} />
