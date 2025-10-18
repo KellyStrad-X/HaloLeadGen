@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import type { CampaignData } from '@/lib/firestore';
 import { getCampaignDataBySlugAdmin, getContractorBrandingAdmin } from '@/lib/firestore-admin';
+import HeroCarousel from '@/components/HeroCarousel';
 import PhotoDeck from '@/components/PhotoDeck';
 import LeadForm from '@/components/LeadForm';
 import TrustBadges from '@/components/TrustBadges';
@@ -91,31 +92,36 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
 
       {/* Hero Section */}
       <section className="bg-gradient-to-b from-white to-gray-50 py-16 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 mb-4 leading-tight">
-            Free Roof Inspections
-            <br />
-            <span style={{ color: primaryColor }}>{location}</span>
-          </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            {tagline}
-          </p>
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-8">
+            <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 mb-4 leading-tight">
+              Free Roof Inspections
+              <br />
+              <span style={{ color: primaryColor }}>{location}</span>
+            </h1>
+            <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+              {tagline}
+            </p>
 
-          {/* Trust Signals - Inline */}
-          <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-700">
-            <div className="flex items-center gap-2">
-              <span className="text-green-500 text-lg">✓</span>
-              <span className="font-medium">Licensed & Insured</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-green-500 text-lg">✓</span>
-              <span className="font-medium">Free Inspection</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-green-500 text-lg">✓</span>
-              <span className="font-medium">Insurance Assistance</span>
+            {/* Trust Signals - Inline */}
+            <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-700">
+              <div className="flex items-center gap-2">
+                <span className="text-green-500 text-lg">✓</span>
+                <span className="font-medium">Licensed & Insured</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-green-500 text-lg">✓</span>
+                <span className="font-medium">Free Inspection</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-green-500 text-lg">✓</span>
+                <span className="font-medium">Insurance Assistance</span>
+              </div>
             </div>
           </div>
+
+          {/* Hero Carousel */}
+          <HeroCarousel />
         </div>
       </section>
 
