@@ -99,8 +99,8 @@ export default function MarketingHero({ onSubmit }: HeroProps) {
             />
           </div>
         ))}
-        {/* Light white overlay for softer, more inviting look */}
-        <div className="absolute inset-0 bg-gradient-to-b from-white/80 via-white/70 to-white/85" />
+        {/* Light white overlay for text readability - reduced opacity */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white/50 via-white/40 to-white/55" />
       </div>
 
       <div className="max-w-4xl mx-auto relative z-10">
@@ -111,8 +111,8 @@ export default function MarketingHero({ onSubmit }: HeroProps) {
             <Image
               src="/halo-logo.png"
               alt="Halo Lead Gen"
-              width={180}
-              height={60}
+              width={225}
+              height={75}
               className="drop-shadow-2xl"
             />
           </div>
