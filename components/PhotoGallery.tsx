@@ -43,7 +43,7 @@ export default function PhotoGallery({ photos }: PhotoGalleryProps) {
           <button
             key={photo.id}
             onClick={() => openLightbox(index)}
-            className="relative aspect-video overflow-hidden rounded-lg bg-halo-dark-light border border-halo-medium/30 hover:border-halo-ice/50 transition-all duration-300 group"
+            className="relative aspect-video overflow-hidden rounded-lg bg-gray-100 border border-gray-200 hover:border-blue-400 hover:shadow-lg transition-all duration-300 group"
           >
             <Image
               src={photo.imageUrl}
@@ -69,7 +69,7 @@ export default function PhotoGallery({ photos }: PhotoGalleryProps) {
           {/* Close button */}
           <button
             onClick={closeLightbox}
-            className="absolute top-4 right-4 text-white hover:text-halo-ice transition-colors p-2"
+            className="absolute top-4 right-4 text-white hover:text-blue-400 transition-colors p-2 z-50"
             aria-label="Close"
           >
             <svg
@@ -93,7 +93,7 @@ export default function PhotoGallery({ photos }: PhotoGalleryProps) {
               e.stopPropagation();
               navigatePhoto('prev');
             }}
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:text-halo-ice transition-colors p-2"
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:text-blue-400 transition-colors p-2 z-50"
             aria-label="Previous photo"
           >
             <svg
@@ -117,7 +117,7 @@ export default function PhotoGallery({ photos }: PhotoGalleryProps) {
               e.stopPropagation();
               navigatePhoto('next');
             }}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:text-halo-ice transition-colors p-2"
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:text-blue-400 transition-colors p-2 z-50"
             aria-label="Next photo"
           >
             <svg

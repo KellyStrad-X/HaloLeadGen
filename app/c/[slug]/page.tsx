@@ -18,99 +18,124 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
     notFound();
   }
 
-  const campaignName =
-    campaignData.campaignName || campaignData.neighborhoodName;
   const location =
     campaignData.showcaseAddress ||
     campaignData.neighborhoodName ||
-    campaignName;
-  const jobStatusLabel = campaignData.jobStatus || 'Pending';
+    campaignData.campaignName;
+
+  const contractorName = campaignData.contractor.company || campaignData.contractor.name || 'Local Contractor';
+  const contractorPhone = campaignData.contractor.phone?.trim();
 
   return (
-    <main className="min-h-screen bg-slate-900">
+    <main className="min-h-screen bg-white">
       {/* Header */}
-      <header className="border-b border-slate-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <header className="bg-white border-b border-gray-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-white">
-                Halo <span className="text-halo-ice">Lead Gen</span>
+              <h1 className="text-xl font-bold text-gray-900">
+                {contractorName}
               </h1>
             </div>
-            <div className="text-right">
-              <p className="text-sm text-halo-medium">{campaignData.contractor.company}</p>
-              <p className="text-xs text-halo-medium">{campaignData.contractor.phone}</p>
-            </div>
+            {contractorPhone && (
+              <div className="text-right">
+                <a
+                  href={`tel:${contractorPhone}`}
+                  className="text-sm font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+                >
+                  {contractorPhone}
+                </a>
+              </div>
+            )}
           </div>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-b from-slate-800 to-slate-900 py-16 px-4">
+      <section className="bg-gradient-to-b from-white to-gray-50 py-16 px-4">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl sm:text-5xl font-bold text-white mb-4">
-            Real Roof Damage From
+          <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 mb-4 leading-tight">
+            Free Roof Inspections
             <br />
-            <span className="text-halo-ice">Your Neighborhood</span>
-          </h2>
-          <p className="text-xl text-halo-light mb-2">
-            {location}
+            <span className="text-blue-600">{location}</span>
+          </h1>
+          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+            Professional roofing services from your local experts
           </p>
-          <p className="text-sm uppercase tracking-wide text-halo-medium">
-            Campaign: {campaignName} • Job Status: {jobStatusLabel}
-          </p>
-          <p className="text-halo-medium max-w-2xl mx-auto">
-            We've documented recent storm damage in your area. See if your roof might need inspection.
-          </p>
+
+          {/* Trust Signals - Inline */}
+          <div className="flex flex-wrap justify-center gap-6 text-sm text-gray-700">
+            <div className="flex items-center gap-2">
+              <span className="text-green-500 text-lg">✓</span>
+              <span className="font-medium">Licensed & Insured</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-green-500 text-lg">✓</span>
+              <span className="font-medium">Free Inspection</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-green-500 text-lg">✓</span>
+              <span className="font-medium">Insurance Assistance</span>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* Photo Gallery */}
-      <section className="py-12 px-4 bg-slate-800">
+      <section className="py-12 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
-          <h3 className="text-2xl font-bold text-white mb-2 text-center">
+          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2 text-center">
             Storm Damage Documentation
-          </h3>
-          <p className="text-halo-medium text-center mb-8">
+          </h2>
+          <p className="text-gray-600 text-center mb-6">
             Recent photos from {location}
           </p>
+
+          {/* Context Banner */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8 max-w-3xl mx-auto">
+            <p className="text-gray-700 text-sm text-center">
+              <strong className="text-gray-900">Important:</strong> Most storm damage
+              isn't visible from the ground. These photos show what a professional
+              inspection can reveal.
+            </p>
+          </div>
 
           {campaignData.photos.length > 0 ? (
             <PhotoGallery photos={campaignData.photos} />
           ) : (
             <div className="text-center py-12">
-              <p className="text-halo-medium">No photos available for this campaign.</p>
+              <p className="text-gray-500">No photos available for this campaign.</p>
             </div>
           )}
         </div>
       </section>
 
       {/* Call to Action */}
-      <section className="py-8 px-4 bg-gradient-to-b from-slate-800 to-slate-900">
-        <div className="max-w-2xl mx-auto text-center">
-          <div className="bg-slate-800/60 border border-cyan-400/30 rounded-lg p-6 mb-8 shadow-lg">
-            <h3 className="text-2xl font-bold text-white mb-3">
+      <section className="py-12 px-4 bg-gray-50">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-lg">
+            <h2 className="text-3xl font-bold text-gray-900 mb-3 text-center">
               Could Your Roof Be Affected?
-            </h3>
-            <p className="text-halo-light mb-4">
+            </h2>
+            <p className="text-gray-600 mb-6 text-center">
               Don't wait for a small problem to become a big expense. Get a free, no-obligation inspection from a local roofing expert.
             </p>
-            <ul className="text-left text-halo-light space-y-2 max-w-md mx-auto">
+            <ul className="space-y-3 max-w-md mx-auto">
               <li className="flex items-start">
-                <span className="text-halo-ice mr-2">✓</span>
-                <span>Free roof inspection</span>
+                <span className="text-green-500 mr-3 text-xl flex-shrink-0">✓</span>
+                <span className="text-gray-700">Free roof inspection</span>
               </li>
               <li className="flex items-start">
-                <span className="text-halo-ice mr-2">✓</span>
-                <span>No obligation quote</span>
+                <span className="text-green-500 mr-3 text-xl flex-shrink-0">✓</span>
+                <span className="text-gray-700">No obligation quote</span>
               </li>
               <li className="flex items-start">
-                <span className="text-halo-ice mr-2">✓</span>
-                <span>Local, trusted contractor</span>
+                <span className="text-green-500 mr-3 text-xl flex-shrink-0">✓</span>
+                <span className="text-gray-700">Local, trusted contractor</span>
               </li>
               <li className="flex items-start">
-                <span className="text-halo-ice mr-2">✓</span>
-                <span>Insurance claim assistance</span>
+                <span className="text-green-500 mr-3 text-xl flex-shrink-0">✓</span>
+                <span className="text-gray-700">Insurance claim assistance</span>
               </li>
             </ul>
           </div>
@@ -118,12 +143,12 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
       </section>
 
       {/* Lead Form */}
-      <section className="py-12 px-4 bg-slate-900">
+      <section className="py-16 px-4 bg-white">
         <div className="max-w-2xl mx-auto">
-          <h3 className="text-3xl font-bold text-white mb-2 text-center">
-            Request Your <span className="text-halo-ice">Free Inspection</span>
-          </h3>
-          <p className="text-halo-medium text-center mb-8">
+          <h2 className="text-4xl font-bold text-gray-900 mb-3 text-center">
+            Request Your <span className="text-blue-600">Free Inspection</span>
+          </h2>
+          <p className="text-gray-600 text-center mb-10">
             Fill out the form below and we'll contact you within 24 hours
           </p>
 
@@ -132,12 +157,12 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-slate-700 py-8 px-4 bg-slate-800">
+      <footer className="border-t border-gray-200 py-8 px-4 bg-gray-50">
         <div className="max-w-7xl mx-auto text-center">
-          <p className="text-halo-medium text-sm mb-2">
-            Provided by {campaignData.contractor.company}
+          <p className="text-gray-600 text-sm mb-2">
+            Provided by {contractorName}
           </p>
-          <p className="text-halo-medium text-xs">
+          <p className="text-gray-500 text-xs">
             Powered by Halo Lead Generation
           </p>
         </div>
@@ -162,9 +187,10 @@ export async function generateMetadata({ params }: CampaignPageProps) {
     campaignData.showcaseAddress ||
     campaignData.neighborhoodName ||
     campaignName;
+  const contractorName = campaignData.contractor.company || campaignData.contractor.name || 'Local Contractor';
 
   return {
     title: `Storm Damage - ${campaignName} | Halo`,
-    description: `View recent roof damage documentation from ${location}. Request a free inspection from ${campaignData.contractor.company}.`,
+    description: `View recent roof damage documentation from ${location}. Request a free inspection from ${contractorName}.`,
   };
 }

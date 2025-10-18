@@ -130,11 +130,11 @@ export default function LeadForm({ campaignId }: LeadFormProps) {
 
   if (submitStatus === 'success') {
     return (
-      <div className="bg-halo-dark border border-halo-ice/30 rounded-lg p-8 text-center">
+      <div className="bg-green-50 border border-green-200 rounded-xl p-8 text-center shadow-lg">
         <div className="mb-4">
-          <div className="w-16 h-16 bg-halo-ice/20 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg
-              className="w-8 h-8 text-halo-ice"
+              className="w-8 h-8 text-green-600"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -147,12 +147,12 @@ export default function LeadForm({ campaignId }: LeadFormProps) {
               />
             </svg>
           </div>
-          <h4 className="text-2xl font-bold text-white mb-2">Request Received!</h4>
-          <p className="text-halo-light">{submitMessage}</p>
+          <h4 className="text-2xl font-bold text-gray-900 mb-2">Request Received!</h4>
+          <p className="text-gray-700">{submitMessage}</p>
         </div>
         <button
           onClick={() => setSubmitStatus('idle')}
-          className="text-halo-ice hover:text-white transition-colors text-sm"
+          className="text-blue-600 hover:text-blue-700 font-medium transition-colors text-sm"
         >
           Submit another request
         </button>
@@ -161,109 +161,109 @@ export default function LeadForm({ campaignId }: LeadFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-halo-dark border border-halo-medium/30 rounded-lg p-6 sm:p-8">
+    <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-xl p-6 sm:p-8 shadow-lg">
       {submitStatus === 'error' && (
-        <div className="mb-6 bg-red-500/10 border border-red-500/30 rounded-lg p-4">
-          <p className="text-red-400 text-sm">{submitMessage}</p>
+        <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+          <p className="text-red-700 text-sm">{submitMessage}</p>
         </div>
       )}
 
       <div className="space-y-5">
         {/* Name */}
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-halo-light mb-2">
-            Full Name <span className="text-halo-ice">*</span>
+          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+            Full Name <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             id="name"
             value={formData.name}
             onChange={(e) => handleChange('name', e.target.value)}
-            className={`w-full px-4 py-3 bg-halo-dark-light border ${
-              errors.name ? 'border-red-500' : 'border-halo-medium/30'
-            } rounded-lg text-white placeholder-halo-medium focus:outline-none focus:border-halo-ice transition-colors`}
+            className={`w-full px-4 py-3 bg-white border ${
+              errors.name ? 'border-red-500' : 'border-gray-300'
+            } rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
             placeholder="John Smith"
             disabled={isSubmitting}
           />
           {errors.name && (
-            <p className="mt-1 text-sm text-red-400">{errors.name}</p>
+            <p className="mt-1 text-sm text-red-600">{errors.name}</p>
           )}
         </div>
 
         {/* Address */}
         <div>
-          <label htmlFor="address" className="block text-sm font-medium text-halo-light mb-2">
-            Home Address <span className="text-halo-ice">*</span>
+          <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
+            Home Address <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
             id="address"
             value={formData.address}
             onChange={(e) => handleChange('address', e.target.value)}
-            className={`w-full px-4 py-3 bg-halo-dark-light border ${
-              errors.address ? 'border-red-500' : 'border-halo-medium/30'
-            } rounded-lg text-white placeholder-halo-medium focus:outline-none focus:border-halo-ice transition-colors`}
+            className={`w-full px-4 py-3 bg-white border ${
+              errors.address ? 'border-red-500' : 'border-gray-300'
+            } rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
             placeholder="123 Oak Street, Dallas TX 75001"
             disabled={isSubmitting}
           />
           {errors.address && (
-            <p className="mt-1 text-sm text-red-400">{errors.address}</p>
+            <p className="mt-1 text-sm text-red-600">{errors.address}</p>
           )}
         </div>
 
         {/* Email */}
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-halo-light mb-2">
-            Email Address <span className="text-halo-ice">*</span>
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+            Email Address <span className="text-red-500">*</span>
           </label>
           <input
             type="email"
             id="email"
             value={formData.email}
             onChange={(e) => handleChange('email', e.target.value)}
-            className={`w-full px-4 py-3 bg-halo-dark-light border ${
-              errors.email ? 'border-red-500' : 'border-halo-medium/30'
-            } rounded-lg text-white placeholder-halo-medium focus:outline-none focus:border-halo-ice transition-colors`}
+            className={`w-full px-4 py-3 bg-white border ${
+              errors.email ? 'border-red-500' : 'border-gray-300'
+            } rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
             placeholder="john@example.com"
             disabled={isSubmitting}
           />
           {errors.email && (
-            <p className="mt-1 text-sm text-red-400">{errors.email}</p>
+            <p className="mt-1 text-sm text-red-600">{errors.email}</p>
           )}
         </div>
 
         {/* Phone */}
         <div>
-          <label htmlFor="phone" className="block text-sm font-medium text-halo-light mb-2">
-            Phone Number <span className="text-halo-ice">*</span>
+          <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+            Phone Number <span className="text-red-500">*</span>
           </label>
           <input
             type="tel"
             id="phone"
             value={formData.phone}
             onChange={(e) => handleChange('phone', e.target.value)}
-            className={`w-full px-4 py-3 bg-halo-dark-light border ${
-              errors.phone ? 'border-red-500' : 'border-halo-medium/30'
-            } rounded-lg text-white placeholder-halo-medium focus:outline-none focus:border-halo-ice transition-colors`}
+            className={`w-full px-4 py-3 bg-white border ${
+              errors.phone ? 'border-red-500' : 'border-gray-300'
+            } rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
             placeholder="(214) 555-1234"
             disabled={isSubmitting}
           />
           {errors.phone && (
-            <p className="mt-1 text-sm text-red-400">{errors.phone}</p>
+            <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
           )}
         </div>
 
         {/* Notes */}
         <div>
-          <label htmlFor="notes" className="block text-sm font-medium text-halo-light mb-2">
-            Additional Notes <span className="text-halo-medium text-xs">(Optional)</span>
+          <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
+            Additional Notes <span className="text-gray-500 text-xs">(Optional)</span>
           </label>
           <textarea
             id="notes"
             value={formData.notes}
             onChange={(e) => handleChange('notes', e.target.value)}
             rows={4}
-            className="w-full px-4 py-3 bg-halo-dark-light border border-halo-medium/30 rounded-lg text-white placeholder-halo-medium focus:outline-none focus:border-halo-ice transition-colors resize-none"
+            className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
             placeholder="Tell us about any specific concerns or questions..."
             disabled={isSubmitting}
           />
@@ -273,12 +273,12 @@ export default function LeadForm({ campaignId }: LeadFormProps) {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full bg-halo-ice hover:bg-halo-ice/90 disabled:bg-halo-medium disabled:cursor-not-allowed text-black font-bold py-4 px-6 rounded-lg transition-all duration-300 transform hover:scale-[1.02] disabled:hover:scale-100"
+          className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-bold py-4 px-6 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-[1.02] disabled:hover:scale-100"
         >
           {isSubmitting ? (
             <span className="flex items-center justify-center">
               <svg
-                className="animate-spin -ml-1 mr-3 h-5 w-5 text-black"
+                className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -304,9 +304,13 @@ export default function LeadForm({ campaignId }: LeadFormProps) {
           )}
         </button>
 
-        <p className="text-center text-xs text-halo-medium mt-4">
-          By submitting, you agree to be contacted about roofing services. No spam, ever.
-        </p>
+        {/* Trust Text */}
+        <div className="flex items-center justify-center gap-2 text-xs text-gray-500 mt-4">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+          <span>Your information is safe and never sold</span>
+        </div>
       </div>
     </form>
   );
