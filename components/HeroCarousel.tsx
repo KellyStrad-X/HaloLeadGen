@@ -1,63 +1,68 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 const HERO_PHOTOS = [
-  '/campaign-hero-photos/1.jpg',
-  '/campaign-hero-photos/2.jpg',
-  '/campaign-hero-photos/3.jpg',
-  '/campaign-hero-photos/4.jpg',
-  '/campaign-hero-photos/5.jpg',
+  '/campaign-hero-photos/1.png',
+  '/campaign-hero-photos/2.png',
+  '/campaign-hero-photos/3.png',
+  '/campaign-hero-photos/4.png',
+  '/campaign-hero-photos/5.png',
 ];
 
 const AUTO_ADVANCE_INTERVAL = 5000; // 5 seconds
 
-export default function HeroCarousel() {
-  const [currentIndex, setCurrentIndex] = useState(0);
+interface HeroCarouselProps {
+  children: React.ReactNode;
+}
 
+export default function HeroCarousel({ children }: HeroCarouselProps) {
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  // Auto-advance slideshow every 5 seconds
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % HERO_PHOTOS.length);
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % HERO_PHOTOS.length);
     }, AUTO_ADVANCE_INTERVAL);
 
-    return () => clearInterval(interval);
+    return () => clearInterval(timer);
   }, []);
 
   return (
-    <div className="relative w-full h-[300px] sm:h-[400px] lg:h-[500px] overflow-hidden rounded-lg shadow-lg">
-      {/* Photos */}
-      {HERO_PHOTOS.map((photo, index) => (
-        <div
-          key={photo}
-          className={`absolute inset-0 transition-opacity duration-1000 ${
-            index === currentIndex ? 'opacity-100' : 'opacity-0'
-          }`}
-        >
-          <img
-            src={photo}
-            alt={`Home ${index + 1}`}
-            className="w-full h-full object-cover"
-          />
-          {/* Gradient overlay for better text readability */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40" />
-        </div>
-      ))}
-
-      {/* Dot Indicators */}
-      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 z-10">
-        {HERO_PHOTOS.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => setCurrentIndex(index)}
-            className={`h-2 rounded-full transition-all ${
-              index === currentIndex
-                ? 'w-8 bg-white'
-                : 'w-2 bg-white/50 hover:bg-white/75'
+    <section className="relative bg-white text-gray-900 py-12 sm:py-20 px-4 sm:px-6 lg:px-8 overflow-hidden min-h-[600px] sm:min-h-[700px]">
+      {/* Background Slideshow */}
+      <div className="absolute inset-0 z-0">
+        {HERO_PHOTOS.map((image, index) => (
+          <div
+            key={image}
+            className={`absolute inset-0 transition-opacity duration-1000 ${
+              index === currentSlide ? 'opacity-100' : 'opacity-0'
             }`}
-            aria-label={`Go to slide ${index + 1}`}
-          />
+          >
+            <Image
+              src={image}
+              alt={`Home ${index + 1}`}
+              fill
+              className="object-cover"
+              style={{ objectPosition: 'center center' }}
+              priority={index === 0}
+              sizes="100vw"
+              onError={(e) => {
+                // Hide image if it fails to load
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+          </div>
         ))}
+        {/* Gradient overlay for text readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white/80 via-white/70 to-white/85" />
       </div>
-    </div>
+
+      {/* Content overlay (passed as children) */}
+      <div className="relative z-10">
+        {children}
+      </div>
+    </section>
   );
 }
