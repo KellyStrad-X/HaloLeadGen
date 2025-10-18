@@ -35,7 +35,14 @@ export default function LandingPage() {
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const headerOffset = 60; // Height of sticky header
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
     }
   };
 
@@ -43,7 +50,7 @@ export default function LandingPage() {
     <main className="min-h-screen">
       {/* Sticky Navigation Header */}
       <header className="sticky top-0 z-50 bg-slate-900 border-b border-slate-700 shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6 py-2">
           <div className="flex items-center justify-between">
             {/* Logo */}
             <div className="flex items-center">
@@ -53,11 +60,12 @@ export default function LandingPage() {
                 width={140}
                 height={47}
                 className="cursor-pointer"
+                style={{ width: '140px', height: 'auto' }}
               />
             </div>
 
             {/* Navigation Links */}
-            <nav className="hidden md:flex items-center gap-8">
+            <nav className="hidden md:flex items-center gap-6">
               <button
                 onClick={() => scrollToSection('how-it-works')}
                 className="text-gray-300 hover:text-cyan-400 transition-colors font-medium"

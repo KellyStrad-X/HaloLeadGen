@@ -110,7 +110,7 @@ export default function MarketingHero({ onSubmit }: HeroProps) {
             Turn every finished roof into{' '}
             <span className="text-cyan-600">the next five jobs</span>
           </h1>
-          <p className="text-2xl font-semibold text-gray-900 mb-8 max-w-2xl mx-auto drop-shadow-lg bg-white/60 backdrop-blur-sm px-6 py-3 rounded-lg">
+          <p className="text-2xl font-bold text-gray-900 mb-8 max-w-2xl mx-auto drop-shadow-[0_2px_4px_rgba(255,255,255,0.8)]">
             Proof-first marketing via QR codes + localized landing pages that showcase
             your work to nearby homeowners.
           </p>
