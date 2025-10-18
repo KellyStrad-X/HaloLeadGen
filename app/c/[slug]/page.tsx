@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import type { CampaignData } from '@/lib/firestore';
 import { getCampaignDataBySlugAdmin, getContractorBrandingAdmin } from '@/lib/firestore-admin';
-import PhotoGallery from '@/components/PhotoGallery';
+import PhotoDeck from '@/components/PhotoDeck';
 import LeadForm from '@/components/LeadForm';
 import TrustBadges from '@/components/TrustBadges';
 import MeetTheCrew from '@/components/MeetTheCrew';
@@ -30,6 +30,7 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
 
   const contractorName = campaignData.contractor.company || campaignData.contractor.name || 'Local Contractor';
   const contractorPhone = campaignData.contractor.phone?.trim();
+  const contractorEmail = campaignData.contractor.email?.trim();
 
   // Branding defaults
   const primaryColor = branding?.primaryColor || '#2563eb';
@@ -38,10 +39,11 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
   return (
     <main className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 shadow-sm">
+      <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+            {/* Mobile: Centered logo, Desktop: Left-aligned */}
+            <div className="flex-1 flex justify-center sm:justify-start">
               {branding?.companyLogo && (
                 <img
                   src={branding.companyLogo}
@@ -55,17 +57,34 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
                 </h1>
               )}
             </div>
-            {contractorPhone && (
-              <div className="text-right">
+
+            {/* Contact Buttons */}
+            <div className="flex items-center gap-2">
+              {contractorEmail && (
+                <a
+                  href={`mailto:${contractorEmail}`}
+                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                  style={{ color: primaryColor }}
+                  aria-label="Email contractor"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </a>
+              )}
+              {contractorPhone && (
                 <a
                   href={`tel:${contractorPhone}`}
-                  className="text-sm font-semibold hover:opacity-80 transition-opacity"
+                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
                   style={{ color: primaryColor }}
+                  aria-label="Call contractor"
                 >
-                  {contractorPhone}
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                  </svg>
                 </a>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </header>
@@ -125,7 +144,7 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
           </div>
 
           {campaignData.photos.length > 0 ? (
-            <PhotoGallery photos={campaignData.photos} />
+            <PhotoDeck photos={campaignData.photos} />
           ) : (
             <div className="text-center py-12">
               <p className="text-gray-500">No photos available for this campaign.</p>
