@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import MarketingHero from './components/MarketingHero';
 import HowItWorks from './components/HowItWorks';
 import VideoDemo from './components/VideoDemo';
@@ -31,12 +32,65 @@ export default function LandingPage() {
     return response.json();
   };
 
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   return (
     <main className="min-h-screen">
+      {/* Sticky Navigation Header */}
+      <header className="sticky top-0 z-50 bg-slate-900 border-b border-slate-700 shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            {/* Logo */}
+            <div className="flex items-center">
+              <Image
+                src="/halo-logo.png"
+                alt="Halo Lead Gen"
+                width={140}
+                height={47}
+                className="cursor-pointer"
+              />
+            </div>
+
+            {/* Navigation Links */}
+            <nav className="hidden md:flex items-center gap-8">
+              <button
+                onClick={() => scrollToSection('how-it-works')}
+                className="text-gray-300 hover:text-cyan-400 transition-colors font-medium"
+              >
+                How It Works
+              </button>
+              <button
+                onClick={() => scrollToSection('demo-video')}
+                className="text-gray-300 hover:text-cyan-400 transition-colors font-medium"
+              >
+                Demo Video
+              </button>
+              <button
+                onClick={() => scrollToSection('dashboard-preview')}
+                className="text-gray-300 hover:text-cyan-400 transition-colors font-medium"
+              >
+                Dashboard Preview
+              </button>
+            </nav>
+          </div>
+        </div>
+      </header>
+
       <MarketingHero onSubmit={handleFormSubmit} />
-      <HowItWorks />
-      <VideoDemo />
-      <ProductShowcase />
+      <div id="how-it-works">
+        <HowItWorks />
+      </div>
+      <div id="demo-video">
+        <VideoDemo />
+      </div>
+      <div id="dashboard-preview">
+        <ProductShowcase />
+      </div>
       <Footer />
     </main>
   );

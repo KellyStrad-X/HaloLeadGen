@@ -106,22 +106,11 @@ export default function MarketingHero({ onSubmit }: HeroProps) {
       <div className="max-w-4xl mx-auto relative z-10">
         {/* Hero Content */}
         <div className="text-center mb-12">
-          {/* Logo */}
-          <div className="flex justify-center mb-8">
-            <Image
-              src="/halo-logo.png"
-              alt="Halo Lead Gen"
-              width={225}
-              height={75}
-              className="drop-shadow-2xl"
-            />
-          </div>
-
           <h1 className="text-5xl sm:text-6xl font-bold mb-6 leading-tight drop-shadow-lg">
             Turn every finished roof into{' '}
             <span className="text-cyan-600">the next five jobs</span>
           </h1>
-          <p className="text-xl text-gray-800 mb-8 max-w-2xl mx-auto drop-shadow">
+          <p className="text-2xl font-semibold text-gray-900 mb-8 max-w-2xl mx-auto drop-shadow-lg bg-white/60 backdrop-blur-sm px-6 py-3 rounded-lg">
             Proof-first marketing via QR codes + localized landing pages that showcase
             your work to nearby homeowners.
           </p>
@@ -196,13 +185,13 @@ export default function MarketingHero({ onSubmit }: HeroProps) {
             </form>
           </div>
 
-          {/* Secondary CTA - Demo Link */}
+          {/* Secondary CTA - Demo Button */}
           <div className="mt-6 text-center">
             <a
               href="/c/demo-campaign"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-cyan-600 hover:text-cyan-700 text-sm font-medium underline transition-colors"
+              className="inline-block bg-white/90 hover:bg-white border-2 border-cyan-600 text-cyan-600 font-bold py-3 px-8 rounded-lg transition-all shadow-lg hover:shadow-xl"
             >
               View Live Demo Campaign →
             </a>
