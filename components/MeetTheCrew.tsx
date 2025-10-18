@@ -1,3 +1,5 @@
+'use client';
+
 import type { CrewMember } from '@/lib/firestore-admin';
 
 interface MeetTheCrewProps {
@@ -34,6 +36,9 @@ export default function MeetTheCrew({ members, tagline }: MeetTheCrewProps) {
                     src={member.photoUrl}
                     alt={member.name}
                     className="w-20 h-20 rounded-full object-cover border-2 border-gray-300 flex-shrink-0"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
                   />
                 )}
                 <div className="flex-1">
