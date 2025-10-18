@@ -1,6 +1,6 @@
 'use client';
 
-import Hero from './components/Hero';
+import MarketingHero from './components/MarketingHero';
 import HowItWorks from './components/HowItWorks';
 import VideoDemo from './components/VideoDemo';
 import ProductShowcase from './components/ProductShowcase';
@@ -33,7 +33,7 @@ export default function LandingPage() {
 
   return (
     <main className="min-h-screen">
-      <Hero onSubmit={handleFormSubmit} />
+      <MarketingHero onSubmit={handleFormSubmit} />
       <HowItWorks />
       <VideoDemo />
       <ProductShowcase />

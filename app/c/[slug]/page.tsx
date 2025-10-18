@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import type { CampaignData } from '@/lib/firestore';
 import { getCampaignDataBySlugAdmin, getContractorBrandingAdmin } from '@/lib/firestore-admin';
-import HeroCarousel from '@/components/HeroCarousel';
+import CampaignHero from '@/components/CampaignHero';
 import PhotoDeck from '@/components/PhotoDeck';
 import LeadForm from '@/components/LeadForm';
 import TrustBadges from '@/components/TrustBadges';
@@ -91,7 +91,7 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
       </header>
 
       {/* Hero Section with Background Carousel */}
-      <HeroCarousel>
+      <CampaignHero>
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 mb-4 leading-tight drop-shadow-lg">
             Free Roof Inspections
@@ -118,7 +118,7 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
             </div>
           </div>
         </div>
-      </HeroCarousel>
+      </CampaignHero>
 
       {/* Trust Badges */}
       {branding?.trustBadges && branding.trustBadges.length > 0 && (
