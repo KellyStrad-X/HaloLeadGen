@@ -49,7 +49,8 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
                 <img
                   src={branding.companyLogo}
                   alt={contractorName}
-                  className="h-8 w-auto object-contain"
+                  className="w-auto object-contain"
+                  style={{ width: '100px', height: 'auto' }}
                 />
               )}
               {!branding?.companyLogo && (
