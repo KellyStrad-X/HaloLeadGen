@@ -18,6 +18,8 @@ export default function BrandingSettingsModal({ isOpen, onClose }: BrandingSetti
 
   // General settings state
   const [companyName, setCompanyName] = useState('');
+  const [companyLogo, setCompanyLogo] = useState('');
+  const [logoFile, setLogoFile] = useState<File | null>(null);
 
   // Trust badges state
   const [selectedBadges, setSelectedBadges] = useState<string[]>([]);
@@ -54,6 +56,7 @@ export default function BrandingSettingsModal({ isOpen, onClose }: BrandingSetti
         const data = await response.json();
         if (data) {
           setCompanyName(data.companyName || '');
+          setCompanyLogo(data.companyLogo || '');
           setSelectedBadges(data.trustBadges || []);
           setTeamMembers(data.crewMembers || []);
         }
@@ -67,6 +70,29 @@ export default function BrandingSettingsModal({ isOpen, onClose }: BrandingSetti
     setIsSaving(true);
     try {
       const token = await getAuthToken();
+
+      // Upload company logo if new file
+      let uploadedLogoUrl = companyLogo;
+      if (logoFile) {
+        const formData = new FormData();
+        formData.append('file', logoFile);
+        formData.append('type', 'company-logo');
+
+        const uploadResponse = await fetch('/api/upload', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+          body: formData,
+        });
+
+        if (uploadResponse.ok) {
+          const { imageUrl } = await uploadResponse.json();
+          uploadedLogoUrl = imageUrl;
+        } else {
+          console.error('Logo upload failed');
+        }
+      }
 
       // Upload team photos if new files
       const updatedTeamMembers = await Promise.all(
@@ -105,6 +131,7 @@ export default function BrandingSettingsModal({ isOpen, onClose }: BrandingSetti
         },
         body: JSON.stringify({
           companyName: companyName.trim() || undefined,
+          companyLogo: uploadedLogoUrl || undefined,
           trustBadges: selectedBadges,
           crewMembers: updatedTeamMembers,
         }),
@@ -194,6 +221,9 @@ export default function BrandingSettingsModal({ isOpen, onClose }: BrandingSetti
               <GeneralTab
                 companyName={companyName}
                 setCompanyName={setCompanyName}
+                companyLogo={companyLogo}
+                setCompanyLogo={setCompanyLogo}
+                setLogoFile={setLogoFile}
               />
             )}
 
@@ -235,7 +265,24 @@ export default function BrandingSettingsModal({ isOpen, onClose }: BrandingSetti
 }
 
 // General Tab Component
-function GeneralTab({ companyName, setCompanyName }: any) {
+function GeneralTab({ companyName, setCompanyName, companyLogo, setCompanyLogo, setLogoFile }: any) {
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCompanyLogo(reader.result as string);
+        setLogoFile(file);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeLogo = () => {
+    setCompanyLogo('');
+    setLogoFile(null);
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -257,6 +304,48 @@ function GeneralTab({ companyName, setCompanyName }: any) {
         <p className="text-xs text-gray-500 mt-2">
           This will appear in the top left corner of all your campaign pages and marketing materials.
         </p>
+      </div>
+
+      {/* Company Logo Upload */}
+      <div>
+        <label className="block font-medium text-white mb-1">
+          Company Logo
+        </label>
+        <p className="text-sm text-gray-400 mb-4">
+          Upload your company logo. It will appear on team member business cards.
+        </p>
+
+        <div className="flex items-center gap-4">
+          {companyLogo ? (
+            <div className="relative">
+              <img
+                src={companyLogo}
+                alt="Company logo"
+                className="w-24 h-24 rounded-full object-cover border-2 border-slate-500"
+              />
+              <button
+                onClick={removeLogo}
+                className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                type="button"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          ) : (
+            <label className="w-24 h-24 rounded-full border-2 border-dashed border-slate-500 flex items-center justify-center cursor-pointer hover:border-cyan-400 bg-slate-600">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleLogoUpload}
+                className="hidden"
+              />
+              <span className="text-2xl">🏢</span>
+            </label>
+          )}
+          <p className="text-xs text-gray-400">
+            Recommended: Square image, at least 400x400px
+          </p>
+        </div>
       </div>
 
       <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-4">

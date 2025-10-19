@@ -5,16 +5,17 @@ import type { CrewMember } from '@/lib/firestore-admin';
 interface MeetTheCrewProps {
   members: CrewMember[];
   tagline?: string;
+  companyLogo?: string;
 }
 
-export default function MeetTheCrew({ members, tagline }: MeetTheCrewProps) {
+export default function MeetTheCrew({ members, tagline, companyLogo }: MeetTheCrewProps) {
   if (!members || members.length === 0) {
     return null;
   }
 
   return (
     <section className="py-12 bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4">
+      <div className="max-w-6xl mx-auto px-4">
         <h2 className="text-3xl font-bold text-gray-900 text-center mb-2">
           Meet Your Roofing Experts
         </h2>
@@ -24,28 +25,29 @@ export default function MeetTheCrew({ members, tagline }: MeetTheCrewProps) {
           </p>
         )}
 
-        <div className="space-y-6">
+        {/* Grid: 2 columns on desktop if 2 members, stacked on mobile */}
+        <div className={`grid gap-6 ${members.length === 2 ? 'md:grid-cols-2' : ''}`}>
           {members.map((member) => (
             <div
               key={member.id}
               className="bg-white rounded-xl p-6 border border-gray-200 shadow-md hover:shadow-lg transition-shadow"
             >
-              {/* Horizontal Business Card Layout */}
-              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+              {/* Horizontal Business Card Layout - Always horizontal */}
+              <div className="flex items-start gap-4">
                 {/* Photo - Left Side */}
                 {member.photoUrl && (
                   <img
                     src={member.photoUrl}
                     alt={member.name}
-                    className="w-32 h-32 rounded-full object-cover border-4 border-gray-200 flex-shrink-0 shadow-md"
+                    className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full object-cover border-4 border-gray-200 flex-shrink-0 shadow-md"
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';
                     }}
                   />
                 )}
 
-                {/* Info - Right Side */}
-                <div className="flex-1 text-center sm:text-left">
+                {/* Info - Middle */}
+                <div className="flex-1 min-w-0">
                   <h3 className="text-2xl font-bold text-gray-900 mb-1">{member.name}</h3>
                   <p className="text-base text-cyan-600 font-semibold mb-3">{member.title}</p>
 
@@ -72,7 +74,7 @@ export default function MeetTheCrew({ members, tagline }: MeetTheCrewProps) {
 
                   {/* Certifications */}
                   {member.certifications && member.certifications.length > 0 && (
-                    <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
+                    <div className="flex flex-wrap gap-2">
                       {member.certifications.map((cert, idx) => (
                         <span
                           key={idx}
@@ -84,6 +86,18 @@ export default function MeetTheCrew({ members, tagline }: MeetTheCrewProps) {
                     </div>
                   )}
                 </div>
+
+                {/* Company Logo - Right Side (Desktop only) */}
+                {companyLogo && (
+                  <img
+                    src={companyLogo}
+                    alt="Company logo"
+                    className="hidden md:block w-24 h-24 lg:w-28 lg:h-28 rounded-full object-cover border-4 border-gray-200 flex-shrink-0 shadow-md"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                )}
               </div>
             </div>
           ))}

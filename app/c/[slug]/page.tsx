@@ -152,7 +152,11 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
 
       {/* Meet the Crew */}
       {branding?.crewMembers && branding.crewMembers.length > 0 && (
-        <MeetTheCrew members={branding.crewMembers} tagline={tagline} />
+        <MeetTheCrew
+          members={branding.crewMembers}
+          tagline={tagline}
+          companyLogo={branding.companyLogo}
+        />
       )}
 
       {/* Call to Action */}

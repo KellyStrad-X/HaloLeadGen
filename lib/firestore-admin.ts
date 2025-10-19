@@ -657,6 +657,7 @@ export interface CrewMember {
 
 export interface ContractorBranding {
   companyName?: string;
+  companyLogo?: string;
   trustBadges?: string[];
   crewMembers?: CrewMember[];
 }
@@ -681,6 +682,7 @@ export async function getContractorBrandingAdmin(
 
   return {
     companyName: (data.companyName as string | undefined) || undefined,
+    companyLogo: (data.companyLogo as string | undefined) || undefined,
     trustBadges: (data.trustBadges as string[] | undefined) || undefined,
     crewMembers: (data.crewMembers as CrewMember[] | undefined) || undefined,
   };
