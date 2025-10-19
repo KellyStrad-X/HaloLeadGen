@@ -13,8 +13,8 @@ export default function MeetTheCrew({ members, tagline }: MeetTheCrewProps) {
   }
 
   return (
-    <section className="py-12 bg-white">
-      <div className="max-w-5xl mx-auto px-4">
+    <section className="py-12 bg-gray-50">
+      <div className="max-w-4xl mx-auto px-4">
         <h2 className="text-3xl font-bold text-gray-900 text-center mb-2">
           Meet Your Roofing Experts
         </h2>
@@ -24,37 +24,59 @@ export default function MeetTheCrew({ members, tagline }: MeetTheCrewProps) {
           </p>
         )}
 
-        <div className={`grid gap-8 ${members.length === 1 ? 'md:grid-cols-1 max-w-md mx-auto' : 'md:grid-cols-2'}`}>
+        <div className="space-y-6">
           {members.map((member) => (
             <div
               key={member.id}
-              className="bg-gray-50 rounded-lg p-6 border border-gray-200 hover:shadow-lg transition-shadow"
+              className="bg-white rounded-xl p-6 border border-gray-200 shadow-md hover:shadow-lg transition-shadow"
             >
-              <div className="flex items-start gap-4">
+              {/* Horizontal Business Card Layout */}
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+                {/* Photo - Left Side */}
                 {member.photoUrl && (
                   <img
                     src={member.photoUrl}
                     alt={member.name}
-                    className="w-20 h-20 rounded-full object-cover border-2 border-gray-300 flex-shrink-0"
+                    className="w-32 h-32 rounded-full object-cover border-4 border-gray-200 flex-shrink-0 shadow-md"
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';
                     }}
                   />
                 )}
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold text-gray-900">{member.name}</h3>
-                  <p className="text-sm text-blue-600 font-medium mb-2">{member.title}</p>
+
+                {/* Info - Right Side */}
+                <div className="flex-1 text-center sm:text-left">
+                  <h3 className="text-2xl font-bold text-gray-900 mb-1">{member.name}</h3>
+                  <p className="text-base text-cyan-600 font-semibold mb-3">{member.title}</p>
+
+                  {/* Contact Info */}
+                  {member.phone && (
+                    <a
+                      href={`tel:${member.phone}`}
+                      className="inline-flex items-center gap-2 text-gray-700 hover:text-cyan-600 transition-colors mb-3 md:pointer-events-none md:cursor-default"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                      </svg>
+                      <span className="font-medium">{member.phone}</span>
+                      <span className="md:hidden text-xs text-gray-500">(tap to call)</span>
+                    </a>
+                  )}
+
+                  {/* Experience */}
                   {member.yearsExperience && (
-                    <p className="text-sm text-gray-700 mb-2">
-                      <strong>{member.yearsExperience}</strong> years experience
+                    <p className="text-sm text-gray-600 mb-3">
+                      <span className="font-semibold">{member.yearsExperience}</span> experience
                     </p>
                   )}
+
+                  {/* Certifications */}
                   {member.certifications && member.certifications.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-2">
+                    <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
                       {member.certifications.map((cert, idx) => (
                         <span
                           key={idx}
-                          className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded"
+                          className="text-xs bg-cyan-100 text-cyan-800 px-3 py-1 rounded-full font-medium"
                         >
                           {cert}
                         </span>

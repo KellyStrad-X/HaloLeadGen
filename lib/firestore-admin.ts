@@ -649,6 +649,7 @@ export interface CrewMember {
   id: string;
   name: string;
   title: string;
+  phone?: string;
   photoUrl: string;
   yearsExperience?: string;
   certifications?: string[];

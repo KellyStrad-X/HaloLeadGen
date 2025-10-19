@@ -377,6 +377,8 @@ function BadgesTab({ selectedBadges, setSelectedBadges }: any) {
 
 // Team Tab Component
 function TeamTab({ teamMembers, setTeamMembers }: any) {
+  const [cropData, setCropData] = useState<{memberId: string, imageData: string} | null>(null);
+
   const addTeamMember = () => {
     if (teamMembers.length >= 2) return;
 
@@ -384,6 +386,7 @@ function TeamTab({ teamMembers, setTeamMembers }: any) {
       id: Date.now().toString(),
       name: '',
       title: '',
+      phone: '',
       photoUrl: '',
       photoFile: null,
       yearsExperience: '',
@@ -396,10 +399,10 @@ function TeamTab({ teamMembers, setTeamMembers }: any) {
     setTeamMembers(teamMembers.filter((m: any) => m.id !== id));
   };
 
-  const updateMember = (id: string, field: string, value: any) => {
-    setTeamMembers(
-      teamMembers.map((m: any) =>
-        m.id === id ? { ...m, [field]: value } : m
+  const updateMember = (id: string, updates: Partial<any>) => {
+    setTeamMembers((prev: any[]) =>
+      prev.map((m: any) =>
+        m.id === id ? { ...m, ...updates } : m
       )
     );
   };
@@ -409,16 +412,26 @@ function TeamTab({ teamMembers, setTeamMembers }: any) {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        updateMember(memberId, 'photoUrl', reader.result as string);
-        updateMember(memberId, 'photoFile', file);
+        setCropData({ memberId, imageData: reader.result as string });
       };
       reader.readAsDataURL(file);
     }
   };
 
+  const handleCropComplete = (memberId: string, croppedImage: Blob) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      updateMember(memberId, {
+        photoUrl: reader.result as string,
+        photoFile: croppedImage
+      });
+      setCropData(null);
+    };
+    reader.readAsDataURL(croppedImage);
+  };
+
   const removeMemberPhoto = (memberId: string) => {
-    updateMember(memberId, 'photoUrl', '');
-    updateMember(memberId, 'photoFile', null);
+    updateMember(memberId, { photoUrl: '', photoFile: null });
   };
 
   return (
@@ -472,35 +485,47 @@ function TeamTab({ teamMembers, setTeamMembers }: any) {
                   <input
                     type="text"
                     placeholder="Full Name"
-                    value={member.name}
-                    onChange={(e) => updateMember(member.id, 'name', e.target.value)}
-                    className="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Title (e.g., Owner, Lead Installer)"
-                    value={member.title}
-                    onChange={(e) => updateMember(member.id, 'title', e.target.value)}
+                    value={member.name || ''}
+                    onChange={(e) => updateMember(member.id, { name: e.target.value })}
                     className="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
                   />
                   <div className="grid grid-cols-2 gap-2">
                     <input
-                      type="number"
-                      placeholder="Years Experience"
-                      value={member.yearsExperience}
-                      onChange={(e) => updateMember(member.id, 'yearsExperience', e.target.value)}
+                      type="text"
+                      placeholder="Title (e.g., Owner)"
+                      value={member.title || ''}
+                      onChange={(e) => updateMember(member.id, { title: e.target.value })}
                       className="bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
                     />
+                    <input
+                      type="tel"
+                      placeholder="Phone"
+                      value={member.phone || ''}
+                      onChange={(e) => updateMember(member.id, { phone: e.target.value })}
+                      className="bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <select
+                      value={member.yearsExperience || ''}
+                      onChange={(e) => updateMember(member.id, { yearsExperience: e.target.value })}
+                      className="bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
+                    >
+                      <option value="">Years Experience</option>
+                      <option value="1-3">1-3 years</option>
+                      <option value="3-5">3-5 years</option>
+                      <option value="5-10">5-10 years</option>
+                      <option value="10+">10+ years</option>
+                      <option value="20+">20+ years</option>
+                    </select>
                     <input
                       type="text"
                       placeholder="Certifications (comma-separated)"
                       value={member.certifications?.join(', ') || ''}
                       onChange={(e) =>
-                        updateMember(
-                          member.id,
-                          'certifications',
-                          e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean)
-                        )
+                        updateMember(member.id, {
+                          certifications: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean)
+                        })
                       }
                       className="bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
                     />
@@ -536,6 +561,108 @@ function TeamTab({ teamMembers, setTeamMembers }: any) {
             No team members added yet. Click the button above to add your first team member.
           </p>
         )}
+      </div>
+
+      {/* Image Cropper Modal */}
+      {cropData && (
+        <CircularImageCropper
+          imageData={cropData.imageData}
+          onCropComplete={(blob) => handleCropComplete(cropData.memberId, blob)}
+          onCancel={() => setCropData(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+// Simple Circular Image Cropper Component
+function CircularImageCropper({ imageData, onCropComplete, onCancel }: {
+  imageData: string;
+  onCropComplete: (blob: Blob) => void;
+  onCancel: () => void;
+}) {
+  const [zoom, setZoom] = useState(1);
+  const canvasRef = useState<HTMLCanvasElement | null>(null)[0];
+  const imgRef = useState<HTMLImageElement | null>(null)[0];
+
+  const handleCrop = () => {
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const img = new Image();
+    img.onload = () => {
+      const size = 400; // Output size
+      canvas.width = size;
+      canvas.height = size;
+
+      // Calculate scaling and positioning for zoom
+      const scale = zoom;
+      const sourceSize = Math.min(img.width, img.height) / scale;
+      const sx = (img.width - sourceSize) / 2;
+      const sy = (img.height - sourceSize) / 2;
+
+      // Draw circular clipped image
+      ctx.beginPath();
+      ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+      ctx.closePath();
+      ctx.clip();
+
+      ctx.drawImage(img, sx, sy, sourceSize, sourceSize, 0, 0, size, size);
+
+      canvas.toBlob((blob) => {
+        if (blob) {
+          onCropComplete(blob);
+        }
+      }, 'image/png');
+    };
+    img.src = imageData;
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80">
+      <div className="bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4">
+        <h3 className="text-xl font-bold text-white mb-4">Crop Photo</h3>
+
+        {/* Preview */}
+        <div className="relative w-64 h-64 mx-auto mb-4 bg-slate-700 rounded-full overflow-hidden">
+          <img
+            src={imageData}
+            alt="Preview"
+            className="w-full h-full object-cover"
+            style={{ transform: `scale(${zoom})` }}
+          />
+        </div>
+
+        {/* Zoom Slider */}
+        <div className="mb-6">
+          <label className="block text-sm text-gray-300 mb-2">Zoom</label>
+          <input
+            type="range"
+            min="1"
+            max="3"
+            step="0.1"
+            value={zoom}
+            onChange={(e) => setZoom(parseFloat(e.target.value))}
+            className="w-full"
+          />
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-3">
+          <button
+            onClick={onCancel}
+            className="flex-1 px-4 py-2 border border-slate-600 rounded-lg text-gray-300 hover:bg-slate-700 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleCrop}
+            className="flex-1 px-4 py-2 bg-cyan-500 text-black rounded-lg hover:bg-cyan-600 transition-colors font-semibold"
+          >
+            Crop & Save
+          </button>
+        </div>
       </div>
     </div>
   );
