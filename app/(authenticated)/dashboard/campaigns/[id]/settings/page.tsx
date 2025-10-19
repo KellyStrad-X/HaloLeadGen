@@ -26,7 +26,7 @@ export default function CampaignSettingsPage() {
   const params = useParams();
   const router = useRouter();
   const campaignId = params.id as string;
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [loading, setLoading] = useState(true);
@@ -40,8 +40,13 @@ export default function CampaignSettingsPage() {
 
   useEffect(() => {
     const fetchCampaign = async () => {
+      if (authLoading) {
+        return;
+      }
+
       if (!user) {
         setLoading(false);
+        setError('You must be signed in to manage campaign settings.');
         return;
       }
 
@@ -53,8 +58,13 @@ export default function CampaignSettingsPage() {
           },
         });
 
+        if (response.status === 404) {
+          throw new Error('Campaign not found');
+        }
+
         if (!response.ok) {
-          throw new Error('Failed to load campaign');
+          const payload = await response.json().catch(() => ({}));
+          throw new Error(payload.error || 'Failed to load campaign');
         }
 
         const data = await response.json();
@@ -70,10 +80,10 @@ export default function CampaignSettingsPage() {
     };
 
     fetchCampaign();
-  }, [campaignId, user]);
+  }, [authLoading, campaignId, user]);
 
   const handleSave = async () => {
-    if (!user) return;
+    if (!user || authLoading) return;
 
     setSaving(true);
     setError(null);

@@ -144,15 +144,25 @@ export default function CampaignDetailsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <Link
-          href="/dashboard/campaigns"
-          className="text-cyan-400 hover:text-cyan-300 text-sm mb-4 inline-block"
-        >
-          ← Back to Campaigns
-        </Link>
-        <h1 className="text-3xl font-bold text-white">{campaign.campaignName}</h1>
-        <p className="text-gray-400 mt-2">{campaign.showcaseAddress}</p>
+      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div>
+          <Link
+            href="/dashboard/campaigns"
+            className="text-cyan-400 hover:text-cyan-300 text-sm mb-4 inline-block"
+          >
+            ← Back to Campaigns
+          </Link>
+          <h1 className="text-3xl font-bold text-white">{campaign.campaignName}</h1>
+          <p className="text-gray-400 mt-2">{campaign.showcaseAddress}</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Link
+            href={`/dashboard/campaigns/${campaignId}/settings`}
+            className="bg-cyan-500 hover:bg-cyan-600 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium"
+          >
+            Campaign Settings
+          </Link>
+        </div>
       </div>
 
       {/* Campaign Info Card */}
@@ -333,7 +343,14 @@ export default function CampaignDetailsPage() {
                       {new Date(lead.submittedAt).toLocaleDateString()}
                     </td>
                     <td className="px-4 py-3 text-sm" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex space-x-3">
+                      <div className="flex space-x-3 items-center">
+                        <Link
+                          href={`/dashboard/campaigns/${campaignId}/leads/${lead.id}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-cyan-400 hover:text-cyan-300"
+                        >
+                          View
+                        </Link>
                         <a
                           href={`tel:${lead.phone}`}
                           className="text-cyan-400 hover:text-cyan-300"

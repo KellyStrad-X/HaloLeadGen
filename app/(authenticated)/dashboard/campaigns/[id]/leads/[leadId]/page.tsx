@@ -24,7 +24,7 @@ export default function LeadDetailPage() {
   const router = useRouter();
   const campaignId = params.id as string;
   const leadId = params.leadId as string;
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
 
   const [lead, setLead] = useState<Lead | null>(null);
   const [loading, setLoading] = useState(true);
@@ -38,8 +38,13 @@ export default function LeadDetailPage() {
 
   useEffect(() => {
     const fetchLead = async () => {
+      if (authLoading) {
+        return;
+      }
+
       if (!user) {
         setLoading(false);
+        setError('You must be signed in to view this lead.');
         return;
       }
 
@@ -51,8 +56,13 @@ export default function LeadDetailPage() {
           },
         });
 
+        if (response.status === 404) {
+          throw new Error('Lead not found');
+        }
+
         if (!response.ok) {
-          throw new Error('Failed to load lead details');
+          const payload = await response.json().catch(() => ({}));
+          throw new Error(payload.error || 'Failed to load lead details');
         }
 
         const data = await response.json();
@@ -68,7 +78,7 @@ export default function LeadDetailPage() {
     };
 
     fetchLead();
-  }, [leadId, user]);
+  }, [authLoading, leadId, user]);
 
   const handleSave = async () => {
     if (!user) return;
