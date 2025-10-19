@@ -5,10 +5,9 @@ import type { CrewMember } from '@/lib/firestore-admin';
 interface MeetTheCrewProps {
   members: CrewMember[];
   tagline?: string;
-  companyLogo?: string;
 }
 
-export default function MeetTheCrew({ members, tagline, companyLogo }: MeetTheCrewProps) {
+export default function MeetTheCrew({ members, tagline }: MeetTheCrewProps) {
   if (!members || members.length === 0) {
     return null;
   }
@@ -86,18 +85,6 @@ export default function MeetTheCrew({ members, tagline, companyLogo }: MeetTheCr
                     </div>
                   )}
                 </div>
-
-                {/* Company Logo - Right Side (Desktop only) */}
-                {companyLogo && (
-                  <img
-                    src={companyLogo}
-                    alt="Company logo"
-                    className="hidden md:block w-24 h-24 lg:w-28 lg:h-28 rounded-full object-cover border-4 border-gray-200 flex-shrink-0 shadow-md"
-                    onError={(e) => {
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
-                )}
               </div>
             </div>
           ))}

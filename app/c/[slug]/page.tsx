@@ -155,7 +155,6 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
         <MeetTheCrew
           members={branding.crewMembers}
           tagline={tagline}
-          companyLogo={branding.companyLogo}
         />
       )}
 
