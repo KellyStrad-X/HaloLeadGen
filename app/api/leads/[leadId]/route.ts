@@ -5,10 +5,10 @@ import { getAdminApp } from '@/lib/firebase-admin';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ leadId: string }> }
+  { params }: { params: { leadId: string } }
 ) {
   try {
-    const { leadId } = await params;
+    const { leadId } = params;
     const authHeader = request.headers.get('Authorization');
 
     if (!authHeader?.startsWith('Bearer ')) {
@@ -41,10 +41,10 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ leadId: string }> }
+  { params }: { params: { leadId: string } }
 ) {
   try {
-    const { leadId } = await params;
+    const { leadId } = params;
     const authHeader = request.headers.get('Authorization');
 
     if (!authHeader?.startsWith('Bearer ')) {

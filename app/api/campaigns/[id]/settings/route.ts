@@ -5,10 +5,10 @@ import { getAdminApp } from '@/lib/firebase-admin';
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ campaignId: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { campaignId } = await params;
+    const { id: campaignId } = params;
     const authHeader = request.headers.get('Authorization');
 
     if (!authHeader?.startsWith('Bearer ')) {

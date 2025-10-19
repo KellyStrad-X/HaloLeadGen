@@ -3,10 +3,10 @@ import { getLeadsForCampaignMap } from '@/lib/firestore-admin';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ campaignId: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { campaignId } = await params;
+    const { id: campaignId } = params;
 
     if (!campaignId) {
       return NextResponse.json(
