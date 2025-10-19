@@ -52,47 +52,64 @@ export default function TrustBadges({ badges }: TrustBadgesProps) {
   return (
     <section className="py-8 bg-gray-50 border-y border-gray-200">
       <div className="max-w-4xl mx-auto px-4">
-        <h3 className="text-center text-sm font-semibold text-gray-600 mb-6 tracking-wide">
+        <h3 className="text-center text-base font-bold text-gray-700 mb-6 tracking-wide drop-shadow-md">
           TRUSTED & CERTIFIED
         </h3>
 
-        {/* 3D Carousel Container - centered with minimal spacing */}
+        {/* 3D Carousel Container - all badges visible in depth layers */}
         <div className="relative h-24 flex items-center justify-center overflow-hidden">
-          {/* Render all badges with positioning based on their relation to currentIndex */}
+          {/* Render all badges with depth-based positioning */}
           {badges.map((badgeId, index) => {
-            const position = (index - currentIndex + badges.length) % badges.length;
-            const isCenter = position === 0;
-            const isPrev = position === badges.length - 1;
-            const isNext = position === 1;
+            // Calculate position relative to current (normalized to 0-5 range)
+            let position = (index - currentIndex + badges.length) % badges.length;
 
-            // Only show prev, center, and next
-            if (!isCenter && !isPrev && !isNext) return null;
-
+            // Map positions to layers with symmetric layout
             let xOffset = 0;
-            let scale = 0.7;
-            let opacity = 0.5;
-            let zIndex = 1;
+            let scale = 1;
+            let opacity = 1;
+            let zIndex = 10;
 
-            if (isCenter) {
+            if (position === 0) {
+              // Front & center
               xOffset = 0;
               scale = 1;
               opacity = 1;
-              zIndex = 10;
-            } else if (isPrev) {
-              xOffset = -110; // Minimal spacing
-              scale = 0.7;
-              opacity = 0.5;
-              zIndex = 1;
-            } else if (isNext) {
-              xOffset = 110; // Minimal spacing
-              scale = 0.7;
-              opacity = 0.5;
-              zIndex = 1;
+              zIndex = 50;
+            } else if (position === 1) {
+              // Next up (right)
+              xOffset = 110;
+              scale = 0.75;
+              opacity = 0.6;
+              zIndex = 40;
+            } else if (position === badges.length - 1) {
+              // Previous (left)
+              xOffset = -110;
+              scale = 0.75;
+              opacity = 0.6;
+              zIndex = 40;
+            } else if (position === 2) {
+              // Further right
+              xOffset = 160;
+              scale = 0.5;
+              opacity = 0.3;
+              zIndex = 30;
+            } else if (position === badges.length - 2) {
+              // Further left
+              xOffset = -160;
+              scale = 0.5;
+              opacity = 0.3;
+              zIndex = 30;
+            } else {
+              // Furthest back (center, behind everything)
+              xOffset = 0;
+              scale = 0.35;
+              opacity = 0.15;
+              zIndex = 20;
             }
 
             return (
               <div
-                key={badgeId}
+                key={`${badgeId}-${index}`}
                 className="absolute transition-all duration-700 ease-in-out"
                 style={{
                   transform: `translateX(${xOffset}px) scale(${scale})`,
@@ -100,11 +117,11 @@ export default function TrustBadges({ badges }: TrustBadgesProps) {
                   zIndex: zIndex,
                 }}
               >
-                <div className={`h-24 w-32 ${!isCenter ? 'grayscale' : ''}`}>
+                <div className={`h-24 w-32 ${position !== 0 ? 'grayscale' : ''}`}>
                   <img
                     src={`/trust-badges/${badgeId}.png`}
                     alt={badgeId.replace(/-/g, ' ')}
-                    className={`h-full w-full object-contain ${isCenter ? 'drop-shadow-lg' : ''}`}
+                    className={`h-full w-full object-contain ${position === 0 ? 'drop-shadow-lg' : ''}`}
                     onError={(e) => {
                       e.currentTarget.style.display = 'none';
                     }}
