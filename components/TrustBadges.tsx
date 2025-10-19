@@ -50,58 +50,77 @@ export default function TrustBadges({ badges }: TrustBadgesProps) {
   }, [badges.length]);
 
   return (
-    <section className="py-8 bg-gray-50 border-y border-gray-200">
-      <div className="max-w-4xl mx-auto px-4">
-        <h3 className="text-center text-base font-bold text-gray-700 mb-6 tracking-wide drop-shadow-md">
-          TRUSTED & CERTIFIED
-        </h3>
+    <>
+      <style jsx>{`
+        .badge-position-1 { --x-offset: 85px; }
+        .badge-position--1 { --x-offset: -85px; }
+        .badge-position-2 { --x-offset: 130px; }
+        .badge-position--2 { --x-offset: -130px; }
 
-        {/* 3D Carousel Container - all badges visible in depth layers */}
-        <div className="relative h-24 flex items-center justify-center overflow-hidden">
+        @media (min-width: 768px) {
+          .badge-position-1 { --x-offset: 110px; }
+          .badge-position--1 { --x-offset: -110px; }
+          .badge-position-2 { --x-offset: 170px; }
+          .badge-position--2 { --x-offset: -170px; }
+        }
+      `}</style>
+      <section className="py-8 bg-gray-50 border-y border-gray-200">
+        <div className="max-w-4xl mx-auto px-4">
+          <h3 className="text-center text-base font-bold text-gray-700 mb-6 tracking-wide drop-shadow-md">
+            TRUSTED & CERTIFIED
+          </h3>
+
+          {/* 3D Carousel Container - all badges visible in depth layers */}
+          <div className="relative h-24 flex items-center justify-center overflow-hidden">
           {/* Render all badges with depth-based positioning */}
           {badges.map((badgeId, index) => {
             // Calculate position relative to current (normalized to 0-5 range)
             let position = (index - currentIndex + badges.length) % badges.length;
 
             // Map positions to layers with symmetric layout
-            let xOffset = 0;
+            let positionClass = '';
             let scale = 1;
             let opacity = 1;
             let zIndex = 10;
+            let useCustomOffset = false;
 
             if (position === 0) {
               // Front & center
-              xOffset = 0;
+              positionClass = '';
               scale = 1;
               opacity = 1;
               zIndex = 50;
             } else if (position === 1) {
               // Next up (right)
-              xOffset = 95;
+              positionClass = 'badge-position-1';
+              useCustomOffset = true;
               scale = 0.75;
               opacity = 0.6;
               zIndex = 40;
             } else if (position === badges.length - 1) {
               // Previous (left)
-              xOffset = -95;
+              positionClass = 'badge-position--1';
+              useCustomOffset = true;
               scale = 0.75;
               opacity = 0.6;
               zIndex = 40;
             } else if (position === 2) {
               // Further right
-              xOffset = 145;
+              positionClass = 'badge-position-2';
+              useCustomOffset = true;
               scale = 0.5;
               opacity = 0.3;
               zIndex = 30;
             } else if (position === badges.length - 2) {
               // Further left
-              xOffset = -145;
+              positionClass = 'badge-position--2';
+              useCustomOffset = true;
               scale = 0.5;
               opacity = 0.3;
               zIndex = 30;
             } else {
               // Furthest back (center, behind everything) - virtually invisible
-              xOffset = 0;
+              positionClass = '';
               scale = 0.35;
               opacity = 0.05;
               zIndex = 20;
@@ -110,9 +129,9 @@ export default function TrustBadges({ badges }: TrustBadgesProps) {
             return (
               <div
                 key={`${badgeId}-${index}`}
-                className="absolute transition-all duration-700 ease-in-out"
+                className={`absolute transition-all duration-700 ease-in-out ${positionClass}`}
                 style={{
-                  transform: `translateX(${xOffset}px) scale(${scale})`,
+                  transform: useCustomOffset ? `translateX(var(--x-offset)) scale(${scale})` : `scale(${scale})`,
                   opacity: opacity,
                   zIndex: zIndex,
                 }}
@@ -133,5 +152,6 @@ export default function TrustBadges({ badges }: TrustBadgesProps) {
         </div>
       </div>
     </section>
+    </>
   );
 }
