@@ -49,16 +49,6 @@ export default function TrustBadges({ badges }: TrustBadgesProps) {
     return () => clearInterval(interval);
   }, [badges.length]);
 
-  // Helper to get badge at relative position
-  const getBadgeAtPosition = (offset: number) => {
-    const index = (currentIndex + offset + badges.length) % badges.length;
-    return badges[index];
-  };
-
-  const prevBadge = getBadgeAtPosition(-1);
-  const centerBadge = getBadgeAtPosition(0);
-  const nextBadge = getBadgeAtPosition(1);
-
   return (
     <section className="py-8 bg-gray-50 border-y border-gray-200">
       <div className="max-w-4xl mx-auto px-4">
@@ -66,68 +56,63 @@ export default function TrustBadges({ badges }: TrustBadgesProps) {
           TRUSTED & CERTIFIED
         </h3>
 
-        {/* 3D Carousel Container */}
-        <div className="relative h-24 flex items-center justify-center">
-          {/* Previous badge (left, behind) */}
-          <div className="absolute left-1/2 -translate-x-1/2 transition-all duration-700 ease-in-out"
-               style={{ transform: 'translateX(-200px) translateZ(-100px) scale(0.7)', zIndex: 1 }}>
-            <div className="h-20 w-28 opacity-50 grayscale">
-              <img
-                src={`/trust-badges/${prevBadge}.png`}
-                alt={prevBadge.replace(/-/g, ' ')}
-                className="h-full w-full object-contain"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-            </div>
-          </div>
+        {/* 3D Carousel Container - centered with minimal spacing */}
+        <div className="relative h-24 flex items-center justify-center overflow-hidden">
+          {/* Render all badges with positioning based on their relation to currentIndex */}
+          {badges.map((badgeId, index) => {
+            const position = (index - currentIndex + badges.length) % badges.length;
+            const isCenter = position === 0;
+            const isPrev = position === badges.length - 1;
+            const isNext = position === 1;
 
-          {/* Center badge (front, full color) */}
-          <div className="absolute left-1/2 -translate-x-1/2 transition-all duration-700 ease-in-out"
-               style={{ transform: 'translateX(0) translateZ(0) scale(1)', zIndex: 10 }}>
-            <div className="h-24 w-32">
-              <img
-                src={`/trust-badges/${centerBadge}.png`}
-                alt={centerBadge.replace(/-/g, ' ')}
-                className="h-full w-full object-contain drop-shadow-lg"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-            </div>
-          </div>
+            // Only show prev, center, and next
+            if (!isCenter && !isPrev && !isNext) return null;
 
-          {/* Next badge (right, behind) */}
-          <div className="absolute left-1/2 -translate-x-1/2 transition-all duration-700 ease-in-out"
-               style={{ transform: 'translateX(200px) translateZ(-100px) scale(0.7)', zIndex: 1 }}>
-            <div className="h-20 w-28 opacity-50 grayscale">
-              <img
-                src={`/trust-badges/${nextBadge}.png`}
-                alt={nextBadge.replace(/-/g, ' ')}
-                className="h-full w-full object-contain"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-            </div>
-          </div>
-        </div>
+            let xOffset = 0;
+            let scale = 0.7;
+            let opacity = 0.5;
+            let zIndex = 1;
 
-        {/* Progress dots */}
-        <div className="flex justify-center gap-2 mt-4">
-          {badges.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentIndex(index)}
-              className={`h-2 rounded-full transition-all ${
-                index === currentIndex
-                  ? 'w-8 bg-gray-900'
-                  : 'w-2 bg-gray-300 hover:bg-gray-400'
-              }`}
-              aria-label={`Go to badge ${index + 1}`}
-            />
-          ))}
+            if (isCenter) {
+              xOffset = 0;
+              scale = 1;
+              opacity = 1;
+              zIndex = 10;
+            } else if (isPrev) {
+              xOffset = -110; // Minimal spacing
+              scale = 0.7;
+              opacity = 0.5;
+              zIndex = 1;
+            } else if (isNext) {
+              xOffset = 110; // Minimal spacing
+              scale = 0.7;
+              opacity = 0.5;
+              zIndex = 1;
+            }
+
+            return (
+              <div
+                key={badgeId}
+                className="absolute transition-all duration-700 ease-in-out"
+                style={{
+                  transform: `translateX(${xOffset}px) scale(${scale})`,
+                  opacity: opacity,
+                  zIndex: zIndex,
+                }}
+              >
+                <div className={`h-24 w-32 ${!isCenter ? 'grayscale' : ''}`}>
+                  <img
+                    src={`/trust-badges/${badgeId}.png`}
+                    alt={badgeId.replace(/-/g, ' ')}
+                    className={`h-full w-full object-contain ${isCenter ? 'drop-shadow-lg' : ''}`}
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>
