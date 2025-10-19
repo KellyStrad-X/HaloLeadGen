@@ -16,7 +16,7 @@ export default function MeetTheCrew({ members, tagline }: MeetTheCrewProps) {
 
   return (
     <section className="py-12 bg-gray-50">
-      <div className="max-w-6xl mx-auto px-4">
+      <div className="max-w-5xl mx-auto px-4">
         <h2 className="text-3xl font-bold text-gray-900 text-center mb-2">
           Meet Your Roofing Experts
         </h2>
@@ -27,7 +27,7 @@ export default function MeetTheCrew({ members, tagline }: MeetTheCrewProps) {
         )}
 
         {/* Grid: 2 columns on desktop if 2 members, stacked on mobile */}
-        <div className={`grid gap-6 ${members.length === 2 ? 'md:grid-cols-2' : ''}`}>
+        <div className={`grid gap-6 ${members.length === 2 ? 'md:grid-cols-2' : 'max-w-3xl mx-auto'}`}>
           {members.map((member) => (
             <div
               key={member.id}
@@ -62,7 +62,7 @@ export default function MeetTheCrew({ members, tagline }: MeetTheCrewProps) {
                   {/* Experience & Certifications */}
                   {member.yearsExperience && (
                     <p className="text-xs text-gray-600 mb-2">
-                      <span className="font-semibold">{member.yearsExperience}</span> experience
+                      <span className="font-semibold">{member.yearsExperience} years</span> experience
                     </p>
                   )}
 
@@ -82,9 +82,11 @@ export default function MeetTheCrew({ members, tagline }: MeetTheCrewProps) {
 
                 {/* Bio - Right (flexible, takes remaining space) */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-700 leading-relaxed">
-                    {member.bio || DEFAULT_BIO}
-                  </p>
+                  <div className="bg-gradient-to-br from-cyan-50 to-blue-50 border-l-4 border-cyan-500 rounded-r-lg p-4 shadow-sm">
+                    <p className="text-sm text-gray-800 leading-relaxed italic">
+                      {member.bio || DEFAULT_BIO}
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -124,15 +126,17 @@ export default function MeetTheCrew({ members, tagline }: MeetTheCrewProps) {
                 </div>
 
                 {/* Bio - Full width below */}
-                <p className="text-sm text-gray-700 leading-relaxed mb-3">
-                  {member.bio || DEFAULT_BIO}
-                </p>
+                <div className="bg-gradient-to-br from-cyan-50 to-blue-50 border-l-4 border-cyan-500 rounded-r-lg p-3 shadow-sm mb-3">
+                  <p className="text-sm text-gray-800 leading-relaxed italic">
+                    {member.bio || DEFAULT_BIO}
+                  </p>
+                </div>
 
                 {/* Experience and Certs - Bottom */}
                 <div className="space-y-2">
                   {member.yearsExperience && (
                     <p className="text-xs text-gray-600">
-                      <span className="font-semibold">{member.yearsExperience}</span> experience
+                      <span className="font-semibold">{member.yearsExperience} years</span> experience
                     </p>
                   )}
 
