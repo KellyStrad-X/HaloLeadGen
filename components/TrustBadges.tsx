@@ -77,33 +77,33 @@ export default function TrustBadges({ badges }: TrustBadgesProps) {
               zIndex = 50;
             } else if (position === 1) {
               // Next up (right)
-              xOffset = 110;
+              xOffset = 130;
               scale = 0.75;
               opacity = 0.6;
               zIndex = 40;
             } else if (position === badges.length - 1) {
               // Previous (left)
-              xOffset = -110;
+              xOffset = -130;
               scale = 0.75;
               opacity = 0.6;
               zIndex = 40;
             } else if (position === 2) {
               // Further right
-              xOffset = 160;
+              xOffset = 200;
               scale = 0.5;
               opacity = 0.3;
               zIndex = 30;
             } else if (position === badges.length - 2) {
               // Further left
-              xOffset = -160;
+              xOffset = -200;
               scale = 0.5;
               opacity = 0.3;
               zIndex = 30;
             } else {
-              // Furthest back (center, behind everything)
+              // Furthest back (center, behind everything) - virtually invisible
               xOffset = 0;
               scale = 0.35;
-              opacity = 0.15;
+              opacity = 0.05;
               zIndex = 20;
             }
 
