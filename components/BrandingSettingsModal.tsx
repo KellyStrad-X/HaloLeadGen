@@ -476,6 +476,7 @@ function TeamTab({ teamMembers, setTeamMembers }: any) {
       name: '',
       title: '',
       phone: '',
+      bio: '',
       photoUrl: '',
       photoFile: null,
       yearsExperience: '',
@@ -593,6 +594,24 @@ function TeamTab({ teamMembers, setTeamMembers }: any) {
                       onChange={(e) => updateMember(member.id, { phone: e.target.value })}
                       className="bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
                     />
+                  </div>
+                  <div>
+                    <textarea
+                      placeholder="Bio (optional, 2-3 sentences about expertise and background)"
+                      value={member.bio || ''}
+                      onChange={(e) => {
+                        const text = e.target.value;
+                        if (text.length <= 200) {
+                          updateMember(member.id, { bio: text });
+                        }
+                      }}
+                      rows={2}
+                      maxLength={200}
+                      className="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:ring-2 focus:ring-cyan-400 focus:border-transparent resize-none text-sm"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      {member.bio?.length || 0}/200 characters
+                    </p>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <select

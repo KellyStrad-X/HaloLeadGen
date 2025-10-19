@@ -651,6 +651,7 @@ export interface CrewMember {
   title: string;
   phone?: string;
   photoUrl: string;
+  bio?: string; // Optional, 200 char max
   yearsExperience?: string;
   certifications?: string[];
 }
