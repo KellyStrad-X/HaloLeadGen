@@ -103,7 +103,7 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-[#24292e] flex items-center justify-center px-4 py-12">
       <div className="max-w-md w-full space-y-8">
         {/* Header */}
         <div className="text-center">
@@ -114,7 +114,7 @@ export default function SignupPage() {
         </div>
 
         {/* Signup Form */}
-        <div className="bg-slate-800/80 rounded-lg shadow-xl p-8 border border-slate-700">
+        <div className="bg-[#2d333b] rounded-lg p-8 border border-[#373e47]">
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
               <div className="bg-red-500/20 border border-red-400 text-red-300 px-4 py-3 rounded">
@@ -132,7 +132,7 @@ export default function SignupPage() {
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-900/60 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400"
+                className="w-full px-4 py-3 bg-[#0d1117] border border-[#373e47] rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400"
                 placeholder="John Smith"
                 disabled={loading}
               />
@@ -148,7 +148,7 @@ export default function SignupPage() {
                 required
                 value={company}
                 onChange={(e) => setCompany(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-900/60 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400"
+                className="w-full px-4 py-3 bg-[#0d1117] border border-[#373e47] rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400"
                 placeholder="Halo Roofing"
                 disabled={loading}
               />
@@ -164,7 +164,7 @@ export default function SignupPage() {
                 required
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-900/60 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400"
+                className="w-full px-4 py-3 bg-[#0d1117] border border-[#373e47] rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400"
                 placeholder="(555) 123-4567"
                 disabled={loading}
               />
@@ -180,7 +180,7 @@ export default function SignupPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-900/60 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400"
+                className="w-full px-4 py-3 bg-[#0d1117] border border-[#373e47] rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400"
                 placeholder="contractor@example.com"
                 disabled={loading}
               />
@@ -195,7 +195,7 @@ export default function SignupPage() {
                 type="text"
                 value={license}
                 onChange={(e) => setLicense(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-900/60 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400"
+                className="w-full px-4 py-3 bg-[#0d1117] border border-[#373e47] rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400"
                 placeholder="e.g., TX-12345"
                 disabled={loading}
               />
@@ -214,7 +214,7 @@ export default function SignupPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-900/60 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400"
+                className="w-full px-4 py-3 bg-[#0d1117] border border-[#373e47] rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400"
                 placeholder="••••••••"
                 disabled={loading}
               />
@@ -230,7 +230,7 @@ export default function SignupPage() {
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-900/60 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400"
+                className="w-full px-4 py-3 bg-[#0d1117] border border-[#373e47] rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400"
                 placeholder="••••••••"
                 disabled={loading}
               />

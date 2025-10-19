@@ -185,7 +185,7 @@ export default function LeadDetailPage() {
       )}
 
       {/* Contact Information */}
-      <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
+      <div className="bg-[#2d333b] border border-[#373e47] rounded-lg p-6">
         <h2 className="text-xl font-semibold text-white mb-4">Contact Information</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
@@ -201,7 +201,7 @@ export default function LeadDetailPage() {
               </a>
               <a
                 href={`mailto:${lead.email}`}
-                className="bg-gray-800 hover:bg-gray-700 text-white px-3 py-2 rounded transition-colors text-sm"
+                className="bg-[#1e2227] hover:bg-[#2d333b] text-white px-3 py-2 rounded transition-colors text-sm"
               >
                 Email
               </a>
@@ -221,7 +221,7 @@ export default function LeadDetailPage() {
               </a>
               <a
                 href={`tel:${lead.phone}`}
-                className="bg-gray-800 hover:bg-gray-700 text-white px-3 py-2 rounded transition-colors text-sm"
+                className="bg-[#1e2227] hover:bg-[#2d333b] text-white px-3 py-2 rounded transition-colors text-sm"
               >
                 Call
               </a>
@@ -239,7 +239,7 @@ export default function LeadDetailPage() {
                   href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(lead.address)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bg-gray-800 hover:bg-gray-700 text-white px-3 py-2 rounded transition-colors text-sm"
+                  className="bg-[#1e2227] hover:bg-[#2d333b] text-white px-3 py-2 rounded transition-colors text-sm"
                 >
                   Map
                 </a>
@@ -250,12 +250,12 @@ export default function LeadDetailPage() {
       </div>
 
       {/* Job Status & Management */}
-      <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
+      <div className="bg-[#2d333b] border border-[#373e47] rounded-lg p-6">
         <h2 className="text-xl font-semibold text-white mb-4">Job Status</h2>
 
         {/* Map Consent Indicator */}
         {lead.mapConsent !== undefined && (
-          <div className="mb-6 p-4 bg-gray-800 rounded-lg">
+          <div className="mb-6 p-4 bg-[#1e2227] rounded-lg">
             <div className="flex items-center gap-2">
               {lead.mapConsent ? (
                 <>
@@ -288,7 +288,7 @@ export default function LeadDetailPage() {
               id="jobStatus"
               value={jobStatus}
               onChange={(e) => setJobStatus(e.target.value as Lead['jobStatus'])}
-              className="w-full md:w-1/2 bg-gray-800 border border-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              className="w-full md:w-1/2 bg-[#1e2227] border border-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
             >
               <option value="new">New - Not Yet Contacted</option>
               <option value="contacted">Contacted - Initial outreach made</option>
@@ -302,7 +302,7 @@ export default function LeadDetailPage() {
             )}
           </div>
 
-          <div className="p-4 bg-gray-800/50 rounded-lg">
+          <div className="p-4 bg-[#1e2227]/50 rounded-lg">
             <h3 className="text-sm font-semibold text-gray-300 mb-2">Status Guide:</h3>
             <ul className="space-y-1 text-sm text-gray-400">
               <li>
@@ -324,21 +324,21 @@ export default function LeadDetailPage() {
 
       {/* Lead Notes */}
       {lead.notes && (
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
+        <div className="bg-[#2d333b] border border-[#373e47] rounded-lg p-6">
           <h2 className="text-xl font-semibold text-white mb-4">Lead's Message</h2>
           <p className="text-gray-300 whitespace-pre-wrap">{lead.notes}</p>
         </div>
       )}
 
       {/* Contractor Notes */}
-      <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
+      <div className="bg-[#2d333b] border border-[#373e47] rounded-lg p-6">
         <h2 className="text-xl font-semibold text-white mb-4">Your Notes</h2>
         <textarea
           value={contractorNotes}
           onChange={(e) => setContractorNotes(e.target.value)}
           rows={6}
           placeholder="Add your notes about this lead, follow-up reminders, job details, etc..."
-          className="w-full bg-gray-800 border border-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 resize-none"
+          className="w-full bg-[#1e2227] border border-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 resize-none"
         />
       </div>
 
@@ -346,7 +346,7 @@ export default function LeadDetailPage() {
       <div className="flex justify-end gap-3">
         <Link
           href={`/dashboard/campaigns/${campaignId}`}
-          className="bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-lg transition-colors"
+          className="bg-[#1e2227] hover:bg-[#2d333b] text-white px-6 py-3 rounded-lg transition-colors"
         >
           Cancel
         </Link>

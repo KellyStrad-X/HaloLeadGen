@@ -184,7 +184,7 @@ export default function CampaignSettingsPage() {
       )}
 
       {/* Halo Map Settings */}
-      <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
+      <div className="bg-[#2d333b] border border-[#373e47] rounded-lg p-6">
         <h2 className="text-xl font-semibold text-white mb-4">Halo Map Settings</h2>
 
         <div className="space-y-6">
@@ -196,7 +196,7 @@ export default function CampaignSettingsPage() {
               id="serviceRadius"
               value={serviceRadiusMiles}
               onChange={(e) => setServiceRadiusMiles(Number(e.target.value))}
-              className="w-full md:w-1/2 bg-gray-800 border border-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              className="w-full md:w-1/2 bg-[#1e2227] border border-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
             >
               <option value={3}>3 miles - Dense urban area</option>
               <option value={5}>5 miles - Standard (recommended)</option>
@@ -208,7 +208,7 @@ export default function CampaignSettingsPage() {
             </p>
           </div>
 
-          <div className="p-4 bg-gray-800/50 rounded-lg">
+          <div className="p-4 bg-[#1e2227]/50 rounded-lg">
             <h3 className="text-sm font-semibold text-gray-300 mb-2">How it works:</h3>
             <ul className="space-y-1 text-sm text-gray-400">
               <li>
@@ -232,7 +232,7 @@ export default function CampaignSettingsPage() {
       </div>
 
       {/* Campaign Status */}
-      <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
+      <div className="bg-[#2d333b] border border-[#373e47] rounded-lg p-6">
         <h2 className="text-xl font-semibold text-white mb-4">Campaign Status</h2>
 
         <div>
@@ -243,7 +243,7 @@ export default function CampaignSettingsPage() {
             id="campaignStatus"
             value={campaignStatus}
             onChange={(e) => setCampaignStatus(e.target.value as 'Active' | 'Inactive')}
-            className="w-full md:w-1/2 bg-gray-800 border border-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
+            className="w-full md:w-1/2 bg-[#1e2227] border border-gray-700 text-white px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
           >
             <option value="Active">Active - Campaign page is public</option>
             <option value="Inactive">Inactive - Campaign page is hidden</option>
@@ -257,7 +257,7 @@ export default function CampaignSettingsPage() {
       </div>
 
       {/* Campaign Info (Read-only) */}
-      <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
+      <div className="bg-[#2d333b] border border-[#373e47] rounded-lg p-6">
         <h2 className="text-xl font-semibold text-white mb-4">Campaign Information</h2>
 
         <div className="space-y-4">
@@ -297,7 +297,7 @@ export default function CampaignSettingsPage() {
               <label className="block text-sm font-medium text-gray-400 mb-1">
                 Storm Information
               </label>
-              <div className="bg-gray-800 rounded-lg p-3 space-y-1 text-sm">
+              <div className="bg-[#1e2227] rounded-lg p-3 space-y-1 text-sm">
                 {campaign.stormInfo.stormDate && (
                   <p className="text-gray-300">
                     <span className="text-gray-400">Date:</span> {campaign.stormInfo.stormDate}
@@ -323,7 +323,7 @@ export default function CampaignSettingsPage() {
       <div className="flex justify-end gap-3">
         <Link
           href={`/dashboard/campaigns/${campaignId}`}
-          className="bg-gray-800 hover:bg-gray-700 text-white px-6 py-3 rounded-lg transition-colors"
+          className="bg-[#1e2227] hover:bg-[#2d333b] text-white px-6 py-3 rounded-lg transition-colors"
         >
           Cancel
         </Link>

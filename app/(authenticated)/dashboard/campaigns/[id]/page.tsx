@@ -43,7 +43,7 @@ const JOB_STATUS_LABELS: Record<NonNullable<Lead['jobStatus']>, string> = {
 };
 
 const JOB_STATUS_CLASSES: Record<NonNullable<Lead['jobStatus']>, string> = {
-  new: 'bg-gray-700 text-gray-300',
+  new: 'bg-[#2d333b] text-gray-300',
   contacted: 'bg-blue-900/50 text-blue-300',
   scheduled: 'bg-orange-900/50 text-orange-300',
   completed: 'bg-green-900/50 text-green-300',
@@ -53,7 +53,7 @@ const LEGACY_STATUS_CLASSES: Record<
   NonNullable<Lead['contractorStatus']>,
   string
 > = {
-  New: 'bg-gray-700 text-gray-300',
+  New: 'bg-[#2d333b] text-gray-300',
   Contacted: 'bg-blue-900/50 text-blue-300',
   Qualified: 'bg-green-900/50 text-green-300',
   Closed: 'bg-purple-900/50 text-purple-300',
@@ -166,7 +166,7 @@ export default function CampaignDetailsPage() {
       </div>
 
       {/* Campaign Info Card */}
-      <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
+      <div className="bg-[#2d333b] border border-[#373e47] rounded-lg p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div>
             <p className="text-gray-400 text-sm mb-1">Job Status</p>
@@ -187,7 +187,7 @@ export default function CampaignDetailsPage() {
               className={`inline-block px-3 py-1 text-sm font-semibold rounded ${
                 campaign.campaignStatus === 'Active'
                   ? 'bg-cyan-900/50 text-cyan-300'
-                  : 'bg-gray-700 text-gray-300'
+                  : 'bg-[#2d333b] text-gray-300'
               }`}
             >
               {campaign.campaignStatus || 'Active'}
@@ -209,7 +209,7 @@ export default function CampaignDetailsPage() {
           </div>
         </div>
 
-        <div className="mt-6 pt-6 border-t border-gray-800">
+        <div className="mt-6 pt-6 border-t border-[#373e47]">
           <p className="text-gray-400 text-sm mb-2">Landing Page URL</p>
           <div className="flex items-center gap-3">
             <code className="flex-1 bg-gray-800 px-4 py-2 rounded text-cyan-400 text-sm">
@@ -219,7 +219,7 @@ export default function CampaignDetailsPage() {
               href={`/c/${campaign.pageSlug}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded transition-colors"
+              className="bg-[#1e2227] hover:bg-[#2d333b] text-white px-4 py-2 rounded transition-colors"
             >
               View
             </a>
@@ -227,7 +227,7 @@ export default function CampaignDetailsPage() {
         </div>
 
         {campaign.qrCodeUrl && (
-          <div className="mt-6 pt-6 border-t border-gray-800">
+          <div className="mt-6 pt-6 border-t border-[#373e47]">
             <p className="text-gray-400 text-sm mb-2">QR Code</p>
             <div className="bg-white inline-block p-4 rounded">
               <Image
@@ -243,7 +243,7 @@ export default function CampaignDetailsPage() {
 
       {/* Photos Gallery */}
       {photos.length > 0 && (
-        <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
+        <div className="bg-[#2d333b] border border-[#373e47] rounded-lg p-6">
           <h2 className="text-xl font-semibold text-white mb-4">Campaign Photos</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             {photos.map((photo) => (
@@ -264,7 +264,7 @@ export default function CampaignDetailsPage() {
       )}
 
       {/* Leads Table */}
-      <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
+      <div className="bg-[#2d333b] border border-[#373e47] rounded-lg p-6">
         <h2 className="text-xl font-semibold text-white mb-4">
           Leads ({leads.length})
         </h2>
@@ -272,7 +272,7 @@ export default function CampaignDetailsPage() {
         {leads.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-800">
+              <thead className="bg-[#1e2227]">
                 <tr>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-300 uppercase">
                     Name
@@ -302,7 +302,7 @@ export default function CampaignDetailsPage() {
                   <tr
                     key={lead.id}
                     onClick={() => router.push(`/dashboard/campaigns/${campaignId}/leads/${lead.id}`)}
-                    className="hover:bg-gray-800/50 cursor-pointer transition-colors"
+                    className="hover:bg-[#373e47]/30 cursor-pointer transition-colors"
                   >
                     <td className="px-4 py-3 text-sm text-white font-medium">
                       {lead.name}
