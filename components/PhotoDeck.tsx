@@ -15,17 +15,24 @@ export default function PhotoDeck({ photos }: PhotoDeckProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   if (!photos || photos.length === 0) {
     return null;
   }
 
   const handlePrevious = () => {
+    if (isTransitioning) return;
+    setIsTransitioning(true);
     setCurrentIndex((prev) => (prev === 0 ? photos.length - 1 : prev - 1));
+    setTimeout(() => setIsTransitioning(false), 300);
   };
 
   const handleNext = () => {
+    if (isTransitioning) return;
+    setIsTransitioning(true);
     setCurrentIndex((prev) => (prev === photos.length - 1 ? 0 : prev + 1));
+    setTimeout(() => setIsTransitioning(false), 300);
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -79,12 +86,17 @@ export default function PhotoDeck({ photos }: PhotoDeckProps) {
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        {/* Current Photo */}
-        <img
-          src={photos[currentIndex].imageUrl}
-          alt={`Photo ${currentIndex + 1} of ${photos.length}`}
-          className="w-full h-full object-contain"
-        />
+        {/* Photos with crossfade transition */}
+        {photos.map((photo, index) => (
+          <img
+            key={photo.id}
+            src={photo.imageUrl}
+            alt={`Photo ${index + 1} of ${photos.length}`}
+            className={`absolute inset-0 w-full h-full object-contain transition-opacity duration-300 ${
+              index === currentIndex ? 'opacity-100' : 'opacity-0'
+            }`}
+          />
+        ))}
 
         {/* Tap Zone Indicators (visible on hover) - Subtle design */}
         <div className="absolute inset-0 flex pointer-events-none">

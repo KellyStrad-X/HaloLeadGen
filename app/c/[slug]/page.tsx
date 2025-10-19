@@ -31,7 +31,12 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
     campaignData.neighborhoodName ||
     campaignData.campaignName;
 
-  const contractorName = campaignData.contractor.company || campaignData.contractor.name || 'Local Contractor';
+  // Use company name override from branding if set, otherwise use contractor data
+  const contractorName =
+    branding?.companyName ||
+    campaignData.contractor.company ||
+    campaignData.contractor.name ||
+    'Local Contractor';
   const contractorPhone = campaignData.contractor.phone?.trim();
   const contractorEmail = campaignData.contractor.email?.trim();
 
@@ -84,12 +89,12 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
       {/* Hero Section with Background Carousel */}
       <CampaignHero>
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-5xl sm:text-6xl font-semibold text-gray-900 mb-4 leading-tight drop-shadow-[0_2px_8px_rgba(255,255,255,0.9)]">
+          <h1 className="text-5xl sm:text-6xl font-bold md:font-normal text-gray-900 mb-4 leading-tight drop-shadow-[0_2px_8px_rgba(255,255,255,0.9)]">
             <span style={{ color: primaryColor }}>{contractorName}</span> is in Your Area!
             <br />
             Schedule a FREE Inspection
           </h1>
-          <p className="text-xl text-gray-800 font-semibold mb-8 max-w-2xl mx-auto drop-shadow-[0_2px_4px_rgba(255,255,255,0.8)]">
+          <p className="text-xl text-gray-800 font-bold md:font-normal mb-8 max-w-2xl mx-auto drop-shadow-[0_2px_4px_rgba(255,255,255,0.8)]">
             Professional roofing services from your local experts
           </p>
 

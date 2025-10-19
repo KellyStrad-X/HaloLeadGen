@@ -9,14 +9,15 @@ interface BrandingSettingsModalProps {
   onClose: () => void;
 }
 
-type TabType = 'badges' | 'team';
+type TabType = 'general' | 'badges' | 'team';
 
 export default function BrandingSettingsModal({ isOpen, onClose }: BrandingSettingsModalProps) {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<TabType>('badges');
+  const [activeTab, setActiveTab] = useState<TabType>('general');
   const [isSaving, setIsSaving] = useState(false);
 
-  // Company branding state (simplified - removed logo, tagline, colors)
+  // General settings state
+  const [companyName, setCompanyName] = useState('');
 
   // Trust badges state
   const [selectedBadges, setSelectedBadges] = useState<string[]>([]);
@@ -52,6 +53,7 @@ export default function BrandingSettingsModal({ isOpen, onClose }: BrandingSetti
       if (response.ok) {
         const data = await response.json();
         if (data) {
+          setCompanyName(data.companyName || '');
           setSelectedBadges(data.trustBadges || []);
           setTeamMembers(data.crewMembers || []);
         }
@@ -102,6 +104,7 @@ export default function BrandingSettingsModal({ isOpen, onClose }: BrandingSetti
           'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
+          companyName: companyName.trim() || undefined,
           trustBadges: selectedBadges,
           crewMembers: updatedTeamMembers,
         }),
@@ -153,6 +156,16 @@ export default function BrandingSettingsModal({ isOpen, onClose }: BrandingSetti
           <div className="border-b border-slate-700 px-6">
             <nav className="flex gap-8">
               <button
+                onClick={() => setActiveTab('general')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  activeTab === 'general'
+                    ? 'border-cyan-400 text-cyan-400'
+                    : 'border-transparent text-gray-400 hover:text-gray-300'
+                }`}
+              >
+                General
+              </button>
+              <button
                 onClick={() => setActiveTab('badges')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === 'badges'
@@ -177,6 +190,13 @@ export default function BrandingSettingsModal({ isOpen, onClose }: BrandingSetti
 
           {/* Tab Content */}
           <div className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
+            {activeTab === 'general' && (
+              <GeneralTab
+                companyName={companyName}
+                setCompanyName={setCompanyName}
+              />
+            )}
+
             {activeTab === 'badges' && (
               <BadgesTab
                 selectedBadges={selectedBadges}
@@ -209,6 +229,40 @@ export default function BrandingSettingsModal({ isOpen, onClose }: BrandingSetti
             </button>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// General Tab Component
+function GeneralTab({ companyName, setCompanyName }: any) {
+  return (
+    <div className="space-y-6">
+      <div>
+        <label className="block font-medium text-white mb-1">
+          Company Display Name
+        </label>
+        <p className="text-sm text-gray-400 mb-4">
+          Override the company name shown in headers and QR landing pages. Leave blank to use your registration name.
+        </p>
+
+        <input
+          type="text"
+          placeholder="e.g., ABC Roofing & Construction"
+          value={companyName}
+          onChange={(e) => setCompanyName(e.target.value)}
+          className="w-full bg-slate-600 border border-slate-500 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
+        />
+
+        <p className="text-xs text-gray-500 mt-2">
+          This will appear in the top left corner of all your campaign pages and marketing materials.
+        </p>
+      </div>
+
+      <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-4">
+        <p className="text-sm text-cyan-300">
+          <strong>Note:</strong> More general settings will be added here in future updates (e.g., default contact info, timezone, notification preferences).
+        </p>
       </div>
     </div>
   );

@@ -106,11 +106,11 @@ export default function MarketingHero({ onSubmit }: HeroProps) {
       <div className="max-w-4xl mx-auto relative z-10">
         {/* Hero Content */}
         <div className="text-center mb-12">
-          <h1 className="text-5xl sm:text-6xl font-bold mb-6 leading-tight drop-shadow-lg">
+          <h1 className="text-5xl sm:text-6xl font-bold md:font-normal mb-6 leading-tight drop-shadow-lg">
             Turn every finished roof into{' '}
             <span className="text-cyan-600">the next five jobs</span>
           </h1>
-          <p className="text-2xl font-bold text-gray-900 mb-8 max-w-2xl mx-auto drop-shadow-[0_2px_4px_rgba(255,255,255,0.8)]">
+          <p className="text-2xl font-bold md:font-normal text-gray-900 mb-8 max-w-2xl mx-auto drop-shadow-[0_2px_4px_rgba(255,255,255,0.8)]">
             Proof-first marketing via QR codes + localized landing pages that showcase
             your work to nearby homeowners.
           </p>

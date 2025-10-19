@@ -655,6 +655,7 @@ export interface CrewMember {
 }
 
 export interface ContractorBranding {
+  companyName?: string;
   trustBadges?: string[];
   crewMembers?: CrewMember[];
 }
@@ -678,6 +679,7 @@ export async function getContractorBrandingAdmin(
   const data = brandingDoc.data() || {};
 
   return {
+    companyName: (data.companyName as string | undefined) || undefined,
     trustBadges: (data.trustBadges as string[] | undefined) || undefined,
     crewMembers: (data.crewMembers as CrewMember[] | undefined) || undefined,
   };
