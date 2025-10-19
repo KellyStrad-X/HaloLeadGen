@@ -42,6 +42,7 @@ interface CampaignDoc {
   campaignName?: string;
   homeownerName?: string | null;
   showcaseAddress?: string | null;
+  qrDisplayName?: string | null;
   jobStatus?: 'Completed' | 'Pending';
   campaignStatus?: 'Active' | 'Inactive';
   neighborhoodName?: string;
@@ -89,6 +90,7 @@ export interface Campaign {
   campaignName: string;
   neighborhoodName: string;
   showcaseAddress: string | null;
+  qrDisplayName?: string | null;
   homeownerName: string | null;
   jobStatus: 'Completed' | 'Pending' | null;
   campaignStatus: 'Active' | 'Inactive';
@@ -196,6 +198,7 @@ function serializeCampaign(doc: CampaignDoc): Campaign {
     campaignName;
 
   const homeownerName = doc.homeownerName?.trim() || null;
+  const qrDisplayName = doc.qrDisplayName?.trim() || null;
   const jobStatus = doc.jobStatus ?? null;
   const campaignStatus = normalizeCampaignStatus(doc);
 
@@ -205,6 +208,7 @@ function serializeCampaign(doc: CampaignDoc): Campaign {
     campaignName,
     neighborhoodName,
     showcaseAddress,
+    qrDisplayName,
     homeownerName,
     jobStatus,
     campaignStatus,

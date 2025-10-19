@@ -24,7 +24,9 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
   // Fetch contractor branding (only trust badges + team)
   const branding = await getContractorBrandingAdmin(campaignData.contractorId);
 
-  const location =
+  // Use qrDisplayName for privacy-safe display, fallback to location if not set
+  const displayLocation =
+    campaignData.qrDisplayName ||
     campaignData.showcaseAddress ||
     campaignData.neighborhoodName ||
     campaignData.campaignName;
@@ -82,13 +84,13 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
       {/* Hero Section with Background Carousel */}
       <CampaignHero>
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-5xl sm:text-6xl font-bold text-gray-900 mb-4 leading-tight drop-shadow-[0_2px_8px_rgba(255,255,255,0.9)]">
-            Free Roof Inspections
+          <h1 className="text-5xl sm:text-6xl font-semibold text-gray-900 mb-4 leading-tight drop-shadow-[0_2px_8px_rgba(255,255,255,0.9)]">
+            <span style={{ color: primaryColor }}>{contractorName}</span> is in Your Area!
             <br />
-            <span style={{ color: primaryColor }}>{location}</span>
+            Schedule a FREE Inspection
           </h1>
-          <p className="text-xl text-gray-800 font-bold mb-8 max-w-2xl mx-auto drop-shadow-[0_2px_4px_rgba(255,255,255,0.8)]">
-            {tagline}
+          <p className="text-xl text-gray-800 font-semibold mb-8 max-w-2xl mx-auto drop-shadow-[0_2px_4px_rgba(255,255,255,0.8)]">
+            Professional roofing services from your local experts
           </p>
 
           {/* Trust Signals - Inline */}
@@ -121,7 +123,7 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
             Storm Damage Documentation
           </h2>
           <p className="text-gray-600 text-center mb-6">
-            Recent photos from {location}
+            Recent photos from {displayLocation}
           </p>
 
           {/* Context Banner */}

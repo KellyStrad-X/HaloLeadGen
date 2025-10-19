@@ -6,6 +6,7 @@ interface CampaignRequest {
   campaignName: string;
   homeownerName?: string;
   showcaseAddress: string;
+  qrDisplayName: string;
   jobStatus: 'Completed' | 'Pending';
 }
 export async function POST(request: NextRequest) {
@@ -36,9 +37,9 @@ export async function POST(request: NextRequest) {
     const body: CampaignRequest = await request.json();
 
     // Validate required fields
-    if (!body.campaignName || !body.showcaseAddress || !body.jobStatus) {
+    if (!body.campaignName || !body.showcaseAddress || !body.qrDisplayName || !body.jobStatus) {
       return NextResponse.json(
-        { error: 'Campaign name, address, and job status are required' },
+        { error: 'Campaign name, address, QR display name, and job status are required' },
         { status: 400 }
       );
     }
@@ -57,6 +58,7 @@ export async function POST(request: NextRequest) {
       campaignName: body.campaignName,
       homeownerName: body.homeownerName,
       showcaseAddress: body.showcaseAddress,
+      qrDisplayName: body.qrDisplayName,
       jobStatus: body.jobStatus,
     });
 

@@ -86,12 +86,12 @@ export default function PhotoDeck({ photos }: PhotoDeckProps) {
           className="w-full h-full object-contain"
         />
 
-        {/* Tap Zone Indicators (visible on hover) */}
-        <div className="absolute inset-0 flex">
+        {/* Tap Zone Indicators (visible on hover) - Subtle design */}
+        <div className="absolute inset-0 flex pointer-events-none">
           {/* Left Zone */}
-          <div className="flex-1 flex items-center justify-start pl-4 hover:bg-black/20 transition-colors">
-            <div className="hidden md:block bg-black/50 rounded-full p-3 opacity-0 group-hover:opacity-100 transition-opacity">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex-1 flex items-center justify-start pl-4 pointer-events-none">
+            <div className="hidden md:block bg-black/30 rounded-full p-2 opacity-0 group-hover:opacity-60 transition-opacity duration-200">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </div>
@@ -101,30 +101,25 @@ export default function PhotoDeck({ photos }: PhotoDeckProps) {
           <div className="flex-1"></div>
 
           {/* Right Zone */}
-          <div className="flex-1 flex items-center justify-end pr-4 hover:bg-black/20 transition-colors">
-            <div className="hidden md:block bg-black/50 rounded-full p-3 opacity-0 group-hover:opacity-100 transition-opacity">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="flex-1 flex items-center justify-end pr-4 pointer-events-none">
+            <div className="hidden md:block bg-black/30 rounded-full p-2 opacity-0 group-hover:opacity-60 transition-opacity duration-200">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </div>
           </div>
         </div>
 
-        {/* Photo Counter */}
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/70 text-white px-4 py-2 rounded-full text-sm font-medium">
-          {currentIndex + 1} / {photos.length}
-        </div>
-
-        {/* Navigation Arrows (Mobile/Touch) */}
+        {/* Navigation Arrows (Mobile/Touch) - Subtle, semi-transparent */}
         <button
           onClick={(e) => {
             e.stopPropagation();
             handlePrevious();
           }}
-          className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 md:hidden transition-colors"
+          className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white rounded-full p-2 md:hidden transition-all duration-150"
           aria-label="Previous photo"
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
@@ -134,10 +129,10 @@ export default function PhotoDeck({ photos }: PhotoDeckProps) {
             e.stopPropagation();
             handleNext();
           }}
-          className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 md:hidden transition-colors"
+          className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white rounded-full p-2 md:hidden transition-all duration-150"
           aria-label="Next photo"
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </button>

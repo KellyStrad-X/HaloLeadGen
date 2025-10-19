@@ -9,6 +9,7 @@ interface CampaignInfo {
   campaignName: string;
   homeownerName: string;
   showcaseAddress: string;
+  qrDisplayName: string;
   jobStatus: 'Completed' | 'Pending';
 }
 
@@ -28,6 +29,7 @@ export default function CampaignForm() {
     campaignName: '',
     homeownerName: '',
     showcaseAddress: '',
+    qrDisplayName: '',
     jobStatus: 'Completed',
   });
 
@@ -46,6 +48,10 @@ export default function CampaignForm() {
       newErrors.showcaseAddress = 'Address is required';
     } else if (campaignInfo.showcaseAddress.trim().length < 10) {
       newErrors.showcaseAddress = 'Please provide a complete address';
+    }
+
+    if (!campaignInfo.qrDisplayName.trim()) {
+      newErrors.qrDisplayName = 'QR display name is required';
     }
 
     setErrors(newErrors);
@@ -90,6 +96,7 @@ export default function CampaignForm() {
           campaignName: campaignInfo.campaignName,
           homeownerName: campaignInfo.homeownerName || undefined,
           showcaseAddress: campaignInfo.showcaseAddress,
+          qrDisplayName: campaignInfo.qrDisplayName,
           jobStatus: campaignInfo.jobStatus,
         }),
       });
@@ -213,7 +220,33 @@ export default function CampaignForm() {
             <p className="mt-1 text-sm text-red-400">{errors.showcaseAddress}</p>
           )}
           <p className="mt-1 text-sm text-gray-500">
-            The specific property featured in this campaign
+            For your reference only (not shown publicly)
+          </p>
+        </div>
+
+        {/* QR Display Name */}
+        <div>
+          <label
+            htmlFor="qrDisplayName"
+            className="block text-sm font-medium text-gray-200 mb-2"
+          >
+            QR Display Name <span className="text-red-400">*</span>
+          </label>
+          <input
+            type="text"
+            id="qrDisplayName"
+            value={campaignInfo.qrDisplayName}
+            onChange={(e) => handleInputChange('qrDisplayName', e.target.value)}
+            className={`w-full px-4 py-3 bg-slate-900/60 border ${
+              errors.qrDisplayName ? 'border-red-500' : 'border-slate-600'
+            } rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent`}
+            placeholder="e.g., Oak Ridge Subdivision, Maple Heights Area"
+          />
+          {errors.qrDisplayName && (
+            <p className="mt-1 text-sm text-red-400">{errors.qrDisplayName}</p>
+          )}
+          <p className="mt-1 text-sm text-gray-500">
+            Shown on QR page (do NOT use homeowner name or exact address)
           </p>
         </div>
 

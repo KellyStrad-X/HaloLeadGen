@@ -17,6 +17,7 @@ export interface AdminCampaign {
   contractorId: string;
   campaignName: string;
   showcaseAddress?: string | null;
+  qrDisplayName?: string | null;
   homeownerName?: string | null;
   jobStatus?: JobStatus | null;
   campaignStatus?: CampaignStatus;
@@ -208,12 +209,14 @@ export async function createCampaignAdmin({
   contractorId,
   campaignName,
   showcaseAddress,
+  qrDisplayName,
   homeownerName,
   jobStatus,
 }: {
   contractorId: string;
   campaignName: string;
   showcaseAddress: string;
+  qrDisplayName: string;
   homeownerName?: string | null;
   jobStatus: JobStatus;
 }): Promise<{ id: string; slug: string }> {
@@ -222,12 +225,14 @@ export async function createCampaignAdmin({
   const now = Timestamp.now();
   const trimmedName = campaignName.trim();
   const trimmedAddress = showcaseAddress.trim();
+  const trimmedQrDisplayName = qrDisplayName.trim();
 
   const docRef = await adminDb.collection('campaigns').add({
     contractorId,
     campaignName: trimmedName,
     homeownerName: homeownerName?.trim() || null,
     showcaseAddress: trimmedAddress,
+    qrDisplayName: trimmedQrDisplayName,
     jobStatus,
     campaignStatus: 'Active' as CampaignStatus,
     neighborhoodName: trimmedAddress || trimmedName,
