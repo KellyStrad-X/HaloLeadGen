@@ -69,6 +69,10 @@ export default function TrustBadges({ badges }: TrustBadgesProps) {
             let opacity = 1;
             let zIndex = 10;
 
+            // Responsive spacing: tighter on mobile, wider on desktop
+            const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+            const spacingMultiplier = isMobile ? 0.7 : 1;
+
             if (position === 0) {
               // Front & center
               xOffset = 0;
@@ -77,25 +81,25 @@ export default function TrustBadges({ badges }: TrustBadgesProps) {
               zIndex = 50;
             } else if (position === 1) {
               // Next up (right)
-              xOffset = 130;
+              xOffset = 130 * spacingMultiplier;
               scale = 0.75;
               opacity = 0.6;
               zIndex = 40;
             } else if (position === badges.length - 1) {
               // Previous (left)
-              xOffset = -130;
+              xOffset = -130 * spacingMultiplier;
               scale = 0.75;
               opacity = 0.6;
               zIndex = 40;
             } else if (position === 2) {
               // Further right
-              xOffset = 200;
+              xOffset = 200 * spacingMultiplier;
               scale = 0.5;
               opacity = 0.3;
               zIndex = 30;
             } else if (position === badges.length - 2) {
               // Further left
-              xOffset = -200;
+              xOffset = -200 * spacingMultiplier;
               scale = 0.5;
               opacity = 0.3;
               zIndex = 30;
