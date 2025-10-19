@@ -11,6 +11,21 @@ interface StormBannerProps {
 export default function StormBanner({ stormInfo }: StormBannerProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const handleViewDamage = () => {
+    scrollToSection('photo-gallery');
+  };
+
+  const handleRequestInspection = () => {
+    scrollToSection('lead-form');
+  };
+
   const getFormattedDate = () => {
     if (!stormInfo.stormDate) return null;
     const date = new Date(stormInfo.stormDate);
@@ -32,7 +47,7 @@ export default function StormBanner({ stormInfo }: StormBannerProps) {
       {/* Storm Alert Banner */}
       <section className="py-4 px-4 bg-gradient-to-r from-orange-500 to-red-500">
         <div className="max-w-5xl mx-auto">
-          <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             {/* Left: Icon + Message */}
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0 animate-pulse">
@@ -52,10 +67,10 @@ export default function StormBanner({ stormInfo }: StormBannerProps) {
               </div>
             </div>
 
-            {/* Right: View Details Button */}
+            {/* Right: View Details Button - centered on mobile */}
             <button
               onClick={() => setIsModalOpen(true)}
-              className="px-6 py-3 bg-white text-orange-600 font-semibold rounded-lg hover:bg-orange-50 transition-all shadow-lg hover:shadow-xl flex-shrink-0"
+              className="px-6 py-3 bg-white text-orange-600 font-semibold rounded-lg hover:bg-orange-50 transition-all shadow-lg hover:shadow-xl flex-shrink-0 w-full sm:w-auto"
             >
               View Storm Details →
             </button>
@@ -68,6 +83,8 @@ export default function StormBanner({ stormInfo }: StormBannerProps) {
         <StormInfoModal
           stormInfo={stormInfo}
           onClose={() => setIsModalOpen(false)}
+          onViewDamage={handleViewDamage}
+          onRequestInspection={handleRequestInspection}
         />
       )}
     </>

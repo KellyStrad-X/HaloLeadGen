@@ -1,15 +1,23 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import type { StormInfo } from '@/lib/firestore';
 
 interface StormInfoModalProps {
   stormInfo: StormInfo;
   onClose: () => void;
+  onViewDamage?: () => void;
+  onRequestInspection?: () => void;
 }
 
-export default function StormInfoModal({ stormInfo, onClose }: StormInfoModalProps) {
+export default function StormInfoModal({ stormInfo, onClose, onViewDamage, onRequestInspection }: StormInfoModalProps) {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    // Trigger animation after mount
+    setTimeout(() => setIsVisible(true), 10);
+  }, []);
   const formatDate = (dateString: string | undefined) => {
     if (!dateString) return null;
     const date = new Date(dateString);
@@ -30,14 +38,18 @@ export default function StormInfoModal({ stormInfo, onClose }: StormInfoModalPro
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black bg-opacity-70 transition-opacity"
+        className={`fixed inset-0 bg-black transition-opacity duration-300 ${
+          isVisible ? 'bg-opacity-70' : 'bg-opacity-0'
+        }`}
         onClick={onClose}
       />
 
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
         <div
-          className="relative bg-white rounded-xl shadow-2xl max-w-2xl w-full overflow-hidden"
+          className={`relative bg-white rounded-xl shadow-2xl max-w-2xl w-full overflow-hidden transition-all duration-300 ${
+            isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+          }`}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header with gradient */}
@@ -83,7 +95,7 @@ export default function StormInfoModal({ stormInfo, onClose }: StormInfoModalPro
                   <div className="flex items-center gap-3 mb-2">
                     <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 2.5C9 1.67 9.67 1 10.5 1h3c.83 0 1.5.67 1.5 1.5S14.33 4 13.5 4h-3C9.67 4 9 3.33 9 2.5zm0 0v0M5 8.5C5 7.67 5.67 7 6.5 7h11c.83 0 1.5.67 1.5 1.5S18.33 10 17.5 10h-11C5.67 10 5 9.33 5 8.5zm0 0v0M3 15c0-.83.67-1.5 1.5-1.5h15c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-15C3.67 16.5 3 15.83 3 15z" />
                       </svg>
                     </div>
                     <div>
@@ -99,8 +111,10 @@ export default function StormInfoModal({ stormInfo, onClose }: StormInfoModalPro
                 <div className="bg-cyan-50 rounded-lg p-4 border border-cyan-200">
                   <div className="flex items-center gap-3 mb-2">
                     <div className="w-10 h-10 bg-cyan-500 rounded-full flex items-center justify-center">
-                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                      <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="8" opacity="0.3"/>
+                        <circle cx="12" cy="12" r="5"/>
+                        <circle cx="9" cy="10" r="1.5" fill="white" opacity="0.6"/>
                       </svg>
                     </div>
                     <div>
@@ -114,8 +128,8 @@ export default function StormInfoModal({ stormInfo, onClose }: StormInfoModalPro
 
             {/* Affected Areas */}
             {stormInfo.affectedAreas && (
-              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                <h4 className="text-sm font-semibold text-gray-700 uppercase mb-2">
+              <div className="bg-red-50 rounded-lg p-4 border-l-4 border-red-500">
+                <h4 className="text-sm font-semibold text-red-700 uppercase mb-2">
                   Affected Areas
                 </h4>
                 <p className="text-gray-800 leading-relaxed">
@@ -156,12 +170,26 @@ export default function StormInfoModal({ stormInfo, onClose }: StormInfoModalPro
 
           {/* Footer */}
           <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
-            <button
-              onClick={onClose}
-              className="w-full px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold rounded-lg hover:from-cyan-600 hover:to-blue-600 transition-all shadow-md hover:shadow-lg"
-            >
-              Close & Request Free Inspection
-            </button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button
+                onClick={() => {
+                  onClose();
+                  onViewDamage?.();
+                }}
+                className="w-full px-6 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white font-semibold rounded-lg hover:from-orange-600 hover:to-red-600 transition-all shadow-md hover:shadow-lg"
+              >
+                Close & View Damage!
+              </button>
+              <button
+                onClick={() => {
+                  onClose();
+                  onRequestInspection?.();
+                }}
+                className="w-full px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-semibold rounded-lg hover:from-cyan-600 hover:to-blue-600 transition-all shadow-md hover:shadow-lg"
+              >
+                Close & Request Inspection
+              </button>
+            </div>
           </div>
         </div>
       </div>
