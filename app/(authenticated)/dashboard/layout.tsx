@@ -38,7 +38,7 @@ export default function DashboardLayout({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-[#24292e] flex items-center justify-center">
         <div className="text-cyan-400 text-xl">Loading...</div>
       </div>
     );
@@ -59,9 +59,9 @@ export default function DashboardLayout({
 
   return (
     <DashboardContext.Provider value={{ activeTab, setActiveTab }}>
-      <div className="min-h-screen bg-slate-900">
+      <div className="min-h-screen bg-[#24292e]">
         {/* Header */}
-        <header className="bg-slate-800 border-b border-slate-700">
+        <header className="bg-[#1e2227] border-b border-[#373e47]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               {/* Logo & Navigation */}
@@ -82,7 +82,7 @@ export default function DashboardLayout({
                       className={`px-4 py-2 rounded-lg text-base font-medium transition-colors ${
                         activeTab === 'overview'
                           ? 'bg-cyan-500/20 text-cyan-400'
-                          : 'text-gray-300 hover:bg-slate-700 hover:text-white'
+                          : 'text-gray-300 hover:bg-[#2d333b] hover:text-white'
                       }`}
                     >
                       Dashboard
@@ -92,7 +92,7 @@ export default function DashboardLayout({
                       className={`px-4 py-2 rounded-lg text-base font-medium transition-colors ${
                         activeTab === 'analytics'
                           ? 'bg-cyan-500/20 text-cyan-400'
-                          : 'text-gray-300 hover:bg-slate-700 hover:text-white'
+                          : 'text-gray-300 hover:bg-[#2d333b] hover:text-white'
                       }`}
                     >
                       Analytics
@@ -102,7 +102,7 @@ export default function DashboardLayout({
                       className={`px-4 py-2 rounded-lg text-base font-medium transition-colors ${
                         activeTab === 'campaigns'
                           ? 'bg-cyan-500/20 text-cyan-400'
-                          : 'text-gray-300 hover:bg-slate-700 hover:text-white'
+                          : 'text-gray-300 hover:bg-[#2d333b] hover:text-white'
                       }`}
                     >
                       All Campaigns
@@ -133,14 +133,14 @@ export default function DashboardLayout({
               </span>
               <button
                 onClick={handleLogout}
-                className="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                className="bg-[#2d333b] hover:bg-[#373e47] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
               >
                 Logout
               </button>
               {showTabs && (
                 <button
                   onClick={() => setShowSettingsModal(true)}
-                  className="hidden sm:flex items-center justify-center border border-slate-600 hover:bg-slate-700 text-gray-200 p-2 rounded-lg transition-colors"
+                  className="hidden sm:flex items-center justify-center border border-[#373e47] hover:bg-[#2d333b] text-gray-200 p-2 rounded-lg transition-colors"
                   title="Settings"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -155,14 +155,14 @@ export default function DashboardLayout({
 
         {/* Mobile Navigation */}
         {showTabs && (
-          <div className="md:hidden border-t border-slate-700">
+          <div className="md:hidden border-t border-[#373e47]">
             <nav className="px-4 py-3 space-y-2">
               <button
                 onClick={() => setActiveTab('overview')}
                 className={`w-full text-left block px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   activeTab === 'overview'
-                    ? 'bg-slate-700 text-cyan-400'
-                    : 'text-gray-200 hover:bg-slate-700 hover:text-white'
+                    ? 'bg-[#2d333b] text-cyan-400'
+                    : 'text-gray-200 hover:bg-[#2d333b] hover:text-white'
                 }`}
               >
                 Dashboard
@@ -171,8 +171,8 @@ export default function DashboardLayout({
                 onClick={() => setActiveTab('analytics')}
                 className={`w-full text-left block px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   activeTab === 'analytics'
-                    ? 'bg-slate-700 text-cyan-400'
-                    : 'text-gray-200 hover:bg-slate-700 hover:text-white'
+                    ? 'bg-[#2d333b] text-cyan-400'
+                    : 'text-gray-200 hover:bg-[#2d333b] hover:text-white'
                 }`}
               >
                 Analytics
@@ -181,15 +181,15 @@ export default function DashboardLayout({
                 onClick={() => setActiveTab('campaigns')}
                 className={`w-full text-left block px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                   activeTab === 'campaigns'
-                    ? 'bg-slate-700 text-cyan-400'
-                    : 'text-gray-200 hover:bg-slate-700 hover:text-white'
+                    ? 'bg-[#2d333b] text-cyan-400'
+                    : 'text-gray-200 hover:bg-[#2d333b] hover:text-white'
                 }`}
               >
                 All Campaigns
               </button>
               <Link
                 href="/create-campaign"
-                className="block px-3 py-2 rounded-lg text-sm font-medium text-gray-200 hover:bg-slate-700 hover:text-white transition-colors"
+                className="block px-3 py-2 rounded-lg text-sm font-medium text-gray-200 hover:bg-[#2d333b] hover:text-white transition-colors"
               >
                 Create Campaign
               </Link>
@@ -204,7 +204,7 @@ export default function DashboardLayout({
       </main>
 
       {/* Footer */}
-      <footer className="bg-slate-800 text-white py-12 px-4 sm:px-6 lg:px-8 border-t border-slate-700 mt-16">
+      <footer className="bg-[#1e2227] text-white py-12 px-4 sm:px-6 lg:px-8 border-t border-[#373e47] mt-16">
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-2 gap-8 mb-8">
             {/* Left Column */}
@@ -240,7 +240,7 @@ export default function DashboardLayout({
           </div>
 
           {/* Bottom Links */}
-          <div className="border-t border-slate-700 pt-8 text-center">
+          <div className="border-t border-[#373e47] pt-8 text-center">
             <p className="text-sm text-gray-400">
               <a href="#" className="hover:text-cyan-400 transition-colors">
                 Privacy Policy

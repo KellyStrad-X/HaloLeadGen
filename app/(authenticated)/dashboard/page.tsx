@@ -160,7 +160,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Campaign Map */}
-      <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-6 shadow-lg">
+      <div className="bg-[#2d333b] border border-[#373e47] rounded-lg p-6">
         <h2 className="text-xl font-semibold text-white mb-4">Campaign Locations</h2>
         <CampaignMap />
       </div>
@@ -168,14 +168,14 @@ export default function DashboardPage() {
       {/* Recent Leads & Campaigns */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Recent Leads */}
-        <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-6 shadow-lg">
+        <div className="bg-[#2d333b] border border-[#373e47] rounded-lg p-6">
           <h2 className="text-xl font-semibold text-white mb-4">Recent Leads</h2>
           {recentLeads.length > 0 ? (
             <div className="space-y-3">
               {recentLeads.map((lead) => (
                 <div
                   key={lead.id}
-                  className="flex items-center justify-between py-3 border-b border-slate-700 last:border-0"
+                  className="flex items-center justify-between py-3 border-b border-[#373e47] last:border-0"
                 >
                   <div>
                     <p className="text-white font-medium">{lead.name}</p>
@@ -200,7 +200,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Recent Campaigns */}
-        <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-6 shadow-lg">
+        <div className="bg-[#2d333b] border border-[#373e47] rounded-lg p-6">
           <h2 className="text-xl font-semibold text-white mb-4">Recent Campaigns</h2>
           {recentCampaigns.length > 0 ? (
             <div className="space-y-3">
@@ -208,7 +208,7 @@ export default function DashboardPage() {
                 <Link
                   key={campaign.id}
                   href={`/dashboard/campaigns/${campaign.id}`}
-                  className="block py-3 border-b border-slate-700 last:border-0 hover:bg-slate-700/30 -mx-2 px-2 rounded transition-colors"
+                  className="block py-3 border-b border-[#373e47] last:border-0 hover:bg-[#373e47]/30 -mx-2 px-2 rounded transition-colors"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
@@ -295,8 +295,8 @@ function StatCard({ title, value, color }: StatCardProps) {
   };
 
   return (
-    <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-6 shadow-lg">
-      <p className="text-gray-300 text-sm font-medium mb-2">{title}</p>
+    <div className="bg-[#2d333b] border border-[#373e47] rounded-lg p-6">
+      <p className="text-gray-400 text-sm font-medium mb-2">{title}</p>
       <p className={`text-4xl font-bold ${colorClasses[color]}`}>{value}</p>
     </div>
   );
