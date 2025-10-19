@@ -64,48 +64,44 @@ export default function TrustBadges({ badges }: TrustBadgesProps) {
             let position = (index - currentIndex + badges.length) % badges.length;
 
             // Map positions to layers with symmetric layout
-            let xOffset = 0;
             let scale = 1;
             let opacity = 1;
             let zIndex = 10;
-
-            // Responsive spacing: tighter on mobile, wider on desktop
-            const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-            const spacingMultiplier = isMobile ? 0.7 : 1;
+            let positionClass = '';
 
             if (position === 0) {
               // Front & center
-              xOffset = 0;
+              positionClass = 'translate-x-0';
               scale = 1;
               opacity = 1;
               zIndex = 50;
             } else if (position === 1) {
-              // Next up (right)
-              xOffset = 130 * spacingMultiplier;
+              // Next up (right) - responsive spacing
+              positionClass = 'translate-x-[91px] md:translate-x-[130px]';
               scale = 0.75;
               opacity = 0.6;
               zIndex = 40;
             } else if (position === badges.length - 1) {
-              // Previous (left)
-              xOffset = -130 * spacingMultiplier;
+              // Previous (left) - responsive spacing
+              positionClass = '-translate-x-[91px] md:-translate-x-[130px]';
               scale = 0.75;
               opacity = 0.6;
               zIndex = 40;
             } else if (position === 2) {
-              // Further right
-              xOffset = 200 * spacingMultiplier;
+              // Further right - responsive spacing
+              positionClass = 'translate-x-[140px] md:translate-x-[200px]';
               scale = 0.5;
               opacity = 0.3;
               zIndex = 30;
             } else if (position === badges.length - 2) {
-              // Further left
-              xOffset = -200 * spacingMultiplier;
+              // Further left - responsive spacing
+              positionClass = '-translate-x-[140px] md:-translate-x-[200px]';
               scale = 0.5;
               opacity = 0.3;
               zIndex = 30;
             } else {
               // Furthest back (center, behind everything) - virtually invisible
-              xOffset = 0;
+              positionClass = 'translate-x-0';
               scale = 0.35;
               opacity = 0.05;
               zIndex = 20;
@@ -114,9 +110,9 @@ export default function TrustBadges({ badges }: TrustBadgesProps) {
             return (
               <div
                 key={`${badgeId}-${index}`}
-                className="absolute transition-all duration-700 ease-in-out"
+                className={`absolute transition-all duration-700 ease-in-out ${positionClass}`}
                 style={{
-                  transform: `translateX(${xOffset}px) scale(${scale})`,
+                  transform: `scale(${scale})`,
                   opacity: opacity,
                   zIndex: zIndex,
                 }}
