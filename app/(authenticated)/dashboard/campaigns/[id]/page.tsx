@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/lib/auth-context';
@@ -31,11 +31,38 @@ interface Lead {
   address: string | null;
   notes: string | null;
   submittedAt: string;
+  jobStatus?: 'new' | 'contacted' | 'scheduled' | 'completed';
   contractorStatus?: 'New' | 'Contacted' | 'Qualified' | 'Closed' | 'Lost';
 }
 
+const JOB_STATUS_LABELS: Record<NonNullable<Lead['jobStatus']>, string> = {
+  new: 'New',
+  contacted: 'Contacted',
+  scheduled: 'Scheduled',
+  completed: 'Completed',
+};
+
+const JOB_STATUS_CLASSES: Record<NonNullable<Lead['jobStatus']>, string> = {
+  new: 'bg-gray-700 text-gray-300',
+  contacted: 'bg-blue-900/50 text-blue-300',
+  scheduled: 'bg-orange-900/50 text-orange-300',
+  completed: 'bg-green-900/50 text-green-300',
+};
+
+const LEGACY_STATUS_CLASSES: Record<
+  NonNullable<Lead['contractorStatus']>,
+  string
+> = {
+  New: 'bg-gray-700 text-gray-300',
+  Contacted: 'bg-blue-900/50 text-blue-300',
+  Qualified: 'bg-green-900/50 text-green-300',
+  Closed: 'bg-purple-900/50 text-purple-300',
+  Lost: 'bg-gray-800 text-gray-400',
+};
+
 export default function CampaignDetailsPage() {
   const params = useParams();
+  const router = useRouter();
   const campaignId = params.id as string;
   const { user } = useAuth();
 
@@ -262,7 +289,11 @@ export default function CampaignDetailsPage() {
               </thead>
               <tbody className="divide-y divide-gray-800">
                 {leads.map((lead) => (
-                  <tr key={lead.id} className="hover:bg-gray-800/50">
+                  <tr
+                    key={lead.id}
+                    onClick={() => router.push(`/dashboard/campaigns/${campaignId}/leads/${lead.id}`)}
+                    className="hover:bg-gray-800/50 cursor-pointer transition-colors"
+                  >
                     <td className="px-4 py-3 text-sm text-white font-medium">
                       {lead.name}
                     </td>
@@ -276,24 +307,32 @@ export default function CampaignDetailsPage() {
                       {lead.address || 'N/A'}
                     </td>
                     <td className="px-4 py-3">
-                      <span
-                        className={`px-2 py-1 text-xs font-semibold rounded ${
-                          lead.contractorStatus === 'Contacted'
-                            ? 'bg-blue-900/50 text-blue-300'
-                            : lead.contractorStatus === 'Qualified'
-                            ? 'bg-green-900/50 text-green-300'
-                            : lead.contractorStatus === 'Closed'
-                            ? 'bg-purple-900/50 text-purple-300'
-                            : 'bg-gray-700 text-gray-300'
-                        }`}
-                      >
-                        {lead.contractorStatus || 'New'}
-                      </span>
+                      {(() => {
+                        if (lead.jobStatus) {
+                          const status = lead.jobStatus;
+                          return (
+                            <span
+                              className={`px-2 py-1 text-xs font-semibold rounded ${JOB_STATUS_CLASSES[status]}`}
+                            >
+                              {JOB_STATUS_LABELS[status]}
+                            </span>
+                          );
+                        }
+
+                        const legacyStatus = lead.contractorStatus ?? 'New';
+                        return (
+                          <span
+                            className={`px-2 py-1 text-xs font-semibold rounded ${LEGACY_STATUS_CLASSES[legacyStatus]}`}
+                          >
+                            {legacyStatus}
+                          </span>
+                        );
+                      })()}
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-400">
-                    {new Date(lead.submittedAt).toLocaleDateString()}
+                      {new Date(lead.submittedAt).toLocaleDateString()}
                     </td>
-                    <td className="px-4 py-3 text-sm">
+                    <td className="px-4 py-3 text-sm" onClick={(e) => e.stopPropagation()}>
                       <div className="flex space-x-3">
                         <a
                           href={`tel:${lead.phone}`}
@@ -315,9 +354,9 @@ export default function CampaignDetailsPage() {
             </table>
           </div>
         ) : (
-          <p className="text-gray-400 text-center py-8">
-            No leads yet for this campaign
-          </p>
+          <div className="text-gray-400 text-sm">
+            No leads yet. Share your QR campaign link to start collecting leads.
+          </div>
         )}
       </div>
     </div>

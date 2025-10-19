@@ -157,6 +157,7 @@ function toCampaignAdmin(doc: FirebaseFirestore.DocumentSnapshot): Campaign {
     pageSlug: data.pageSlug || generateSlug(campaignName),
     qrCodeUrl: (data.qrCodeUrl as string | null | undefined) ?? null,
     stormInfo: (data.stormInfo as StormInfo | undefined) || null,
+    serviceRadiusMiles: (data.serviceRadiusMiles as number | undefined) || 5,
     createdAt,
     updatedAt: updatedAtTimestamp ? serializeTimestamp(updatedAtTimestamp) : null,
   };
@@ -641,6 +642,7 @@ export async function getDashboardCampaignDetailsAdmin(
       address: (data.address as string | null | undefined) ?? null,
       notes: (data.notes as string | null | undefined) ?? null,
       submittedAt: serializeTimestamp(data.submittedAt as Timestamp | undefined),
+      jobStatus: (data.jobStatus as 'new' | 'contacted' | 'scheduled' | 'completed' | undefined) || 'new',
       contractorStatus: (data.contractorStatus as
         | 'New'
         | 'Contacted'
@@ -751,4 +753,171 @@ export async function getLeadsForCampaignMap(
   }
 
   return mapLeads;
+}
+
+/**
+ * Get lead by ID for contractor (ensures contractor owns the lead's campaign)
+ */
+export async function getLeadByIdAdmin(
+  leadId: string,
+  contractorId: string
+): Promise<any | null> {
+  const adminDb = getAdminFirestore();
+  const leadDoc = await adminDb.collection('leads').doc(leadId).get();
+
+  if (!leadDoc.exists) {
+    return null;
+  }
+
+  const leadData = leadDoc.data() || {};
+  const campaignId = leadData.campaignId as string;
+
+  // Verify contractor owns this campaign
+  const campaignDoc = await adminDb.collection('campaigns').doc(campaignId).get();
+  if (!campaignDoc.exists) {
+    return null;
+  }
+
+  const campaignData = campaignDoc.data() || {};
+  if (campaignData.contractorId !== contractorId) {
+    return null; // Contractor doesn't own this campaign
+  }
+
+  return {
+    id: leadDoc.id,
+    name: (leadData.name as string) || '',
+    email: (leadData.email as string) || '',
+    phone: (leadData.phone as string) || '',
+    address: (leadData.address as string | null) || null,
+    notes: (leadData.notes as string | null) || null,
+    submittedAt: serializeTimestamp(leadData.submittedAt as Timestamp | undefined),
+    jobStatus: (leadData.jobStatus as 'new' | 'contacted' | 'scheduled' | 'completed' | undefined) || 'new',
+    jobStatusUpdatedAt: leadData.jobStatusUpdatedAt
+      ? serializeTimestamp(leadData.jobStatusUpdatedAt as Timestamp)
+      : null,
+    mapConsent: (leadData.mapConsent as boolean | undefined) || false,
+    contractorNotes: (leadData.contractorNotes as string | undefined) || '',
+  };
+}
+
+/**
+ * Update lead status and notes
+ */
+export async function updateLeadStatusAdmin({
+  leadId,
+  contractorId,
+  jobStatus,
+  contractorNotes,
+}: {
+  leadId: string;
+  contractorId: string;
+  jobStatus?: 'new' | 'contacted' | 'scheduled' | 'completed';
+  contractorNotes?: string;
+}): Promise<any | null> {
+  const adminDb = getAdminFirestore();
+  const leadDoc = await adminDb.collection('leads').doc(leadId).get();
+
+  if (!leadDoc.exists) {
+    return null;
+  }
+
+  const leadData = leadDoc.data() || {};
+  const campaignId = leadData.campaignId as string;
+
+  // Verify contractor owns this campaign
+  const campaignDoc = await adminDb.collection('campaigns').doc(campaignId).get();
+  if (!campaignDoc.exists) {
+    return null;
+  }
+
+  const campaignData = campaignDoc.data() || {};
+  if (campaignData.contractorId !== contractorId) {
+    return null;
+  }
+
+  // Build update object
+  const updateData: any = {};
+
+  if (jobStatus !== undefined) {
+    updateData.jobStatus = jobStatus;
+    updateData.jobStatusUpdatedAt = Timestamp.now();
+
+    // Optional: Track status history for analytics
+    const statusHistory = (leadData.statusHistory as any[]) || [];
+    statusHistory.push({
+      status: jobStatus,
+      changedAt: Timestamp.now(),
+      changedBy: contractorId,
+    });
+    updateData.statusHistory = statusHistory;
+  }
+
+  if (contractorNotes !== undefined) {
+    updateData.contractorNotes = contractorNotes;
+  }
+
+  // Update the lead
+  await leadDoc.ref.update(updateData);
+
+  // Return updated lead
+  return getLeadByIdAdmin(leadId, contractorId);
+}
+
+/**
+ * Update campaign settings (service radius, status, etc.)
+ */
+export async function updateCampaignSettingsAdmin({
+  campaignId,
+  contractorId,
+  serviceRadiusMiles,
+  campaignStatus,
+}: {
+  campaignId: string;
+  contractorId: string;
+  serviceRadiusMiles?: number;
+  campaignStatus?: 'Active' | 'Inactive';
+}): Promise<any | null> {
+  const adminDb = getAdminFirestore();
+  const campaignDoc = await adminDb.collection('campaigns').doc(campaignId).get();
+
+  if (!campaignDoc.exists) {
+    return null;
+  }
+
+  const campaignData = campaignDoc.data() || {};
+
+  // Verify contractor owns this campaign
+  if (campaignData.contractorId !== contractorId) {
+    return null;
+  }
+
+  // Build update object
+  const updateData: any = {
+    updatedAt: Timestamp.now(),
+  };
+
+  if (serviceRadiusMiles !== undefined) {
+    updateData.serviceRadiusMiles = serviceRadiusMiles;
+  }
+
+  if (campaignStatus !== undefined) {
+    updateData.campaignStatus = campaignStatus;
+  }
+
+  // Update the campaign
+  await campaignDoc.ref.update(updateData);
+
+  // Return updated campaign
+  const updated = await campaignDoc.ref.get();
+  const updatedData = updated.data() || {};
+
+  return {
+    id: updated.id,
+    campaignName: updatedData.campaignName || '',
+    showcaseAddress: updatedData.showcaseAddress || null,
+    jobStatus: updatedData.jobStatus || null,
+    campaignStatus: updatedData.campaignStatus || 'Active',
+    serviceRadiusMiles: updatedData.serviceRadiusMiles || 5,
+    stormInfo: updatedData.stormInfo || null,
+  };
 }

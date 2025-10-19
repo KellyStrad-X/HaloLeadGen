@@ -36,7 +36,7 @@ function getServiceAccount(): ServiceAccount {
 // Lazy initialization - only initialize when actually needed
 let app: App | null = null;
 
-function getAdminApp(): App {
+export function getAdminApp(): App {
   if (app) {
     return app;
   }

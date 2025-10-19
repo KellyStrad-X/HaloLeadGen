@@ -58,6 +58,7 @@ interface CampaignDoc {
   pageSlug: string;
   qrCodeUrl: string | null;
   stormInfo?: StormInfo | null;
+  serviceRadiusMiles?: number;
   createdAt: Timestamp;
   updatedAt?: Timestamp;
   status?: 'active' | 'paused' | 'completed';
@@ -108,6 +109,7 @@ export interface Campaign {
   pageSlug: string;
   qrCodeUrl: string | null;
   stormInfo?: StormInfo | null;
+  serviceRadiusMiles?: number;
   createdAt: string; // ISO date string
   updatedAt: string | null;
 }
