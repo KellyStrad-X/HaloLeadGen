@@ -6,6 +6,7 @@ import PhotoDeck from '@/components/PhotoDeck';
 import LeadForm from '@/components/LeadForm';
 import TrustBadges from '@/components/TrustBadges';
 import MeetTheCrew from '@/components/MeetTheCrew';
+import StormBanner from '@/components/StormBanner';
 
 interface CampaignPageProps {
   params: Promise<{
@@ -119,6 +120,11 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
       {/* Trust Badges */}
       {branding?.trustBadges && branding.trustBadges.length > 0 && (
         <TrustBadges badges={branding.trustBadges} />
+      )}
+
+      {/* Storm Banner */}
+      {campaignData.stormInfo && campaignData.stormInfo.enabled && (
+        <StormBanner stormInfo={campaignData.stormInfo} />
       )}
 
       {/* Photo Gallery */}

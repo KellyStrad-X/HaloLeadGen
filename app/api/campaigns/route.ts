@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth } from '@/lib/firebase-admin';
-import { createCampaignAdmin } from '@/lib/firestore-admin';
+import { createCampaignAdmin, type StormInfo } from '@/lib/firestore-admin';
 
 interface CampaignRequest {
   campaignName: string;
@@ -8,6 +8,7 @@ interface CampaignRequest {
   showcaseAddress: string;
   qrDisplayName: string;
   jobStatus: 'Completed' | 'Pending';
+  stormInfo?: StormInfo | null;
 }
 export async function POST(request: NextRequest) {
   try {
@@ -60,6 +61,7 @@ export async function POST(request: NextRequest) {
       showcaseAddress: body.showcaseAddress,
       qrDisplayName: body.qrDisplayName,
       jobStatus: body.jobStatus,
+      stormInfo: body.stormInfo || null,
     });
 
     return NextResponse.json(

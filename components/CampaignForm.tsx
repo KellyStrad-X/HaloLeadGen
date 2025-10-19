@@ -5,12 +5,22 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import PhotoUpload from './PhotoUpload';
 
+interface StormInfo {
+  enabled: boolean;
+  stormDate: string;
+  windSpeed: string;
+  hailSize: string;
+  affectedAreas: string;
+  additionalNotes: string;
+}
+
 interface CampaignInfo {
   campaignName: string;
   homeownerName: string;
   showcaseAddress: string;
   qrDisplayName: string;
   jobStatus: 'Completed' | 'Pending';
+  stormInfo: StormInfo;
 }
 
 interface FormErrors {
@@ -31,6 +41,14 @@ export default function CampaignForm() {
     showcaseAddress: '',
     qrDisplayName: '',
     jobStatus: 'Completed',
+    stormInfo: {
+      enabled: false,
+      stormDate: '',
+      windSpeed: '',
+      hailSize: '',
+      affectedAreas: '',
+      additionalNotes: '',
+    },
   });
 
   const [uploadedPhotos, setUploadedPhotos] = useState<string[]>([]);
@@ -54,6 +72,10 @@ export default function CampaignForm() {
       newErrors.qrDisplayName = 'QR display name is required';
     }
 
+    if (campaignInfo.stormInfo.enabled && !campaignInfo.stormInfo.stormDate) {
+      newErrors.stormDate = 'Storm date is required when storm info is enabled';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -63,6 +85,25 @@ export default function CampaignForm() {
     setCampaignInfo((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  // Handle storm info changes
+  const handleStormInfoChange = (field: keyof StormInfo, value: string | boolean) => {
+    setCampaignInfo((prev) => ({
+      ...prev,
+      stormInfo: {
+        ...prev.stormInfo,
+        [field]: value,
+      },
+    }));
+
+    if (field === 'stormDate' && errors.stormDate) {
+      setErrors((prev) => ({ ...prev, stormDate: '' }));
+    }
+
+    if (field === 'enabled' && value === false && errors.stormDate) {
+      setErrors((prev) => ({ ...prev, stormDate: '' }));
     }
   };
 
@@ -98,6 +139,16 @@ export default function CampaignForm() {
           showcaseAddress: campaignInfo.showcaseAddress,
           qrDisplayName: campaignInfo.qrDisplayName,
           jobStatus: campaignInfo.jobStatus,
+          stormInfo: campaignInfo.stormInfo.enabled
+            ? {
+                ...campaignInfo.stormInfo,
+                stormDate: campaignInfo.stormInfo.stormDate,
+                windSpeed: campaignInfo.stormInfo.windSpeed.trim(),
+                hailSize: campaignInfo.stormInfo.hailSize.trim(),
+                affectedAreas: campaignInfo.stormInfo.affectedAreas.trim(),
+                additionalNotes: campaignInfo.stormInfo.additionalNotes.trim(),
+              }
+            : null,
         }),
       });
 
@@ -270,6 +321,94 @@ export default function CampaignForm() {
           <p className="mt-1 text-sm text-gray-500">
             Current status of the roofing work
           </p>
+        </div>
+
+        {/* Storm Info Section */}
+        <div className="border-t border-slate-600 pt-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-lg font-semibold text-gray-200">Storm Information (Optional)</h3>
+              <p className="text-sm text-gray-500">Add storm details to create urgency and demonstrate expertise</p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={campaignInfo.stormInfo.enabled}
+                onChange={(e) => handleStormInfoChange('enabled', e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
+            </label>
+          </div>
+
+          {campaignInfo.stormInfo.enabled && (
+            <div className="space-y-4 pl-4 border-l-2 border-cyan-500">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-200 mb-2">
+                    Storm Date
+                  </label>
+                <input
+                  type="date"
+                  value={campaignInfo.stormInfo.stormDate}
+                  onChange={(e) => handleStormInfoChange('stormDate', e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-900/60 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                />
+                {errors.stormDate && (
+                  <p className="mt-1 text-sm text-red-400">{errors.stormDate}</p>
+                )}
+              </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-200 mb-2">
+                    Wind Speed
+                  </label>
+                  <input
+                    type="text"
+                    value={campaignInfo.stormInfo.windSpeed}
+                    onChange={(e) => handleStormInfoChange('windSpeed', e.target.value)}
+                    placeholder="e.g., 70 mph"
+                    className="w-full px-4 py-3 bg-slate-900/60 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-200 mb-2">
+                  Hail Size
+                </label>
+                <input
+                  type="text"
+                  value={campaignInfo.stormInfo.hailSize}
+                  onChange={(e) => handleStormInfoChange('hailSize', e.target.value)}
+                  placeholder="e.g., Golf ball, 1.5 inches"
+                  className="w-full px-4 py-3 bg-slate-900/60 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-200 mb-2">
+                  Affected Areas
+                </label>
+                <input
+                  type="text"
+                  value={campaignInfo.stormInfo.affectedAreas}
+                  onChange={(e) => handleStormInfoChange('affectedAreas', e.target.value)}
+                  placeholder="e.g., Northeast Denver, Highlands Ranch"
+                  className="w-full px-4 py-3 bg-slate-900/60 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-200 mb-2">
+                  Additional Notes (Optional)
+                </label>
+                <textarea
+                  value={campaignInfo.stormInfo.additionalNotes}
+                  onChange={(e) => handleStormInfoChange('additionalNotes', e.target.value)}
+                  placeholder="Any additional storm details..."
+                  rows={3}
+                  className="w-full px-4 py-3 bg-slate-900/60 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent resize-none"
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Error message */}

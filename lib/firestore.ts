@@ -36,6 +36,15 @@ interface ContractorDoc {
   createdAt: Timestamp;
 }
 
+export interface StormInfo {
+  enabled: boolean;
+  stormDate: string;
+  windSpeed: string;
+  hailSize: string;
+  affectedAreas: string;
+  additionalNotes?: string;
+}
+
 interface CampaignDoc {
   id: string;
   contractorId: string;
@@ -48,6 +57,7 @@ interface CampaignDoc {
   neighborhoodName?: string;
   pageSlug: string;
   qrCodeUrl: string | null;
+  stormInfo?: StormInfo | null;
   createdAt: Timestamp;
   updatedAt?: Timestamp;
   status?: 'active' | 'paused' | 'completed';
@@ -97,6 +107,7 @@ export interface Campaign {
   status?: 'active' | 'paused' | 'completed';
   pageSlug: string;
   qrCodeUrl: string | null;
+  stormInfo?: StormInfo | null;
   createdAt: string; // ISO date string
   updatedAt: string | null;
 }
@@ -215,6 +226,7 @@ function serializeCampaign(doc: CampaignDoc): Campaign {
     status: doc.status,
     pageSlug: doc.pageSlug,
     qrCodeUrl: doc.qrCodeUrl,
+    stormInfo: doc.stormInfo || null,
     createdAt: serializeTimestamp(doc.createdAt),
     updatedAt: doc.updatedAt ? serializeTimestamp(doc.updatedAt) : null,
   };

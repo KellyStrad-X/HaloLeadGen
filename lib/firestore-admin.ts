@@ -12,6 +12,15 @@ import { geocodeAddressServer, type Location } from './geocoding';
 type JobStatus = 'Completed' | 'Pending';
 type CampaignStatus = 'Active' | 'Inactive';
 
+export interface StormInfo {
+  enabled: boolean;
+  stormDate: string;
+  windSpeed: string;
+  hailSize: string;
+  affectedAreas: string;
+  additionalNotes?: string;
+}
+
 export interface AdminCampaign {
   id: string;
   contractorId: string;
@@ -24,6 +33,7 @@ export interface AdminCampaign {
   neighborhoodName?: string | null;
   pageSlug: string;
   qrCodeUrl?: string | null;
+  stormInfo?: StormInfo | null;
   createdAt?: Timestamp;
   updatedAt?: Timestamp;
   geocodedLocation?: {
@@ -146,6 +156,7 @@ function toCampaignAdmin(doc: FirebaseFirestore.DocumentSnapshot): Campaign {
     status: data.status as Campaign['status'],
     pageSlug: data.pageSlug || generateSlug(campaignName),
     qrCodeUrl: (data.qrCodeUrl as string | null | undefined) ?? null,
+    stormInfo: (data.stormInfo as StormInfo | undefined) || null,
     createdAt,
     updatedAt: updatedAtTimestamp ? serializeTimestamp(updatedAtTimestamp) : null,
   };
@@ -212,6 +223,7 @@ export async function createCampaignAdmin({
   qrDisplayName,
   homeownerName,
   jobStatus,
+  stormInfo,
 }: {
   contractorId: string;
   campaignName: string;
@@ -219,6 +231,7 @@ export async function createCampaignAdmin({
   qrDisplayName: string;
   homeownerName?: string | null;
   jobStatus: JobStatus;
+  stormInfo?: StormInfo | null;
 }): Promise<{ id: string; slug: string }> {
   const adminDb = getAdminFirestore();
   const slug = await generateUniqueSlugAdmin(campaignName);
@@ -238,6 +251,7 @@ export async function createCampaignAdmin({
     neighborhoodName: trimmedAddress || trimmedName,
     pageSlug: slug,
     qrCodeUrl: null,
+    stormInfo: stormInfo || null,
     createdAt: now,
     updatedAt: now,
   });
