@@ -128,7 +128,7 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
       )}
 
       {/* Photo Gallery */}
-      <section className="py-12 px-4 bg-white">
+      <section id="photo-gallery" className="py-12 px-4 bg-white">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2 text-center">
             Storm Damage Documentation
@@ -155,14 +155,6 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
           )}
         </div>
       </section>
-
-      {/* Meet the Crew */}
-      {branding?.crewMembers && branding.crewMembers.length > 0 && (
-        <MeetTheCrew
-          members={branding.crewMembers}
-          tagline={tagline}
-        />
-      )}
 
       {/* Call to Action */}
       <section className="py-12 px-4 bg-gray-50">
@@ -196,16 +188,17 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
         </div>
       </section>
 
-      {/* Lead Form */}
-      <section className="py-16 px-4 bg-white">
-        <div className="max-w-2xl mx-auto">
-          <h2 className="text-4xl font-bold text-gray-900 mb-3 text-center">
-            Request Your <span style={{ color: primaryColor }}>Free Inspection</span>
-          </h2>
-          <p className="text-gray-600 text-center mb-10">
-            Fill out the form below and we'll contact you within 24 hours
-          </p>
+      {/* Meet the Crew */}
+      {branding?.crewMembers && branding.crewMembers.length > 0 && (
+        <MeetTheCrew
+          members={branding.crewMembers}
+          tagline={tagline}
+        />
+      )}
 
+      {/* Lead Form */}
+      <section id="lead-form" className="py-16 px-4 bg-white">
+        <div className="max-w-2xl mx-auto">
           <LeadForm campaignId={campaignData.id} primaryColor={primaryColor} />
         </div>
       </section>

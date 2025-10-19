@@ -165,16 +165,16 @@ export default function LeadForm({ campaignId, primaryColor = '#2563eb' }: LeadF
   return (
     <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-lg">
       {/* Gradient Header */}
-      <div className="bg-gradient-to-r from-orange-500 to-red-500 px-6 py-5">
+      <div className="bg-gradient-to-r from-orange-500 to-red-500 px-4 sm:px-6 py-4 sm:py-5">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
-            <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+            <svg className="w-5 h-5 sm:w-7 sm:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
           </div>
-          <div>
-            <h3 className="text-2xl font-bold text-white">Request Your Free Inspection</h3>
-            <p className="text-orange-100 text-sm">Fill out the form below - we'll contact you within 24 hours</p>
+          <div className="min-w-0 flex-1">
+            <h3 className="text-lg sm:text-2xl font-bold text-white leading-tight">Request Your Free Inspection</h3>
+            <p className="text-orange-100 text-xs sm:text-sm mt-0.5">Fill out the form below - we'll contact you within 24 hours</p>
           </div>
         </div>
       </div>
@@ -307,10 +307,11 @@ export default function LeadForm({ campaignId, primaryColor = '#2563eb' }: LeadF
         <button
           type="submit"
           disabled={isSubmitting}
-          style={{
-            backgroundColor: isSubmitting ? '#9ca3af' : primaryColor,
-          }}
-          className="w-full disabled:cursor-not-allowed text-white font-bold py-4 px-6 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-[1.02] disabled:hover:scale-100 hover:opacity-90"
+          className={`w-full disabled:cursor-not-allowed text-white font-bold py-4 px-6 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-[1.02] disabled:hover:scale-100 ${
+            isSubmitting
+              ? 'bg-gray-400'
+              : 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600'
+          }`}
         >
           {isSubmitting ? (
             <span className="flex items-center justify-center">
