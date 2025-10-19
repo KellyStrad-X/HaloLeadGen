@@ -64,44 +64,44 @@ export default function TrustBadges({ badges }: TrustBadgesProps) {
             let position = (index - currentIndex + badges.length) % badges.length;
 
             // Map positions to layers with symmetric layout
+            let xOffset = 0;
             let scale = 1;
             let opacity = 1;
             let zIndex = 10;
-            let positionClass = '';
 
             if (position === 0) {
               // Front & center
-              positionClass = 'translate-x-0';
+              xOffset = 0;
               scale = 1;
               opacity = 1;
               zIndex = 50;
             } else if (position === 1) {
-              // Next up (right) - responsive spacing
-              positionClass = 'translate-x-[91px] md:translate-x-[130px]';
+              // Next up (right)
+              xOffset = 110;
               scale = 0.75;
               opacity = 0.6;
               zIndex = 40;
             } else if (position === badges.length - 1) {
-              // Previous (left) - responsive spacing
-              positionClass = '-translate-x-[91px] md:-translate-x-[130px]';
+              // Previous (left)
+              xOffset = -110;
               scale = 0.75;
               opacity = 0.6;
               zIndex = 40;
             } else if (position === 2) {
-              // Further right - responsive spacing
-              positionClass = 'translate-x-[140px] md:translate-x-[200px]';
+              // Further right
+              xOffset = 170;
               scale = 0.5;
               opacity = 0.3;
               zIndex = 30;
             } else if (position === badges.length - 2) {
-              // Further left - responsive spacing
-              positionClass = '-translate-x-[140px] md:-translate-x-[200px]';
+              // Further left
+              xOffset = -170;
               scale = 0.5;
               opacity = 0.3;
               zIndex = 30;
             } else {
               // Furthest back (center, behind everything) - virtually invisible
-              positionClass = 'translate-x-0';
+              xOffset = 0;
               scale = 0.35;
               opacity = 0.05;
               zIndex = 20;
@@ -110,9 +110,9 @@ export default function TrustBadges({ badges }: TrustBadgesProps) {
             return (
               <div
                 key={`${badgeId}-${index}`}
-                className={`absolute transition-all duration-700 ease-in-out ${positionClass}`}
+                className="absolute transition-all duration-700 ease-in-out"
                 style={{
-                  transform: `scale(${scale})`,
+                  transform: `translateX(${xOffset}px) scale(${scale})`,
                   opacity: opacity,
                   zIndex: zIndex,
                 }}
