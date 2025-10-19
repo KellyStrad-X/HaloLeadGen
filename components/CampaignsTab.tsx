@@ -103,7 +103,7 @@ export default function CampaignsTab() {
       )}
 
       {/* Filters and Sort */}
-      <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-4">
+      <div className="bg-[#1e2227]/60 border border-[#373e47] rounded-lg p-4">
         <div className="flex flex-col sm:flex-row gap-4">
           {/* Filter by status */}
           <div className="flex-1">
@@ -113,7 +113,7 @@ export default function CampaignsTab() {
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value as any)}
-              className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              className="w-full px-4 py-2 bg-[#0d1117] border border-[#373e47] rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
             >
               <option value="all">All Campaigns</option>
               <option value="Active">Active</option>
@@ -129,7 +129,7 @@ export default function CampaignsTab() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              className="w-full px-4 py-2 bg-[#0d1117] border border-[#373e47] rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
             >
               <option value="date">Date Created</option>
               <option value="name">Campaign Name</option>
@@ -141,10 +141,10 @@ export default function CampaignsTab() {
 
       {/* Campaigns Table */}
       {sortedCampaigns.length > 0 ? (
-        <div className="bg-slate-800/60 border border-slate-700 rounded-lg overflow-hidden">
+        <div className="bg-[#1e2227]/60 border border-[#373e47] rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-slate-900/80 border-b border-slate-700">
+              <thead className="bg-[#0d1117]/80 border-b border-[#373e47]">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
                     Campaign Name
@@ -169,13 +169,13 @@ export default function CampaignsTab() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-700">
+              <tbody className="divide-y divide-[#373e47]">
                 {sortedCampaigns.map((campaign) => {
                   const status = normalizeStatus(campaign);
                   const address = campaign.showcaseAddress || 'N/A';
 
                   return (
-                    <tr key={campaign.id} className="hover:bg-slate-700/30">
+                    <tr key={campaign.id} className="hover:bg-[#2d333b]/30">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-white">
                           {campaign.campaignName}
@@ -245,7 +245,7 @@ export default function CampaignsTab() {
           </div>
         </div>
       ) : (
-        <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-12 text-center">
+        <div className="bg-[#1e2227]/60 border border-[#373e47] rounded-lg p-12 text-center">
           <p className="text-gray-400 text-lg mb-4">
             {filterStatus === 'all'
               ? 'No campaigns yet'

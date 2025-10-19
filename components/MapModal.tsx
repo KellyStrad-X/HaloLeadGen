@@ -103,9 +103,9 @@ export default function MapModal({
       />
 
       {/* Modal Content */}
-      <div className="relative w-full h-full max-w-7xl max-h-[90vh] m-4 bg-slate-900 rounded-lg shadow-2xl overflow-hidden">
+      <div className="relative w-full h-full max-w-7xl max-h-[90vh] m-4 bg-[#0d1117] border border-[#373e47] rounded-lg shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="absolute top-0 left-0 right-0 z-10 bg-slate-900/95 border-b border-slate-700 p-4 flex items-center justify-between">
+        <div className="absolute top-0 left-0 right-0 z-10 bg-[#0d1117]/95 border-b border-[#373e47] p-4 flex items-center justify-between backdrop-blur">
           <div>
             <h2 className="text-2xl font-bold text-white">Campaign Locations</h2>
             <div className="flex flex-wrap gap-4 mt-2 text-sm">
@@ -129,7 +129,7 @@ export default function MapModal({
           </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors p-2"
+            className="text-gray-400 hover:text-gray-200 transition-colors p-2"
             aria-label="Close modal"
           >
             <svg

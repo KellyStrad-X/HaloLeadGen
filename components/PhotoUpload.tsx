@@ -207,7 +207,7 @@ export default function PhotoUpload({
         className={`relative border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors ${
           isDragging
             ? 'border-halo-ice bg-halo-ice/10'
-            : 'border-slate-600 hover:border-halo-medium'
+            : 'border-[#444c56] hover:border-halo-medium'
         }`}
       >
         <input
@@ -262,7 +262,7 @@ export default function PhotoUpload({
             {photos.map((photo, index) => (
               <div
                 key={photo.id}
-                className="relative bg-slate-800 border border-slate-600 rounded-lg overflow-hidden group"
+                className="relative bg-[#1e2227] border border-[#444c56] rounded-lg overflow-hidden group"
               >
                 {/* Order number */}
                 <div className="absolute top-2 left-2 w-8 h-8 bg-halo-ice text-black font-bold rounded-full flex items-center justify-center text-sm z-10">
@@ -330,7 +330,7 @@ export default function PhotoUpload({
             <span className="text-halo-light">Uploading photos...</span>
             <span className="text-halo-ice font-semibold">{uploadProgress}%</span>
           </div>
-          <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+          <div className="w-full h-2 bg-[#1e2227] rounded-full overflow-hidden">
             <div
               className="h-full bg-halo-ice transition-all duration-300"
               style={{ width: `${uploadProgress}%` }}

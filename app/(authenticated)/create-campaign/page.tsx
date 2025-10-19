@@ -33,7 +33,7 @@ export default function CreateCampaignPage() {
       </header>
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-b from-slate-800 to-slate-900 py-12 px-4">
+      <section className="bg-gradient-to-b from-[#1e2227] via-[#161b21] to-[#0d1117] py-12 px-4">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-4xl sm:text-5xl font-bold text-white mb-4">
             Create New <span className="text-cyan-400">Campaign</span>

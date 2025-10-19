@@ -4,14 +4,14 @@ import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
 
-interface BrandingSettingsModalProps {
+interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
 type TabType = 'general' | 'badges' | 'team';
 
-export default function BrandingSettingsModal({ isOpen, onClose }: BrandingSettingsModalProps) {
+export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('general');
   const [isSaving, setIsSaving] = useState(false);
@@ -165,22 +165,25 @@ export default function BrandingSettingsModal({ isOpen, onClose }: BrandingSetti
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
         <div
-          className="relative bg-slate-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
+          className="relative bg-[#1e2227] border border-[#373e47] rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-slate-700 px-6 py-4">
-            <h2 className="text-2xl font-bold text-white">Settings</h2>
+          <div className="flex items-center justify-between border-b border-[#373e47] px-6 py-4 bg-[#2d333b]">
+            <div>
+              <p className="text-sm uppercase tracking-wide text-gray-400">Dashboard</p>
+              <h2 className="text-2xl font-bold text-white">Settings</h2>
+            </div>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-300 transition-colors"
+              className="text-gray-400 hover:text-gray-200 transition-colors"
             >
               <X className="w-6 h-6" />
             </button>
           </div>
 
           {/* Tabs */}
-          <div className="border-b border-slate-700 px-6">
+          <div className="border-b border-[#373e47] px-6 bg-[#1e2227]">
             <nav className="flex gap-8">
               <button
                 onClick={() => setActiveTab('general')}
@@ -216,7 +219,7 @@ export default function BrandingSettingsModal({ isOpen, onClose }: BrandingSetti
           </div>
 
           {/* Tab Content */}
-          <div className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
+          <div className="p-6 overflow-y-auto max-h-[calc(90vh-180px)] bg-[#0d1117] space-y-8">
             {activeTab === 'general' && (
               <GeneralTab
                 companyName={companyName}
@@ -243,17 +246,17 @@ export default function BrandingSettingsModal({ isOpen, onClose }: BrandingSetti
           </div>
 
           {/* Footer */}
-          <div className="border-t border-slate-700 px-6 py-4 bg-slate-900 flex justify-end gap-3">
+          <div className="border-t border-[#373e47] px-6 py-4 bg-[#0d1117] flex justify-end gap-3">
             <button
               onClick={onClose}
-              className="px-4 py-2 border border-slate-600 rounded-lg text-gray-300 hover:bg-slate-700 transition-colors"
+              className="px-4 py-2 border border-[#444c56] rounded-lg text-gray-300 hover:bg-[#2d333b] transition-colors"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
               disabled={isSaving}
-              className="px-4 py-2 bg-cyan-500 text-black rounded-lg hover:bg-cyan-600 disabled:bg-slate-600 disabled:text-slate-400 disabled:cursor-not-allowed transition-colors font-semibold"
+              className="px-4 py-2 bg-cyan-500 text-black rounded-lg hover:bg-cyan-600 disabled:bg-[#1e2227] disabled:text-gray-400 disabled:cursor-not-allowed transition-colors font-semibold"
             >
               {isSaving ? 'Saving...' : 'Save Changes'}
             </button>
@@ -298,7 +301,7 @@ function GeneralTab({ companyName, setCompanyName, companyLogo, setCompanyLogo, 
           placeholder="e.g., ABC Roofing & Construction"
           value={companyName}
           onChange={(e) => setCompanyName(e.target.value)}
-          className="w-full bg-slate-600 border border-slate-500 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
+          className="w-full bg-[#1e2227] border border-[#545d68] rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
         />
 
         <p className="text-xs text-gray-500 mt-2">
@@ -321,7 +324,7 @@ function GeneralTab({ companyName, setCompanyName, companyLogo, setCompanyLogo, 
               <img
                 src={companyLogo}
                 alt="Company logo"
-                className="w-24 h-24 rounded-full object-cover border-2 border-slate-500"
+                className="w-24 h-24 rounded-full object-cover border-2 border-[#545d68]"
               />
               <button
                 onClick={removeLogo}
@@ -332,7 +335,7 @@ function GeneralTab({ companyName, setCompanyName, companyLogo, setCompanyLogo, 
               </button>
             </div>
           ) : (
-            <label className="w-24 h-24 rounded-full border-2 border-dashed border-slate-500 flex items-center justify-center cursor-pointer hover:border-cyan-400 bg-slate-600">
+            <label className="w-24 h-24 rounded-full border-2 border-dashed border-[#545d68] flex items-center justify-center cursor-pointer hover:border-cyan-400 bg-[#1e2227]">
               <input
                 type="file"
                 accept="image/*"
@@ -415,7 +418,7 @@ function BadgesTab({ selectedBadges, setSelectedBadges }: any) {
                   relative border-2 rounded-lg p-4 transition-all
                   ${isSelected
                     ? 'border-cyan-400 bg-cyan-500/10 ring-2 ring-cyan-400/30'
-                    : 'border-slate-600 hover:border-slate-500 bg-slate-700'
+                    : 'border-[#444c56] hover:border-[#545d68] bg-[#2d333b]'
                   }
                   ${isDisabled
                     ? 'opacity-40 cursor-not-allowed'
@@ -424,7 +427,7 @@ function BadgesTab({ selectedBadges, setSelectedBadges }: any) {
                 `}
               >
                 {/* Badge image placeholder */}
-                <div className="h-16 w-full mb-3 bg-slate-600 rounded flex items-center justify-center overflow-hidden">
+                <div className="h-16 w-full mb-3 bg-[#1e2227] rounded flex items-center justify-center overflow-hidden">
                   <img
                     src={`/trust-badges/${badge.id}.png`}
                     alt={badge.name}
@@ -457,7 +460,7 @@ function BadgesTab({ selectedBadges, setSelectedBadges }: any) {
       {/* Helper text */}
       <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-lg p-4">
         <p className="text-sm text-cyan-300">
-          <strong>Note:</strong> Add badge images as PNG files to <code className="bg-slate-700 px-1 rounded">/public/trust-badges/</code> using the badge ID as the filename (e.g., <code className="bg-slate-700 px-1 rounded">gaf-master-elite.png</code>). Empty boxes will show until images are added.
+          <strong>Note:</strong> Add badge images as PNG files to <code className="bg-[#2d333b] px-1 rounded">/public/trust-badges/</code> using the badge ID as the filename (e.g., <code className="bg-[#2d333b] px-1 rounded">gaf-master-elite.png</code>). Empty boxes will show until images are added.
         </p>
       </div>
     </div>
@@ -537,7 +540,7 @@ function TeamTab({ teamMembers, setTeamMembers }: any) {
           {teamMembers.map((member: any) => (
             <div
               key={member.id}
-              className="border border-slate-600 rounded-lg p-4 bg-slate-700"
+              className="border border-[#444c56] rounded-lg p-4 bg-[#2d333b]"
             >
               <div className="flex items-start gap-4">
                 {/* Photo */}
@@ -547,7 +550,7 @@ function TeamTab({ teamMembers, setTeamMembers }: any) {
                       <img
                         src={member.photoUrl}
                         alt={member.name || 'Team member'}
-                        className="w-full h-full rounded-full object-cover border-2 border-slate-500"
+                        className="w-full h-full rounded-full object-cover border-2 border-[#545d68]"
                       />
                       <button
                         onClick={() => removeMemberPhoto(member.id)}
@@ -558,7 +561,7 @@ function TeamTab({ teamMembers, setTeamMembers }: any) {
                       </button>
                     </div>
                   ) : (
-                    <label className="w-20 h-20 rounded-full border-2 border-dashed border-slate-500 flex items-center justify-center cursor-pointer hover:border-cyan-400 bg-slate-600">
+                    <label className="w-20 h-20 rounded-full border-2 border-dashed border-[#545d68] flex items-center justify-center cursor-pointer hover:border-cyan-400 bg-[#1e2227]">
                       <input
                         type="file"
                         accept="image/*"
@@ -577,7 +580,7 @@ function TeamTab({ teamMembers, setTeamMembers }: any) {
                     placeholder="Full Name"
                     value={member.name || ''}
                     onChange={(e) => updateMember(member.id, { name: e.target.value })}
-                    className="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
+                    className="w-full bg-[#1e2227] border border-[#545d68] rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
                   />
                   <div className="grid grid-cols-2 gap-2">
                     <input
@@ -585,14 +588,14 @@ function TeamTab({ teamMembers, setTeamMembers }: any) {
                       placeholder="Title (e.g., Owner)"
                       value={member.title || ''}
                       onChange={(e) => updateMember(member.id, { title: e.target.value })}
-                      className="bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
+                      className="bg-[#1e2227] border border-[#545d68] rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
                     />
                     <input
                       type="tel"
                       placeholder="Phone"
                       value={member.phone || ''}
                       onChange={(e) => updateMember(member.id, { phone: e.target.value })}
-                      className="bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
+                      className="bg-[#1e2227] border border-[#545d68] rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
                     />
                   </div>
                   <div>
@@ -607,7 +610,7 @@ function TeamTab({ teamMembers, setTeamMembers }: any) {
                       }}
                       rows={2}
                       maxLength={200}
-                      className="w-full bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:ring-2 focus:ring-cyan-400 focus:border-transparent resize-none text-sm"
+                      className="w-full bg-[#1e2227] border border-[#545d68] rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:ring-2 focus:ring-cyan-400 focus:border-transparent resize-none text-sm"
                     />
                     <p className="text-xs text-gray-500 mt-1">
                       {member.bio?.length || 0}/200 characters
@@ -617,7 +620,7 @@ function TeamTab({ teamMembers, setTeamMembers }: any) {
                     <select
                       value={member.yearsExperience || ''}
                       onChange={(e) => updateMember(member.id, { yearsExperience: e.target.value })}
-                      className="bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
+                      className="bg-[#1e2227] border border-[#545d68] rounded-lg px-3 py-2 text-white focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
                     >
                       <option value="">Years Experience</option>
                       <option value="1-3">1-3 years</option>
@@ -635,7 +638,7 @@ function TeamTab({ teamMembers, setTeamMembers }: any) {
                           certifications: e.target.value.split(',').map((s: string) => s.trim()).filter(Boolean)
                         })
                       }
-                      className="bg-slate-600 border border-slate-500 rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
+                      className="bg-[#1e2227] border border-[#545d68] rounded-lg px-3 py-2 text-white placeholder-gray-400 focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
                     />
                   </div>
                 </div>
@@ -658,7 +661,7 @@ function TeamTab({ teamMembers, setTeamMembers }: any) {
           <button
             onClick={addTeamMember}
             type="button"
-            className="w-full border-2 border-dashed border-slate-600 rounded-lg py-4 text-gray-400 hover:border-cyan-400 hover:text-cyan-400 transition-colors"
+            className="w-full border-2 border-dashed border-[#444c56] rounded-lg py-4 text-gray-400 hover:border-cyan-400 hover:text-cyan-400 transition-colors"
           >
             + Add Team Member ({teamMembers.length}/2)
           </button>
@@ -729,11 +732,11 @@ function CircularImageCropper({ imageData, onCropComplete, onCancel }: {
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80">
-      <div className="bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4">
+      <div className="bg-[#1e2227] rounded-lg p-6 max-w-md w-full mx-4">
         <h3 className="text-xl font-bold text-white mb-4">Crop Photo</h3>
 
         {/* Preview */}
-        <div className="relative w-64 h-64 mx-auto mb-4 bg-slate-700 rounded-full overflow-hidden">
+        <div className="relative w-64 h-64 mx-auto mb-4 bg-[#2d333b] rounded-full overflow-hidden">
           <img
             src={imageData}
             alt="Preview"
@@ -760,7 +763,7 @@ function CircularImageCropper({ imageData, onCropComplete, onCancel }: {
         <div className="flex gap-3">
           <button
             onClick={onCancel}
-            className="flex-1 px-4 py-2 border border-slate-600 rounded-lg text-gray-300 hover:bg-slate-700 transition-colors"
+            className="flex-1 px-4 py-2 border border-[#444c56] rounded-lg text-gray-300 hover:bg-[#2d333b] transition-colors"
           >
             Cancel
           </button>

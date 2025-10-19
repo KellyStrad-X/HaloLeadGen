@@ -4,7 +4,7 @@ export default function AnalyticsTab() {
   return (
     <div className="space-y-6">
       {/* Placeholder Content */}
-      <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-12 text-center">
+      <div className="bg-[#1e2227]/60 border border-[#373e47] rounded-lg p-12 text-center">
         <svg
           className="mx-auto h-24 w-24 text-gray-500 mb-6"
           fill="none"
@@ -28,7 +28,7 @@ export default function AnalyticsTab() {
 
         {/* Preview Feature List */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl mx-auto text-left">
-          <div className="bg-slate-900/50 border border-slate-700 rounded-lg p-4">
+          <div className="bg-[#0d1117]/50 border border-[#373e47] rounded-lg p-4">
             <div className="flex items-center gap-3 mb-2">
               <svg className="w-5 h-5 text-cyan-400" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
@@ -41,7 +41,7 @@ export default function AnalyticsTab() {
             </p>
           </div>
 
-          <div className="bg-slate-900/50 border border-slate-700 rounded-lg p-4">
+          <div className="bg-[#0d1117]/50 border border-[#373e47] rounded-lg p-4">
             <div className="flex items-center gap-3 mb-2">
               <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z" clipRule="evenodd" />
@@ -53,7 +53,7 @@ export default function AnalyticsTab() {
             </p>
           </div>
 
-          <div className="bg-slate-900/50 border border-slate-700 rounded-lg p-4">
+          <div className="bg-[#0d1117]/50 border border-[#373e47] rounded-lg p-4">
             <div className="flex items-center gap-3 mb-2">
               <svg className="w-5 h-5 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />

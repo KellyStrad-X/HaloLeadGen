@@ -179,19 +179,19 @@ export default function CampaignForm() {
 
   // Render step 1: Campaign Info
   const renderStep1 = () => (
-    <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-8 shadow-lg">
+    <div className="bg-[#1e2227]/60 border border-[#373e47] rounded-lg p-8 shadow-lg">
       <div className="mb-8">
         <div className="flex items-center justify-center mb-4">
           <div className="flex items-center space-x-2">
             <div className="w-8 h-8 rounded-full bg-cyan-400 text-black flex items-center justify-center font-bold">
               1
             </div>
-            <div className="w-20 h-1 bg-gray-700"></div>
-            <div className="w-8 h-8 rounded-full bg-gray-700 text-gray-400 flex items-center justify-center">
+            <div className="w-20 h-1 bg-[#373e47]"></div>
+            <div className="w-8 h-8 rounded-full bg-[#373e47] text-gray-400 flex items-center justify-center">
               2
             </div>
-            <div className="w-20 h-1 bg-gray-700"></div>
-            <div className="w-8 h-8 rounded-full bg-gray-700 text-gray-400 flex items-center justify-center">
+            <div className="w-20 h-1 bg-[#373e47]"></div>
+            <div className="w-8 h-8 rounded-full bg-[#373e47] text-gray-400 flex items-center justify-center">
               3
             </div>
           </div>
@@ -215,8 +215,8 @@ export default function CampaignForm() {
             id="campaignName"
             value={campaignInfo.campaignName}
             onChange={(e) => handleInputChange('campaignName', e.target.value)}
-            className={`w-full px-4 py-3 bg-slate-900/60 border ${
-              errors.campaignName ? 'border-red-500' : 'border-slate-600'
+            className={`w-full px-4 py-3 bg-[#0d1117]/60 border ${
+              errors.campaignName ? 'border-red-500' : 'border-[#444c56]'
             } rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent`}
             placeholder="e.g., John Bryan's Campaign"
           />
@@ -241,7 +241,7 @@ export default function CampaignForm() {
             id="homeownerName"
             value={campaignInfo.homeownerName}
             onChange={(e) => handleInputChange('homeownerName', e.target.value)}
-            className="w-full px-4 py-3 bg-slate-900/60 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+            className="w-full px-4 py-3 bg-[#0d1117]/60 border border-[#444c56] rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
             placeholder="e.g., John Bryan"
           />
           <p className="mt-1 text-sm text-gray-500">
@@ -262,8 +262,8 @@ export default function CampaignForm() {
             id="showcaseAddress"
             value={campaignInfo.showcaseAddress}
             onChange={(e) => handleInputChange('showcaseAddress', e.target.value)}
-            className={`w-full px-4 py-3 bg-slate-900/60 border ${
-              errors.showcaseAddress ? 'border-red-500' : 'border-slate-600'
+            className={`w-full px-4 py-3 bg-[#0d1117]/60 border ${
+              errors.showcaseAddress ? 'border-red-500' : 'border-[#444c56]'
             } rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent`}
             placeholder="e.g., 123 Oak Street, Denver, CO 80202"
           />
@@ -288,8 +288,8 @@ export default function CampaignForm() {
             id="qrDisplayName"
             value={campaignInfo.qrDisplayName}
             onChange={(e) => handleInputChange('qrDisplayName', e.target.value)}
-            className={`w-full px-4 py-3 bg-slate-900/60 border ${
-              errors.qrDisplayName ? 'border-red-500' : 'border-slate-600'
+            className={`w-full px-4 py-3 bg-[#0d1117]/60 border ${
+              errors.qrDisplayName ? 'border-red-500' : 'border-[#444c56]'
             } rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent`}
             placeholder="e.g., Oak Ridge Subdivision, Maple Heights Area"
           />
@@ -313,7 +313,7 @@ export default function CampaignForm() {
             id="jobStatus"
             value={campaignInfo.jobStatus}
             onChange={(e) => handleInputChange('jobStatus', e.target.value as 'Completed' | 'Pending')}
-            className="w-full px-4 py-3 bg-slate-900/60 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+            className="w-full px-4 py-3 bg-[#0d1117]/60 border border-[#444c56] rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
           >
             <option value="Completed">Completed - Work finished</option>
             <option value="Pending">Pending - Contract signed, work in progress</option>
@@ -324,7 +324,7 @@ export default function CampaignForm() {
         </div>
 
         {/* Storm Info Section */}
-        <div className="border-t border-slate-600 pt-6">
+        <div className="border-t border-[#444c56] pt-6">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h3 className="text-lg font-semibold text-gray-200">Storm Information (Optional)</h3>
@@ -337,7 +337,7 @@ export default function CampaignForm() {
                 onChange={(e) => handleStormInfoChange('enabled', e.target.checked)}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
+              <div className="w-11 h-6 bg-[#373e47] peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-cyan-800 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
             </label>
           </div>
 
@@ -352,7 +352,7 @@ export default function CampaignForm() {
                   type="date"
                   value={campaignInfo.stormInfo.stormDate}
                   onChange={(e) => handleStormInfoChange('stormDate', e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-900/60 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                  className="w-full px-4 py-3 bg-[#0d1117]/60 border border-[#444c56] rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
                 />
                 {errors.stormDate && (
                   <p className="mt-1 text-sm text-red-400">{errors.stormDate}</p>
@@ -367,7 +367,7 @@ export default function CampaignForm() {
                     value={campaignInfo.stormInfo.windSpeed}
                     onChange={(e) => handleStormInfoChange('windSpeed', e.target.value)}
                     placeholder="e.g., 70 mph"
-                    className="w-full px-4 py-3 bg-slate-900/60 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                    className="w-full px-4 py-3 bg-[#0d1117]/60 border border-[#444c56] rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
                   />
                 </div>
               </div>
@@ -380,7 +380,7 @@ export default function CampaignForm() {
                   value={campaignInfo.stormInfo.hailSize}
                   onChange={(e) => handleStormInfoChange('hailSize', e.target.value)}
                   placeholder="e.g., Golf ball, 1.5 inches"
-                  className="w-full px-4 py-3 bg-slate-900/60 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                  className="w-full px-4 py-3 bg-[#0d1117]/60 border border-[#444c56] rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
                 />
               </div>
               <div>
@@ -392,7 +392,7 @@ export default function CampaignForm() {
                   value={campaignInfo.stormInfo.affectedAreas}
                   onChange={(e) => handleStormInfoChange('affectedAreas', e.target.value)}
                   placeholder="e.g., Northeast Denver, Highlands Ranch"
-                  className="w-full px-4 py-3 bg-slate-900/60 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
+                  className="w-full px-4 py-3 bg-[#0d1117]/60 border border-[#444c56] rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
                 />
               </div>
               <div>
@@ -404,7 +404,7 @@ export default function CampaignForm() {
                   onChange={(e) => handleStormInfoChange('additionalNotes', e.target.value)}
                   placeholder="Any additional storm details..."
                   rows={3}
-                  className="w-full px-4 py-3 bg-slate-900/60 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent resize-none"
+                  className="w-full px-4 py-3 bg-[#0d1117]/60 border border-[#444c56] rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent resize-none"
                 />
               </div>
             </div>
@@ -432,7 +432,7 @@ export default function CampaignForm() {
 
   // Render step 2: Photo Upload
   const renderStep2 = () => (
-    <div className="bg-slate-800/60 border border-slate-700 rounded-lg p-8 shadow-lg">
+    <div className="bg-[#1e2227]/60 border border-[#373e47] rounded-lg p-8 shadow-lg">
       <div className="mb-8">
         <div className="flex items-center justify-center mb-4">
           <div className="flex items-center space-x-2">
@@ -443,8 +443,8 @@ export default function CampaignForm() {
             <div className="w-8 h-8 rounded-full bg-cyan-400 text-black flex items-center justify-center font-bold">
               2
             </div>
-            <div className="w-20 h-1 bg-gray-700"></div>
-            <div className="w-8 h-8 rounded-full bg-gray-700 text-gray-400 flex items-center justify-center">
+            <div className="w-20 h-1 bg-[#373e47]"></div>
+            <div className="w-8 h-8 rounded-full bg-[#373e47] text-gray-400 flex items-center justify-center">
               3
             </div>
           </div>

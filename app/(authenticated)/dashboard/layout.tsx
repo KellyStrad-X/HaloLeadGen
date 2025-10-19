@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/auth-context';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, createContext, useContext } from 'react';
-import BrandingSettingsModal from '@/components/BrandingSettingsModal';
+import SettingsModal from '@/components/SettingsModal';
 
 type DashboardTab = 'overview' | 'analytics' | 'campaigns';
 
@@ -255,7 +255,7 @@ export default function DashboardLayout({
       </footer>
 
       {/* Settings Modal */}
-      <BrandingSettingsModal
+      <SettingsModal
         isOpen={showSettingsModal}
         onClose={() => setShowSettingsModal(false)}
       />

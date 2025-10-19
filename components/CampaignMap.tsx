@@ -157,7 +157,7 @@ export default function CampaignMap() {
 
   if (!apiKey) {
     return (
-      <div className="h-[400px] flex items-center justify-center bg-slate-900/40 rounded-lg">
+      <div className="h-[400px] flex items-center justify-center bg-[#0d1117]/40 rounded-lg">
         <p className="text-gray-400">Map unavailable: API key not configured</p>
       </div>
     );
@@ -165,7 +165,7 @@ export default function CampaignMap() {
 
   if (loading) {
     return (
-      <div className="h-[400px] flex items-center justify-center bg-slate-900/40 rounded-lg">
+      <div className="h-[400px] flex items-center justify-center bg-[#0d1117]/40 rounded-lg">
         <p className="text-gray-400">Loading campaign locations...</p>
       </div>
     );
@@ -173,7 +173,7 @@ export default function CampaignMap() {
 
   if (campaigns.length === 0) {
     return (
-      <div className="h-[400px] flex items-center justify-center bg-slate-900/40 rounded-lg">
+      <div className="h-[400px] flex items-center justify-center bg-[#0d1117]/40 rounded-lg">
         <p className="text-gray-400">No campaigns with addresses to display</p>
       </div>
     );
