@@ -650,10 +650,6 @@ export interface CrewMember {
 }
 
 export interface ContractorBranding {
-  companyLogo?: string;
-  tagline?: string;
-  primaryColor?: string;
-  secondaryColor?: string;
   trustBadges?: string[];
   crewMembers?: CrewMember[];
 }
@@ -677,10 +673,6 @@ export async function getContractorBrandingAdmin(
   const data = brandingDoc.data() || {};
 
   return {
-    companyLogo: (data.companyLogo as string | undefined) || undefined,
-    tagline: (data.tagline as string | undefined) || undefined,
-    primaryColor: (data.primaryColor as string | undefined) || undefined,
-    secondaryColor: (data.secondaryColor as string | undefined) || undefined,
     trustBadges: (data.trustBadges as string[] | undefined) || undefined,
     crewMembers: (data.crewMembers as CrewMember[] | undefined) || undefined,
   };

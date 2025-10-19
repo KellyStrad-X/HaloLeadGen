@@ -21,7 +21,7 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
     notFound();
   }
 
-  // Fetch contractor branding
+  // Fetch contractor branding (only trust badges + team)
   const branding = await getContractorBrandingAdmin(campaignData.contractorId);
 
   const location =
@@ -33,9 +33,9 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
   const contractorPhone = campaignData.contractor.phone?.trim();
   const contractorEmail = campaignData.contractor.email?.trim();
 
-  // Branding defaults
-  const primaryColor = branding?.primaryColor || '#2563eb';
-  const tagline = branding?.tagline || 'Professional roofing services from your local experts';
+  // Default Halo branding (no customization)
+  const primaryColor = '#06b6d4'; // Halo cyan
+  const tagline = 'Professional roofing services from your local experts';
 
   return (
     <main className="min-h-screen bg-white">
@@ -43,21 +43,11 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
       <header className="sticky top-0 z-50 bg-neutral-900 border-b border-neutral-700 shadow-lg">
         <div className="w-full pl-1 pr-2 sm:pl-2 lg:pl-6 lg:pr-8 py-0.5 md:py-1">
           <div className="flex items-center justify-between">
-            {/* Logo - Far left */}
+            {/* Contractor Name - Far left */}
             <div className="flex items-center">
-              {branding?.companyLogo && (
-                <img
-                  src={branding.companyLogo}
-                  alt={contractorName}
-                  className="w-auto object-contain"
-                  style={{ width: '100px', height: 'auto' }}
-                />
-              )}
-              {!branding?.companyLogo && (
-                <h1 className="text-lg font-bold text-gray-100">
-                  {contractorName}
-                </h1>
-              )}
+              <h1 className="text-lg font-bold text-gray-100">
+                {contractorName}
+              </h1>
             </div>
 
             {/* Contact Buttons - Far right */}
@@ -155,7 +145,7 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
 
       {/* Meet the Crew */}
       {branding?.crewMembers && branding.crewMembers.length > 0 && (
-        <MeetTheCrew members={branding.crewMembers} tagline={branding.tagline} />
+        <MeetTheCrew members={branding.crewMembers} tagline={tagline} />
       )}
 
       {/* Call to Action */}

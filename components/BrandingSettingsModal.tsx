@@ -9,19 +9,14 @@ interface BrandingSettingsModalProps {
   onClose: () => void;
 }
 
-type TabType = 'company' | 'badges' | 'team';
+type TabType = 'badges' | 'team';
 
 export default function BrandingSettingsModal({ isOpen, onClose }: BrandingSettingsModalProps) {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<TabType>('company');
+  const [activeTab, setActiveTab] = useState<TabType>('badges');
   const [isSaving, setIsSaving] = useState(false);
 
-  // Company branding state
-  const [logoUrl, setLogoUrl] = useState('');
-  const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [tagline, setTagline] = useState('');
-  const [primaryColor, setPrimaryColor] = useState('#2563eb');
-  const [secondaryColor, setSecondaryColor] = useState('#10b981');
+  // Company branding state (simplified - removed logo, tagline, colors)
 
   // Trust badges state
   const [selectedBadges, setSelectedBadges] = useState<string[]>([]);
@@ -57,10 +52,6 @@ export default function BrandingSettingsModal({ isOpen, onClose }: BrandingSetti
       if (response.ok) {
         const data = await response.json();
         if (data) {
-          setLogoUrl(data.companyLogo || '');
-          setTagline(data.tagline || '');
-          setPrimaryColor(data.primaryColor || '#2563eb');
-          setSecondaryColor(data.secondaryColor || '#10b981');
           setSelectedBadges(data.trustBadges || []);
           setTeamMembers(data.crewMembers || []);
         }
@@ -74,29 +65,6 @@ export default function BrandingSettingsModal({ isOpen, onClose }: BrandingSetti
     setIsSaving(true);
     try {
       const token = await getAuthToken();
-
-      // Upload logo if new file selected
-      let finalLogoUrl = logoUrl;
-      if (logoFile) {
-        const formData = new FormData();
-        formData.append('file', logoFile);
-        formData.append('type', 'logo');
-
-        const uploadResponse = await fetch('/api/upload', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-          body: formData,
-        });
-
-        if (uploadResponse.ok) {
-          const { imageUrl } = await uploadResponse.json();
-          finalLogoUrl = imageUrl;
-        } else {
-          throw new Error('Logo upload failed');
-        }
-      }
 
       // Upload team photos if new files
       const updatedTeamMembers = await Promise.all(
@@ -134,10 +102,6 @@ export default function BrandingSettingsModal({ isOpen, onClose }: BrandingSetti
           'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({
-          companyLogo: finalLogoUrl,
-          tagline,
-          primaryColor,
-          secondaryColor,
           trustBadges: selectedBadges,
           crewMembers: updatedTeamMembers,
         }),
@@ -189,16 +153,6 @@ export default function BrandingSettingsModal({ isOpen, onClose }: BrandingSetti
           <div className="border-b border-slate-700 px-6">
             <nav className="flex gap-8">
               <button
-                onClick={() => setActiveTab('company')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  activeTab === 'company'
-                    ? 'border-cyan-400 text-cyan-400'
-                    : 'border-transparent text-gray-400 hover:text-gray-300'
-                }`}
-              >
-                Company
-              </button>
-              <button
                 onClick={() => setActiveTab('badges')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                   activeTab === 'badges'
@@ -223,21 +177,6 @@ export default function BrandingSettingsModal({ isOpen, onClose }: BrandingSetti
 
           {/* Tab Content */}
           <div className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
-            {activeTab === 'company' && (
-              <CompanyTab
-                logoUrl={logoUrl}
-                logoFile={logoFile}
-                setLogoFile={setLogoFile}
-                setLogoUrl={setLogoUrl}
-                tagline={tagline}
-                setTagline={setTagline}
-                primaryColor={primaryColor}
-                setPrimaryColor={setPrimaryColor}
-                secondaryColor={secondaryColor}
-                setSecondaryColor={setSecondaryColor}
-              />
-            )}
-
             {activeTab === 'badges' && (
               <BadgesTab
                 selectedBadges={selectedBadges}
@@ -269,221 +208,6 @@ export default function BrandingSettingsModal({ isOpen, onClose }: BrandingSetti
               {isSaving ? 'Saving...' : 'Save Changes'}
             </button>
           </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Company Tab Component
-function CompanyTab({
-  logoUrl,
-  logoFile,
-  setLogoFile,
-  setLogoUrl,
-  tagline,
-  setTagline,
-  primaryColor,
-  setPrimaryColor,
-  secondaryColor,
-  setSecondaryColor,
-}: any) {
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Validate file size (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      alert('Logo file must be under 2MB');
-      return;
-    }
-
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      alert('Please upload an image file (PNG, JPG, etc.)');
-      return;
-    }
-
-    // Load image to check dimensions
-    const img = new Image();
-    const objectUrl = URL.createObjectURL(file);
-
-    img.onload = () => {
-      URL.revokeObjectURL(objectUrl);
-
-      const { width, height } = img;
-
-      // Recommend dimensions but allow flexibility
-      // Warn if aspect ratio is way off (should be roughly horizontal)
-      if (width < height) {
-        const proceed = confirm(
-          `Warning: This logo appears to be vertical (${width}x${height}px).\n\n` +
-          `Recommended: Horizontal logos work best (e.g., 400x100px).\n\n` +
-          `Continue anyway?`
-        );
-        if (!proceed) return;
-      }
-
-      // Warn if logo is too large (will be displayed at max 100px width)
-      if (width > 800 || height > 200) {
-        const proceed = confirm(
-          `This logo is quite large (${width}x${height}px).\n\n` +
-          `It will be displayed at max 100px width on your pages.\n\n` +
-          `For best quality, consider using an image around 400x100px.\n\n` +
-          `Continue anyway?`
-        );
-        if (!proceed) return;
-      }
-
-      // If all checks pass, read the file
-      setLogoFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setLogoUrl(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    };
-
-    img.onerror = () => {
-      URL.revokeObjectURL(objectUrl);
-      alert('Failed to load image. Please try a different file.');
-    };
-
-    img.src = objectUrl;
-  };
-
-  const removeLogo = () => {
-    setLogoUrl('');
-    setLogoFile(null);
-  };
-
-  return (
-    <div className="space-y-8">
-      {/* Logo Upload */}
-      <div>
-        <label className="block font-medium text-white mb-1">Company Logo</label>
-        <p className="text-sm text-gray-400 mb-3">
-          Appears on your QR landing pages at 100px width. Best quality: horizontal logos around 400x100px, max 2MB.
-        </p>
-
-        {logoUrl ? (
-          <div className="relative inline-block">
-            <div className="w-64 h-32 border border-slate-600 rounded-lg p-4 bg-slate-700">
-              <img
-                src={logoUrl}
-                alt="Logo preview"
-                className="w-full h-full object-contain"
-              />
-            </div>
-            <button
-              onClick={removeLogo}
-              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        ) : (
-          <label className="border-2 border-dashed border-slate-600 rounded-lg p-8 cursor-pointer hover:border-cyan-400 transition-colors block w-64 text-center bg-slate-700">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleLogoUpload}
-              className="hidden"
-            />
-            <div className="text-gray-400">
-              <div className="mb-2 text-4xl">📤</div>
-              <span className="text-sm">Click to upload logo</span>
-            </div>
-          </label>
-        )}
-      </div>
-
-      {/* Tagline */}
-      <div>
-        <label className="block font-medium text-white mb-1">
-          Company Tagline <span className="text-gray-400 font-normal">(Optional)</span>
-        </label>
-        <p className="text-sm text-gray-400 mb-3">
-          Shown below your company name on QR pages
-        </p>
-        <input
-          type="text"
-          maxLength={100}
-          placeholder="e.g., Your trusted roofing experts since 1995"
-          value={tagline}
-          onChange={(e) => setTagline(e.target.value)}
-          className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white placeholder-gray-500 focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
-        />
-        <p className="text-xs text-gray-500 mt-1">{tagline.length}/100</p>
-      </div>
-
-      {/* Brand Colors */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Primary Color */}
-        <div>
-          <label className="block font-medium text-white mb-1">Primary Color</label>
-          <p className="text-sm text-gray-400 mb-3">
-            Used for headlines, buttons, and links
-          </p>
-          <div className="flex items-center gap-3">
-            <input
-              type="color"
-              value={primaryColor}
-              onChange={(e) => setPrimaryColor(e.target.value)}
-              className="w-14 h-14 rounded-lg border border-slate-600 cursor-pointer bg-slate-700"
-            />
-            <input
-              type="text"
-              value={primaryColor}
-              onChange={(e) => setPrimaryColor(e.target.value)}
-              placeholder="#2563eb"
-              className="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white font-mono text-sm focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
-            />
-          </div>
-        </div>
-
-        {/* Secondary Color */}
-        <div>
-          <label className="block font-medium text-white mb-1">
-            Secondary Color <span className="text-gray-400 font-normal">(Optional)</span>
-          </label>
-          <p className="text-sm text-gray-400 mb-3">
-            Used for accents and highlights
-          </p>
-          <div className="flex items-center gap-3">
-            <input
-              type="color"
-              value={secondaryColor}
-              onChange={(e) => setSecondaryColor(e.target.value)}
-              className="w-14 h-14 rounded-lg border border-slate-600 cursor-pointer bg-slate-700"
-            />
-            <input
-              type="text"
-              value={secondaryColor}
-              onChange={(e) => setSecondaryColor(e.target.value)}
-              placeholder="#10b981"
-              className="flex-1 bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white font-mono text-sm focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Live Preview */}
-      <div className="border border-slate-600 rounded-lg p-6 bg-slate-900">
-        <p className="text-sm text-gray-400 mb-4 font-medium">Preview:</p>
-        <div className="space-y-4">
-          <h3
-            className="text-3xl font-bold"
-            style={{ color: primaryColor }}
-          >
-            Free Roof Inspections
-          </h3>
-          <button
-            className="px-6 py-3 rounded-lg text-white font-medium"
-            style={{ backgroundColor: primaryColor }}
-          >
-            Request Inspection
-          </button>
         </div>
       </div>
     </div>
