@@ -702,3 +702,53 @@ export async function getContractorBrandingAdmin(
     crewMembers: (data.crewMembers as CrewMember[] | undefined) || undefined,
   };
 }
+
+/**
+ * Map Lead interface for public display
+ */
+export interface MapLead {
+  id: string;
+  status: 'pending' | 'completed';
+  approximateLat: number;
+  approximateLng: number;
+  streetName?: string;
+  statusUpdatedAt?: string;
+}
+
+/**
+ * Fetch consented leads with approximate locations for Halo Map
+ * Only returns leads that have opted into map display
+ */
+export async function getLeadsForCampaignMap(
+  campaignId: string
+): Promise<MapLead[]> {
+  const adminDb = getAdminFirestore();
+
+  const leadsSnapshot = await adminDb
+    .collection('leads')
+    .where('campaignId', '==', campaignId)
+    .where('mapConsent', '==', true)
+    .get();
+
+  const mapLeads: MapLead[] = [];
+
+  for (const leadDoc of leadsSnapshot.docs) {
+    const data = leadDoc.data() || {};
+
+    // Only include leads that have approximate coordinates
+    if (data.approximateLat && data.approximateLng) {
+      mapLeads.push({
+        id: leadDoc.id,
+        status: (data.jobStatus as 'pending' | 'completed' | undefined) || 'pending',
+        approximateLat: data.approximateLat as number,
+        approximateLng: data.approximateLng as number,
+        streetName: (data.streetName as string | undefined) || undefined,
+        statusUpdatedAt: data.statusUpdatedAt
+          ? serializeTimestamp(data.statusUpdatedAt as Timestamp)
+          : undefined,
+      });
+    }
+  }
+
+  return mapLeads;
+}

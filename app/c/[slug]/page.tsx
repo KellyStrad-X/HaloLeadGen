@@ -7,6 +7,7 @@ import LeadForm from '@/components/LeadForm';
 import TrustBadges from '@/components/TrustBadges';
 import MeetTheCrew from '@/components/MeetTheCrew';
 import StormBanner from '@/components/StormBanner';
+import HaloMap from '@/components/HaloMap';
 
 interface CampaignPageProps {
   params: Promise<{
@@ -156,37 +157,11 @@ export default async function CampaignPage({ params }: CampaignPageProps) {
         </div>
       </section>
 
-      {/* Call to Action */}
-      <section className="py-12 px-4 bg-gray-50">
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-lg">
-            <h2 className="text-3xl font-bold text-gray-900 mb-3 text-center">
-              Could Your Roof Be Affected?
-            </h2>
-            <p className="text-gray-600 mb-6 text-center">
-              Don't wait for a small problem to become a big expense. Get a free, no-obligation inspection from a local roofing expert.
-            </p>
-            <ul className="space-y-3 max-w-md mx-auto">
-              <li className="flex items-start">
-                <span className="text-green-500 mr-3 text-xl flex-shrink-0">✓</span>
-                <span className="text-gray-700">Free roof inspection</span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-green-500 mr-3 text-xl flex-shrink-0">✓</span>
-                <span className="text-gray-700">No obligation quote</span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-green-500 mr-3 text-xl flex-shrink-0">✓</span>
-                <span className="text-gray-700">Local, trusted contractor</span>
-              </li>
-              <li className="flex items-start">
-                <span className="text-green-500 mr-3 text-xl flex-shrink-0">✓</span>
-                <span className="text-gray-700">Insurance claim assistance</span>
-              </li>
-            </ul>
-          </div>
-        </div>
-      </section>
+      {/* Halo Map - Social Proof */}
+      <HaloMap
+        campaignId={campaignData.id}
+        contractorName={contractorName}
+      />
 
       {/* Meet the Crew */}
       {branding?.crewMembers && branding.crewMembers.length > 0 && (
