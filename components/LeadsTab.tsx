@@ -552,20 +552,17 @@ export default function LeadsTab() {
           <span className="line-clamp-1">{lead.address ?? 'Address not provided'}</span>
         </div>
       </div>
-      <div className="mt-4 flex flex-wrap justify-between gap-2">
-        <button
-          type="button"
-          onClick={() => openLeadModal(lead)}
-          className="rounded-md bg-[#2d333b] px-3 py-2 text-xs font-medium text-white transition hover:bg-[#373e47]"
-        >
-          View Lead
-        </button>
+      <div className="mt-4 flex justify-end">
         <button
           type="button"
           onClick={() => openPromoteModal(lead, 'scheduled')}
-          className="rounded-md bg-cyan-500 px-3 py-2 text-xs font-semibold text-black transition hover:bg-cyan-400"
+          className="flex items-center gap-2 rounded-md bg-emerald-500 px-4 py-2 text-xs font-semibold text-black transition hover:bg-emerald-400"
         >
-          Promote to Job
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h2l3 7-1.34 2.68a1 1 0 00.9 1.45H16" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 13h10l4-8H5.4" />
+          </svg>
+          CONTACT!
         </button>
       </div>
     </div>

@@ -72,7 +72,7 @@ export default function JobModal(props: JobModalProps) {
     if (props.mode === 'edit') {
       return 'Update Job';
     }
-    return 'Promote Lead to Job';
+    return 'Contact Lead';
   }, [props.mode]);
 
   useEffect(() => {
@@ -137,7 +137,7 @@ export default function JobModal(props: JobModalProps) {
             <h2 className="text-2xl font-semibold text-white">{headerTitle}</h2>
             <p className="text-sm text-gray-400">
               {props.mode === 'promote'
-                ? 'Confirm job details before moving this lead into the active workflow.'
+                ? 'View contact details and schedule an inspection.'
                 : 'Update scheduling details or mark the job as complete.'}
             </p>
           </div>
@@ -279,7 +279,7 @@ export default function JobModal(props: JobModalProps) {
             {isSubmitting
               ? 'Saving...'
               : props.mode === 'promote'
-              ? 'Promote Lead'
+              ? 'Schedule Job'
               : 'Save Changes'}
           </button>
         </div>
