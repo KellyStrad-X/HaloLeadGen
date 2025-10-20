@@ -19,7 +19,7 @@ function parseDate(value: unknown): Date | null | undefined {
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { leadId: string } }
+  { params }: { params: Promise<{ leadId: string }> }
 ) {
   try {
     const authHeader = request.headers.get('Authorization');
@@ -33,7 +33,7 @@ export async function PATCH(
     const token = authHeader.split('Bearer ')[1];
     const decoded = await adminAuth.verifyIdToken(token);
 
-    const { leadId } = params;
+    const { leadId } = await params;
     if (!leadId) {
       return NextResponse.json(
         { error: 'leadId is required' },

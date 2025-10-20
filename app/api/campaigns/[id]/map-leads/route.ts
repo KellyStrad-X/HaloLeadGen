@@ -3,10 +3,10 @@ import { getCompletedCampaignLocationsByCampaignIdAdmin } from '@/lib/firestore-
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id: campaignId } = params;
+    const { id: campaignId } = await params;
 
     if (!campaignId) {
       return NextResponse.json(
