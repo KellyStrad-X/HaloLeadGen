@@ -871,14 +871,14 @@ export default function LeadsTab() {
             <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-400">
               Jobs Pipeline ({jobsCountForSelected})
             </h2>
-            <div className="space-y-3">
+            <div className="flex flex-col gap-3 md:flex-row md:items-start">
               {JOB_COLUMNS.map((column) => {
                 const isExpanded = expandedJobSections[column.key];
                 const jobsInSection = filteredJobs[column.key];
                 return (
                   <div
                     key={column.key}
-                    className={`rounded-lg border bg-[#0d1117] transition ${column.accent}`}
+                    className={`flex-1 rounded-lg border bg-[#0d1117] transition ${column.accent}`}
                   >
                     <button
                       type="button"
@@ -905,7 +905,7 @@ export default function LeadsTab() {
                           <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-300">
                             {column.title}
                           </h3>
-                          <p className="text-xs text-gray-500">{column.description}</p>
+                          <p className="hidden text-xs text-gray-500 lg:block">{column.description}</p>
                         </div>
                       </div>
                       <span className="rounded-full bg-[#1e2227] px-3 py-1 text-xs font-semibold text-gray-300">
@@ -928,7 +928,7 @@ export default function LeadsTab() {
                             Drop a lead or move an existing job here.
                           </div>
                         ) : (
-                          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                          <div className="space-y-3">
                             {jobsInSection.map(renderJobCard)}
                           </div>
                         )}
