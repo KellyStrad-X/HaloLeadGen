@@ -13,7 +13,6 @@ interface Lead {
   submittedAt: string;
   jobStatus?: 'new' | 'contacted' | 'scheduled' | 'completed';
   jobStatusUpdatedAt?: string;
-  mapConsent?: boolean;
   contractorNotes?: string;
   campaignName?: string;
 }
@@ -279,32 +278,6 @@ export default function LeadDetailsModal({
                 {/* Job Status & Management */}
                 <div className="bg-[#2d333b] border border-[#373e47] rounded-lg p-6">
                   <h3 className="text-lg font-semibold text-white mb-4">Job Status</h3>
-
-                  {/* Map Consent Indicator */}
-                  {lead.mapConsent !== undefined && (
-                    <div className="mb-6 p-4 bg-[#1e2227] rounded-lg">
-                      <div className="flex items-center gap-2">
-                        {lead.mapConsent ? (
-                          <>
-                            <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                            <span className="text-green-400 font-medium">Opted into Halo Map</span>
-                            <span className="text-gray-400 text-sm ml-2">
-                              - This lead will appear on the campaign map when job is completed
-                            </span>
-                          </>
-                        ) : (
-                          <>
-                            <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                            <span className="text-gray-400">Not opted into Halo Map</span>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  )}
 
                   <div className="space-y-4">
                     <div>

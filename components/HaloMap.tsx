@@ -8,13 +8,12 @@ interface Location {
   lng: number;
 }
 
-interface MapLead {
+interface CompletedMapLocation {
   id: string;
-  status: 'pending' | 'completed';
-  approximateLat: number;
-  approximateLng: number;
-  streetName?: string;
-  statusUpdatedAt?: string;
+  campaignName: string;
+  showcaseAddress: string | null;
+  location: Location;
+  completedAt: string | null;
 }
 
 interface HaloMapProps {
@@ -27,35 +26,43 @@ export default function HaloMap({ campaignId, campaignLocation, contractorName }
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
   const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID;
 
-  const [leads, setLeads] = useState<MapLead[]>([]);
+  const [locations, setLocations] = useState<CompletedMapLocation[]>([]);
   const [loading, setLoading] = useState(true);
   const [mapCenter, setMapCenter] = useState<Location>(
     campaignLocation || { lat: 29.7604, lng: -95.3698 }
   );
 
   useEffect(() => {
-    async function fetchMapLeads() {
+    async function fetchCompletedLocations() {
       try {
         const response = await fetch(`/api/campaigns/${campaignId}/map-leads`);
         if (response.ok) {
           const data = await response.json();
-          setLeads(data.leads || []);
+          const completedLocations: CompletedMapLocation[] = data.locations || [];
+          setLocations(completedLocations);
 
-          // Calculate center if we have leads
-          if (data.leads && data.leads.length > 0) {
-            const avgLat = data.leads.reduce((sum: number, lead: MapLead) => sum + lead.approximateLat, 0) / data.leads.length;
-            const avgLng = data.leads.reduce((sum: number, lead: MapLead) => sum + lead.approximateLng, 0) / data.leads.length;
+          if (completedLocations.length > 0) {
+            const avgLat =
+              completedLocations.reduce(
+                (sum: number, item: CompletedMapLocation) => sum + item.location.lat,
+                0
+              ) / completedLocations.length;
+            const avgLng =
+              completedLocations.reduce(
+                (sum: number, item: CompletedMapLocation) => sum + item.location.lng,
+                0
+              ) / completedLocations.length;
             setMapCenter({ lat: avgLat, lng: avgLng });
           }
         }
       } catch (error) {
-        console.error('Error fetching map leads:', error);
+        console.error('Error fetching completed campaign locations:', error);
       } finally {
         setLoading(false);
       }
     }
 
-    fetchMapLeads();
+    fetchCompletedLocations();
   }, [campaignId]);
 
   if (!apiKey) {
@@ -75,7 +82,7 @@ export default function HaloMap({ campaignId, campaignLocation, contractorName }
   }
 
   // Empty state - show encouraging message
-  if (leads.length === 0) {
+  if (locations.length === 0) {
     return (
       <section className="py-12 px-4 bg-gray-50">
         <div className="max-w-2xl mx-auto">
@@ -116,9 +123,6 @@ export default function HaloMap({ campaignId, campaignLocation, contractorName }
     );
   }
 
-  const completedCount = leads.filter(l => l.status === 'completed').length;
-  const pendingCount = leads.filter(l => l.status === 'pending').length;
-
   return (
     <section className="py-12 px-4 bg-gray-50">
       <div className="max-w-5xl mx-auto">
@@ -129,22 +133,6 @@ export default function HaloMap({ campaignId, campaignLocation, contractorName }
           <p className="text-gray-600">
             {contractorName} is working in your area right now
           </p>
-        </div>
-
-        {/* Legend */}
-        <div className="flex justify-center gap-6 mb-4 text-sm">
-          {completedCount > 0 && (
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full bg-green-500"></div>
-              <span className="text-gray-700">Completed ({completedCount})</span>
-            </div>
-          )}
-          {pendingCount > 0 && (
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full bg-orange-500"></div>
-              <span className="text-gray-700">Scheduled ({pendingCount})</span>
-            </div>
-          )}
         </div>
 
         {/* Map */}
@@ -160,17 +148,16 @@ export default function HaloMap({ campaignId, campaignLocation, contractorName }
               mapTypeControl={false}
               streetViewControl={false}
             >
-              {leads.map((lead) => (
+              {locations.map((item) => (
                 <AdvancedMarker
-                  key={lead.id}
-                  position={{ lat: lead.approximateLat, lng: lead.approximateLng }}
+                  key={item.id}
+                  position={{
+                    lat: item.location.lat,
+                    lng: item.location.lng,
+                  }}
                 >
                   <div className="relative">
-                    <div
-                      className={`w-6 h-6 rounded-full border-2 border-white shadow-lg ${
-                        lead.status === 'completed' ? 'bg-green-500' : 'bg-orange-500'
-                      }`}
-                    />
+                    <div className="w-6 h-6 rounded-full border-2 border-white shadow-lg bg-green-500" />
                   </div>
                 </AdvancedMarker>
               ))}
@@ -180,7 +167,7 @@ export default function HaloMap({ campaignId, campaignLocation, contractorName }
 
         {/* Privacy Notice */}
         <p className="text-xs text-gray-500 text-center mt-3">
-          Approximate locations shown for privacy. Markers represent general areas, not exact addresses.
+          Approximate locations shown for privacy. Markers represent general areas where {contractorName} has completed projects, not exact addresses.
         </p>
       </div>
     </section>

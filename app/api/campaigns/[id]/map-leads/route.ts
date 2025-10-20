@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getLeadsForCampaignMap } from '@/lib/firestore-admin';
+import { getCompletedCampaignLocationsByCampaignIdAdmin } from '@/lib/firestore-admin';
 
 export async function GET(
   request: NextRequest,
@@ -15,14 +15,15 @@ export async function GET(
       );
     }
 
-    // Fetch consented leads with approximate locations
-    const leads = await getLeadsForCampaignMap(campaignId);
+    const locations = await getCompletedCampaignLocationsByCampaignIdAdmin(
+      campaignId
+    );
 
-    return NextResponse.json({ leads });
+    return NextResponse.json({ locations });
   } catch (error) {
-    console.error('Error fetching map leads:', error);
+    console.error('Error fetching completed campaign locations:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch map leads' },
+      { error: 'Failed to fetch campaign locations' },
       { status: 500 }
     );
   }

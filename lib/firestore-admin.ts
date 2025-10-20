@@ -90,6 +90,14 @@ export interface DashboardCampaign {
   location?: Location | null;
 }
 
+export interface CompletedCampaignLocation {
+  id: string;
+  campaignName: string;
+  showcaseAddress: string | null;
+  location: Location;
+  completedAt: string | null;
+}
+
 export interface DashboardCampaignDetails {
   campaign: Campaign;
   photos: Photo[];
@@ -555,36 +563,7 @@ export async function getDashboardCampaignsAdmin(
       .count()
       .get();
 
-    // Check for cached geocoded location
-    let location: Location | null = null;
-
-    if (campaign.showcaseAddress) {
-      const cached = data.geocodedLocation;
-
-      // Use cache if address hasn't changed
-      if (cached && cached.address === campaign.showcaseAddress) {
-        location = {
-          lat: cached.lat,
-          lng: cached.lng,
-        };
-      } else {
-        // Geocode and cache the result
-        const geocodeResult = await geocodeAddressServer(campaign.showcaseAddress);
-        if (geocodeResult) {
-          location = geocodeResult.location;
-
-          // Save to Firestore for future requests
-          await campaignDoc.ref.update({
-            geocodedLocation: {
-              lat: location.lat,
-              lng: location.lng,
-              geocodedAt: Timestamp.now(),
-              address: campaign.showcaseAddress,
-            },
-          });
-        }
-      }
-    }
+    const location = await resolveCampaignLocation(campaignDoc, campaign, data);
 
     campaigns.push({
       id: campaign.id,
@@ -600,6 +579,121 @@ export async function getDashboardCampaignsAdmin(
   }
 
   return campaigns;
+}
+
+async function resolveCampaignLocation(
+  campaignDoc: FirebaseFirestore.QueryDocumentSnapshot,
+  campaign: Campaign,
+  data: Partial<AdminCampaign>
+): Promise<Location | null> {
+  if (!campaign.showcaseAddress) {
+    return null;
+  }
+
+  const cached = data.geocodedLocation as
+    | {
+        lat: number;
+        lng: number;
+        address: string;
+      }
+    | undefined;
+
+  if (cached && cached.address === campaign.showcaseAddress) {
+    return {
+      lat: cached.lat,
+      lng: cached.lng,
+    };
+  }
+
+  const geocodeResult = await geocodeAddressServer(campaign.showcaseAddress);
+  if (!geocodeResult) {
+    return null;
+  }
+
+  await campaignDoc.ref.update({
+    geocodedLocation: {
+      lat: geocodeResult.location.lat,
+      lng: geocodeResult.location.lng,
+      geocodedAt: Timestamp.now(),
+      address: campaign.showcaseAddress,
+    },
+  });
+
+  return geocodeResult.location;
+}
+
+function obfuscateLocation(location: Location, seed: string): Location {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i += 1) {
+    hash = (hash * 31 + seed.charCodeAt(i)) & 0xffffffff;
+  }
+
+  const latBucket = hash % 401;
+  const lngBucket = Math.floor(hash / 401) % 401;
+
+  const latOffset = (latBucket - 200) / 100000;
+  const lngOffset = (lngBucket - 200) / 100000;
+
+  const clamp = (value: number, min: number, max: number) =>
+    Math.min(max, Math.max(min, value));
+
+  return {
+    lat: clamp(location.lat + latOffset, -90, 90),
+    lng: clamp(location.lng + lngOffset, -180, 180),
+  };
+}
+
+export async function getCompletedCampaignLocationsForContractorAdmin(
+  contractorId: string
+): Promise<CompletedCampaignLocation[]> {
+  const adminDb = getAdminFirestore();
+  const campaignsSnapshot = await adminDb
+    .collection('campaigns')
+    .where('contractorId', '==', contractorId)
+    .orderBy('createdAt', 'desc')
+    .get();
+
+  const locations: CompletedCampaignLocation[] = [];
+
+  for (const campaignDoc of campaignsSnapshot.docs) {
+    const campaign = toCampaignAdmin(campaignDoc);
+    if (campaign.jobStatus !== 'Completed' || !campaign.showcaseAddress) {
+      continue;
+    }
+
+    const data = campaignDoc.data() as Partial<AdminCampaign>;
+    const preciseLocation = await resolveCampaignLocation(
+      campaignDoc,
+      campaign,
+      data
+    );
+
+    if (!preciseLocation) {
+      continue;
+    }
+
+    locations.push({
+      id: campaign.id,
+      campaignName: campaign.campaignName,
+      showcaseAddress: campaign.showcaseAddress,
+      location: obfuscateLocation(preciseLocation, campaign.id),
+      completedAt: campaign.updatedAt ?? campaign.createdAt,
+    });
+  }
+
+  return locations;
+}
+
+export async function getCompletedCampaignLocationsByCampaignIdAdmin(
+  campaignId: string
+): Promise<CompletedCampaignLocation[]> {
+  const campaign = await getCampaignByIdAdmin(campaignId);
+
+  if (!campaign || !campaign.contractorId) {
+    return [];
+  }
+
+  return getCompletedCampaignLocationsForContractorAdmin(campaign.contractorId);
 }
 
 export async function getDashboardCampaignDetailsAdmin(
@@ -706,56 +800,6 @@ export async function getContractorBrandingAdmin(
 }
 
 /**
- * Map Lead interface for public display
- */
-export interface MapLead {
-  id: string;
-  status: 'pending' | 'completed';
-  approximateLat: number;
-  approximateLng: number;
-  streetName?: string;
-  statusUpdatedAt?: string;
-}
-
-/**
- * Fetch consented leads with approximate locations for Halo Map
- * Only returns leads that have opted into map display
- */
-export async function getLeadsForCampaignMap(
-  campaignId: string
-): Promise<MapLead[]> {
-  const adminDb = getAdminFirestore();
-
-  const leadsSnapshot = await adminDb
-    .collection('leads')
-    .where('campaignId', '==', campaignId)
-    .where('mapConsent', '==', true)
-    .get();
-
-  const mapLeads: MapLead[] = [];
-
-  for (const leadDoc of leadsSnapshot.docs) {
-    const data = leadDoc.data() || {};
-
-    // Only include leads that have approximate coordinates
-    if (data.approximateLat && data.approximateLng) {
-      mapLeads.push({
-        id: leadDoc.id,
-        status: (data.jobStatus as 'pending' | 'completed' | undefined) || 'pending',
-        approximateLat: data.approximateLat as number,
-        approximateLng: data.approximateLng as number,
-        streetName: (data.streetName as string | undefined) || undefined,
-        statusUpdatedAt: data.statusUpdatedAt
-          ? serializeTimestamp(data.statusUpdatedAt as Timestamp)
-          : undefined,
-      });
-    }
-  }
-
-  return mapLeads;
-}
-
-/**
  * Get lead by ID for contractor (ensures contractor owns the lead's campaign)
  */
 export async function getLeadByIdAdmin(
@@ -795,7 +839,6 @@ export async function getLeadByIdAdmin(
     jobStatusUpdatedAt: leadData.jobStatusUpdatedAt
       ? serializeTimestamp(leadData.jobStatusUpdatedAt as Timestamp)
       : null,
-    mapConsent: (leadData.mapConsent as boolean | undefined) || false,
     contractorNotes: (leadData.contractorNotes as string | undefined) || '',
     campaignName: (campaignData.campaignName as string | undefined) || 'Unknown Campaign',
   };
