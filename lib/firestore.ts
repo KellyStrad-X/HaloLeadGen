@@ -74,6 +74,15 @@ interface LeadDoc {
   notes: string | null;
   submittedAt: Timestamp;
   status: 'new' | 'contacted' | 'qualified' | 'closed' | 'lost';
+  job?: {
+    status: 'scheduled' | 'in_progress' | 'completed';
+    promotedAt: Timestamp;
+    scheduledInspectionDate?: Timestamp | null;
+    inspector?: string | null;
+    internalNotes?: string | null;
+    completedAt?: Timestamp | null;
+  } | null;
+  promotedToJob?: boolean;
 }
 
 interface PhotoDoc {
@@ -124,6 +133,14 @@ export interface Lead {
   notes: string | null;
   submittedAt: string; // ISO date string
   status: 'new' | 'contacted' | 'qualified' | 'closed' | 'lost';
+  job?: {
+    status: 'scheduled' | 'in_progress' | 'completed';
+    promotedAt: string;
+    scheduledInspectionDate: string | null;
+    inspector: string | null;
+    internalNotes: string | null;
+    completedAt: string | null;
+  } | null;
 }
 
 export interface Photo {

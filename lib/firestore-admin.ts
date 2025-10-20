@@ -11,6 +11,16 @@ import { geocodeAddressServer, type Location } from './geocoding';
 
 type JobStatus = 'Completed' | 'Pending';
 type CampaignStatus = 'Active' | 'Inactive';
+export type LeadJobStatus = 'scheduled' | 'in_progress' | 'completed';
+
+interface LeadJobData {
+  status: LeadJobStatus;
+  promotedAt: Timestamp;
+  scheduledInspectionDate?: Timestamp | null;
+  inspector?: string | null;
+  internalNotes?: string | null;
+  completedAt?: Timestamp | null;
+}
 
 export interface StormInfo {
   enabled: boolean;
@@ -376,6 +386,7 @@ export async function submitLeadAdmin({
     notes: notes?.trim() || null,
     submittedAt: Timestamp.now(),
     status: 'new',
+    promotedToJob: false,
   });
 
   return docRef.id;
@@ -459,7 +470,16 @@ export async function getDashboardSummaryAdmin(
       .count()
       .get();
 
-    const leadCount = countSnapshot.data().count;
+    const promotedCountSnapshot = await adminDb
+      .collection('leads')
+      .where('campaignId', '==', campaignDoc.id)
+      .where('promotedToJob', '==', true)
+      .count()
+      .get();
+
+    const rawLeadCount = countSnapshot.data().count;
+    const promotedCount = promotedCountSnapshot.data().count;
+    const leadCount = Math.max(rawLeadCount - promotedCount, 0);
     totalLeads += leadCount;
 
     // Check for new leads in the last 7 days
@@ -470,7 +490,11 @@ export async function getDashboardSummaryAdmin(
       .limit(1)
       .get();
 
-    const hasNewLeads = !recentLeadsSnapshot.empty;
+    const hasNewLeads = recentLeadsSnapshot.docs.some(doc => {
+      const data = doc.data() || {};
+      const jobDetails = data.job as LeadJobData | undefined;
+      return !(jobDetails && jobDetails.status);
+    });
 
     // Add to campaign summaries
     campaignSummaries.push({
@@ -494,6 +518,10 @@ export async function getDashboardSummaryAdmin(
 
     for (const leadDoc of leadsSnapshot.docs) {
       const leadData = leadDoc.data() || {};
+      const jobDetails = leadData.job as LeadJobData | undefined;
+      if (jobDetails && jobDetails.status) {
+        continue;
+      }
       collectedLeads.push({
         id: leadDoc.id,
         campaignId: campaignDoc.id,
@@ -563,6 +591,17 @@ export async function getDashboardCampaignsAdmin(
       .count()
       .get();
 
+    const promotedCountSnapshot = await adminDb
+      .collection('leads')
+      .where('campaignId', '==', campaignDoc.id)
+      .where('promotedToJob', '==', true)
+      .count()
+      .get();
+
+    const rawLeadCount = countSnapshot.data().count;
+    const promotedCount = promotedCountSnapshot.data().count;
+    const availableLeadCount = Math.max(rawLeadCount - promotedCount, 0);
+
     const location = await resolveCampaignLocation(campaignDoc, campaign, data);
 
     campaigns.push({
@@ -572,7 +611,7 @@ export async function getDashboardCampaignsAdmin(
       jobStatus: campaign.jobStatus,
       campaignStatus: campaign.campaignStatus,
       createdAt: campaign.createdAt,
-      leadCount: countSnapshot.data().count,
+      leadCount: availableLeadCount,
       pageSlug: campaign.pageSlug,
       location,
     });
@@ -827,6 +866,23 @@ export async function getLeadByIdAdmin(
     return null; // Contractor doesn't own this campaign
   }
 
+  const jobData = (leadData.job as LeadJobData | undefined) || null;
+  let effectiveJobStatus =
+    (leadData.jobStatus as
+      | 'new'
+      | 'contacted'
+      | 'scheduled'
+      | 'completed'
+      | undefined) || 'new';
+
+  if (jobData) {
+    if (jobData.status === 'completed') {
+      effectiveJobStatus = 'completed';
+    } else {
+      effectiveJobStatus = 'scheduled';
+    }
+  }
+
   return {
     id: leadDoc.id,
     name: (leadData.name as string) || '',
@@ -835,12 +891,24 @@ export async function getLeadByIdAdmin(
     address: (leadData.address as string | null) || null,
     notes: (leadData.notes as string | null) || null,
     submittedAt: serializeTimestamp(leadData.submittedAt as Timestamp | undefined),
-    jobStatus: (leadData.jobStatus as 'new' | 'contacted' | 'scheduled' | 'completed' | undefined) || 'new',
+    jobStatus: effectiveJobStatus,
     jobStatusUpdatedAt: leadData.jobStatusUpdatedAt
       ? serializeTimestamp(leadData.jobStatusUpdatedAt as Timestamp)
       : null,
     contractorNotes: (leadData.contractorNotes as string | undefined) || '',
     campaignName: (campaignData.campaignName as string | undefined) || 'Unknown Campaign',
+    job: jobData
+      ? {
+          status: jobData.status,
+          promotedAt: serializeTimestamp(jobData.promotedAt),
+          scheduledInspectionDate: jobData.scheduledInspectionDate
+            ? serializeTimestamp(jobData.scheduledInspectionDate)
+            : null,
+          inspector: jobData.inspector ?? null,
+          internalNotes: jobData.internalNotes ?? null,
+          completedAt: jobData.completedAt ? serializeTimestamp(jobData.completedAt) : null,
+        }
+      : null,
   };
 }
 
@@ -886,7 +954,6 @@ export async function updateLeadStatusAdmin({
     updateData.jobStatus = jobStatus;
     updateData.jobStatusUpdatedAt = Timestamp.now();
 
-    // Optional: Track status history for analytics
     const statusHistory = (leadData.statusHistory as any[]) || [];
     statusHistory.push({
       status: jobStatus,
@@ -894,6 +961,26 @@ export async function updateLeadStatusAdmin({
       changedBy: contractorId,
     });
     updateData.statusHistory = statusHistory;
+
+    if (leadData.job) {
+      const currentJob = leadData.job as LeadJobData;
+      const jobUpdate: Partial<LeadJobData> = {};
+
+      if (jobStatus === 'completed') {
+        jobUpdate.status = 'completed';
+        jobUpdate.completedAt = Timestamp.now();
+      } else if (jobStatus === 'scheduled') {
+        jobUpdate.status = 'scheduled';
+      } else if (jobStatus === 'contacted' || jobStatus === 'new') {
+        // Keep job status aligned but default to scheduled so downstream UI remains consistent
+        jobUpdate.status = currentJob.status;
+      }
+
+      updateData.job = {
+        ...currentJob,
+        ...jobUpdate,
+      };
+    }
   }
 
   if (contractorNotes !== undefined) {
@@ -905,6 +992,291 @@ export async function updateLeadStatusAdmin({
 
   // Return updated lead
   return getLeadByIdAdmin(leadId, contractorId);
+}
+
+export async function promoteLeadToJobAdmin({
+  leadId,
+  contractorId,
+  status = 'scheduled',
+  scheduledInspectionDate,
+  inspector,
+  internalNotes,
+}: {
+  leadId: string;
+  contractorId: string;
+  status?: LeadJobStatus;
+  scheduledInspectionDate?: Date | null;
+  inspector?: string | null;
+  internalNotes?: string | null;
+}): Promise<DashboardJob | null> {
+  const adminDb = getAdminFirestore();
+  const leadRef = adminDb.collection('leads').doc(leadId);
+  const leadSnap = await leadRef.get();
+
+  if (!leadSnap.exists) {
+    return null;
+  }
+
+  const leadData = leadSnap.data() || {};
+  const campaignId = leadData.campaignId as string;
+  const campaignDoc = await adminDb.collection('campaigns').doc(campaignId).get();
+
+  if (!campaignDoc.exists) {
+    return null;
+  }
+
+  const campaignData = campaignDoc.data() || {};
+  if (campaignData.contractorId !== contractorId) {
+    return null;
+  }
+
+  const existingJob = leadData.job as LeadJobData | undefined;
+  if (existingJob && existingJob.status) {
+    // Already promoted; delegate to update helper
+    return updateJobAdmin({
+      leadId,
+      contractorId,
+      status,
+      scheduledInspectionDate,
+      inspector,
+      internalNotes,
+    });
+  }
+
+  const now = Timestamp.now();
+  const scheduledTimestamp = scheduledInspectionDate
+    ? Timestamp.fromDate(scheduledInspectionDate)
+    : null;
+
+  const jobPayload: LeadJobData = {
+    status,
+    promotedAt: now,
+    scheduledInspectionDate: scheduledTimestamp,
+    inspector: inspector ?? null,
+    internalNotes: internalNotes ?? null,
+    completedAt: status === 'completed' ? now : null,
+  };
+
+  const statusHistory = (leadData.statusHistory as any[]) || [];
+  statusHistory.push({
+    status: status === 'completed' ? 'completed' : 'scheduled',
+    changedAt: now,
+    changedBy: contractorId,
+  });
+
+  await leadRef.update({
+    job: jobPayload,
+    jobStatus: status === 'completed' ? 'completed' : 'scheduled',
+    jobStatusUpdatedAt: now,
+    promotedToJob: true,
+    statusHistory,
+  });
+
+  const refreshed = await leadRef.get();
+  const refreshedData = refreshed.data() || {};
+
+  return toDashboardJob({
+    id: refreshed.id,
+    data: refreshedData,
+    job: refreshedData.job as LeadJobData,
+    campaignId,
+    campaignName: (campaignData.campaignName as string) || 'Unknown Campaign',
+  });
+}
+
+export async function updateJobAdmin({
+  leadId,
+  contractorId,
+  status,
+  scheduledInspectionDate,
+  inspector,
+  internalNotes,
+}: {
+  leadId: string;
+  contractorId: string;
+  status?: LeadJobStatus;
+  scheduledInspectionDate?: Date | null;
+  inspector?: string | null;
+  internalNotes?: string | null;
+}): Promise<DashboardJob | null> {
+  const adminDb = getAdminFirestore();
+  const leadRef = adminDb.collection('leads').doc(leadId);
+  const leadSnap = await leadRef.get();
+
+  if (!leadSnap.exists) {
+    return null;
+  }
+
+  const leadData = leadSnap.data() || {};
+  const campaignId = leadData.campaignId as string;
+
+  const campaignDoc = await adminDb.collection('campaigns').doc(campaignId).get();
+  if (!campaignDoc.exists) {
+    return null;
+  }
+
+  const campaignData = campaignDoc.data() || {};
+  if (campaignData.contractorId !== contractorId) {
+    return null;
+  }
+
+  const existingJob = (leadData.job as LeadJobData | undefined) || null;
+  if (!existingJob) {
+    return promoteLeadToJobAdmin({
+      leadId,
+      contractorId,
+      status: status ?? 'scheduled',
+      scheduledInspectionDate,
+      inspector,
+      internalNotes,
+    });
+  }
+
+  const now = Timestamp.now();
+  const nextJob: LeadJobData = {
+    ...existingJob,
+  };
+
+  if (typeof inspector !== 'undefined') {
+    nextJob.inspector = inspector ?? null;
+  }
+
+  if (typeof internalNotes !== 'undefined') {
+    nextJob.internalNotes = internalNotes ?? null;
+  }
+
+  if (typeof scheduledInspectionDate !== 'undefined') {
+    nextJob.scheduledInspectionDate = scheduledInspectionDate
+      ? Timestamp.fromDate(scheduledInspectionDate)
+      : null;
+  }
+
+  let jobStatusForCompat = existingJob.status === 'completed' ? 'completed' : 'scheduled';
+
+  if (status) {
+    nextJob.status = status;
+    if (status === 'completed') {
+      nextJob.completedAt = now;
+    } else {
+      nextJob.completedAt = null;
+    }
+    jobStatusForCompat = status === 'completed' ? 'completed' : 'scheduled';
+  }
+
+  const updatePayload: FirebaseFirestore.UpdateData<FirebaseFirestore.DocumentData> = {
+    job: nextJob,
+    promotedToJob: true,
+  };
+
+  if (status) {
+    updatePayload.jobStatus = jobStatusForCompat;
+    updatePayload.jobStatusUpdatedAt = now;
+
+    const statusHistory = (leadData.statusHistory as any[]) || [];
+    statusHistory.push({
+      status: jobStatusForCompat,
+      changedAt: now,
+      changedBy: contractorId,
+    });
+    updatePayload.statusHistory = statusHistory;
+  }
+
+  await leadRef.update(updatePayload);
+
+  const refreshed = await leadRef.get();
+  const refreshedData = refreshed.data() || {};
+
+  return toDashboardJob({
+    id: refreshed.id,
+    data: refreshedData,
+    job: refreshedData.job as LeadJobData,
+    campaignId,
+    campaignName: (campaignData.campaignName as string) || 'Unknown Campaign',
+  });
+}
+
+export async function getJobsByStatusAdmin(
+  contractorId: string
+): Promise<{
+  scheduled: DashboardJob[];
+  inProgress: DashboardJob[];
+  completed: DashboardJob[];
+}> {
+  const adminDb = getAdminFirestore();
+
+  const campaignsSnapshot = await adminDb
+    .collection('campaigns')
+    .where('contractorId', '==', contractorId)
+    .get();
+
+  if (campaignsSnapshot.empty) {
+    return {
+      scheduled: [],
+      inProgress: [],
+      completed: [],
+    };
+  }
+
+  const campaignMap = new Map<string, string>();
+  const campaignIds: string[] = [];
+
+  campaignsSnapshot.docs.forEach(doc => {
+    const data = doc.data();
+    campaignMap.set(doc.id, (data.campaignName as string) || 'Unnamed Campaign');
+    campaignIds.push(doc.id);
+  });
+
+  const scheduled: DashboardJob[] = [];
+  const inProgress: DashboardJob[] = [];
+  const completed: DashboardJob[] = [];
+
+  const BATCH_SIZE = 10;
+  for (let i = 0; i < campaignIds.length; i += BATCH_SIZE) {
+    const batchIds = campaignIds.slice(i, i + BATCH_SIZE);
+
+    const leadsSnapshot = await adminDb
+      .collection('leads')
+      .where('campaignId', 'in', batchIds)
+      .where('job.status', 'in', ['scheduled', 'in_progress', 'completed'])
+      .orderBy('submittedAt', 'desc')
+      .get();
+
+    leadsSnapshot.docs.forEach(leadDoc => {
+      const data = leadDoc.data() || {};
+      const jobDetails = data.job as LeadJobData | undefined;
+
+      if (!jobDetails || !jobDetails.status) {
+        return;
+      }
+
+      const campaignId = data.campaignId as string;
+      const job = toDashboardJob({
+        id: leadDoc.id,
+        data,
+        job: jobDetails,
+        campaignId,
+        campaignName: campaignMap.get(campaignId) || 'Unknown Campaign',
+      });
+
+      switch (job.status) {
+        case 'completed':
+          completed.push(job);
+          break;
+        case 'in_progress':
+          inProgress.push(job);
+          break;
+        default:
+          scheduled.push(job);
+          break;
+      }
+    });
+  }
+
+  return {
+    scheduled,
+    inProgress,
+    completed,
+  };
 }
 
 /**
@@ -982,6 +1354,56 @@ export interface DashboardLead {
   campaignName: string;
 }
 
+export interface DashboardJob {
+  id: string;
+  campaignId: string;
+  campaignName: string;
+  customerName: string;
+  email: string;
+  phone: string;
+  address: string | null;
+  notes: string | null;
+  status: LeadJobStatus;
+  scheduledInspectionDate: string | null;
+  inspector: string | null;
+  internalNotes: string | null;
+  promotedAt: string;
+  completedAt: string | null;
+}
+
+function toDashboardJob({
+  id,
+  data,
+  job,
+  campaignId,
+  campaignName,
+}: {
+  id: string;
+  data: FirebaseFirestore.DocumentData;
+  job: LeadJobData;
+  campaignId: string;
+  campaignName: string;
+}): DashboardJob {
+  return {
+    id,
+    campaignId,
+    campaignName,
+    customerName: (data.name as string) || '',
+    email: (data.email as string) || '',
+    phone: (data.phone as string) || '',
+    address: (data.address as string | null) || null,
+    notes: (data.notes as string | null) || null,
+    status: job.status,
+    scheduledInspectionDate: job.scheduledInspectionDate
+      ? serializeTimestamp(job.scheduledInspectionDate)
+      : null,
+    inspector: job.inspector ?? null,
+    internalNotes: job.internalNotes ?? null,
+    promotedAt: serializeTimestamp(job.promotedAt),
+    completedAt: job.completedAt ? serializeTimestamp(job.completedAt) : null,
+  };
+}
+
 export async function getAllLeadsAdmin(
   contractorId: string,
   filters?: {
@@ -1051,7 +1473,27 @@ export async function getAllLeadsAdmin(
 
     leadsSnapshot.docs.forEach(leadDoc => {
       const data = leadDoc.data() || {};
+      const jobDetails = data.job as LeadJobData | undefined;
+
+      // Skip leads that have been promoted to jobs unless the caller explicitly requests scheduled/completed status
+      const isPromoted = !!(jobDetails && jobDetails.status);
+      const requestedStatus = filters?.jobStatus;
+      const isLegacyJobStatus =
+        requestedStatus === 'scheduled' || requestedStatus === 'completed';
+
+      if (isPromoted && !isLegacyJobStatus) {
+        return;
+      }
+
       const campaignId = data.campaignId as string;
+
+      let legacyStatus =
+        (data.jobStatus as 'new' | 'contacted' | 'scheduled' | 'completed' | undefined) ||
+        'new';
+
+      if (jobDetails) {
+        legacyStatus = jobDetails.status === 'completed' ? 'completed' : 'scheduled';
+      }
 
       allLeads.push({
         id: leadDoc.id,
@@ -1061,7 +1503,7 @@ export async function getAllLeadsAdmin(
         address: (data.address as string | null) || null,
         notes: (data.notes as string | null) || null,
         submittedAt: serializeTimestamp(data.submittedAt as Timestamp | undefined),
-        jobStatus: (data.jobStatus as 'new' | 'contacted' | 'scheduled' | 'completed' | undefined) || 'new',
+        jobStatus: legacyStatus,
         campaignId,
         campaignName: campaignMap.get(campaignId) || 'Unknown Campaign',
       });
