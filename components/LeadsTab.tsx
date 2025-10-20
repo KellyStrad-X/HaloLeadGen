@@ -769,7 +769,9 @@ export default function LeadsTab() {
         </select>
       </div>
 
+      {/* Main Content Area */}
       <div className="flex flex-col gap-6 md:flex-row">
+        {/* Left: Campaigns Column */}
         <div className="hidden md:block md:w-64 md:flex-shrink-0">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-400">
             Campaigns
@@ -805,140 +807,138 @@ export default function LeadsTab() {
           </div>
         </div>
 
-        <div className="flex-1 space-y-6">
-          {/* Leads Section - Top */}
-          <div className={`${activeMobileView === 'jobs' ? 'hidden md:block' : ''}`}>
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
-                  Leads ({sortedLeads.length})
-                </h2>
-                <select
-                  value={leadSortOrder}
-                  onChange={(e) => setLeadSortOrder(e.target.value as 'newest' | 'oldest')}
-                  className="rounded-md border border-[#373e47] bg-[#0d1117] px-3 py-1.5 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                >
-                  <option value="newest">Newest First</option>
-                  <option value="oldest">Oldest First</option>
-                </select>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowAllLeadsModal(true)}
-                className="rounded-md border border-cyan-500/40 bg-cyan-500/10 px-3 py-1.5 text-xs font-medium text-cyan-300 transition hover:bg-cyan-500/20"
+        {/* Right: Leads Section */}
+        <div className={`flex-1 ${activeMobileView === 'jobs' ? 'hidden md:block' : ''}`}>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
+                Leads ({sortedLeads.length})
+              </h2>
+              <select
+                value={leadSortOrder}
+                onChange={(e) => setLeadSortOrder(e.target.value as 'newest' | 'oldest')}
+                className="rounded-md border border-[#373e47] bg-[#0d1117] px-3 py-1.5 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
               >
-                View All Leads
-              </button>
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+              </select>
             </div>
-
-            {sortedLeads.length === 0 ? (
-              emptyLeadState
-            ) : (
-              <>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  {paginatedLeads.map(renderLeadCard)}
-                </div>
-
-                {totalLeadPages > 1 && (
-                  <div className="mt-4 flex items-center justify-between">
-                    <button
-                      type="button"
-                      onClick={() => setLeadsPage((p) => Math.max(0, p - 1))}
-                      disabled={leadsPage === 0}
-                      className="rounded-md border border-[#373e47] bg-[#0d1117] px-3 py-1.5 text-xs font-medium text-white transition hover:bg-[#1e2227] disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                      ← Previous
-                    </button>
-                    <span className="text-xs text-gray-400">
-                      Page {leadsPage + 1} of {totalLeadPages}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setLeadsPage((p) => Math.min(totalLeadPages - 1, p + 1))}
-                      disabled={leadsPage >= totalLeadPages - 1}
-                      className="rounded-md border border-[#373e47] bg-[#0d1117] px-3 py-1.5 text-xs font-medium text-white transition hover:bg-[#1e2227] disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                      Next →
-                    </button>
-                  </div>
-                )}
-              </>
-            )}
+            <button
+              type="button"
+              onClick={() => setShowAllLeadsModal(true)}
+              className="rounded-md border border-cyan-500/40 bg-cyan-500/10 px-3 py-1.5 text-xs font-medium text-cyan-300 transition hover:bg-cyan-500/20"
+            >
+              View All Leads
+            </button>
           </div>
 
-          {/* Jobs Pipeline - Bottom */}
-          <div className={`${activeMobileView === 'leads' ? 'hidden md:block' : ''}`}>
-            <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-400">
-              Jobs Pipeline ({jobsCountForSelected})
-            </h2>
-            <div className="flex flex-col gap-3 md:flex-row md:items-start">
-              {JOB_COLUMNS.map((column) => {
-                const isExpanded = expandedJobSections[column.key];
-                const jobsInSection = filteredJobs[column.key];
-                return (
-                  <div
-                    key={column.key}
-                    className={`flex-1 rounded-lg border bg-[#0d1117] transition ${column.accent}`}
-                  >
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setExpandedJobSections((prev) => ({
-                          ...prev,
-                          [column.key]: !prev[column.key],
-                        }))
-                      }
-                      className="flex w-full items-center justify-between p-4 text-left"
-                    >
-                      <div className="flex items-center gap-3">
-                        <svg
-                          className={`h-4 w-4 text-gray-400 transition-transform ${
-                            isExpanded ? 'rotate-90' : ''
-                          }`}
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                        <div>
-                          <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-300">
-                            {column.title}
-                          </h3>
-                          <p className="hidden text-xs text-gray-500 lg:block">{column.description}</p>
-                        </div>
-                      </div>
-                      <span className="rounded-full bg-[#1e2227] px-3 py-1 text-xs font-semibold text-gray-300">
-                        {jobsInSection.length}
-                      </span>
-                    </button>
+          {sortedLeads.length === 0 ? (
+            emptyLeadState
+          ) : (
+            <>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {paginatedLeads.map(renderLeadCard)}
+              </div>
 
-                    {isExpanded && (
-                      <div
-                        onDragOver={handleDragOver}
-                        onDrop={(event) => handleJobDrop(event, column.key)}
-                        className={`border-t p-4 transition ${
-                          isColumnActive(column.key)
-                            ? 'border-2 border-dashed border-cyan-500/40 bg-cyan-500/5'
-                            : 'border-[#2d333b]'
-                        }`}
-                      >
-                        {jobsInSection.length === 0 ? (
-                          <div className="rounded-md border border-dashed border-[#373e47] bg-[#161c22] p-6 text-center text-xs text-gray-500">
-                            Drop a lead or move an existing job here.
-                          </div>
-                        ) : (
-                          <div className="space-y-3">
-                            {jobsInSection.map(renderJobCard)}
-                          </div>
-                        )}
+              {totalLeadPages > 1 && (
+                <div className="mt-4 flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={() => setLeadsPage((p) => Math.max(0, p - 1))}
+                    disabled={leadsPage === 0}
+                    className="rounded-md border border-[#373e47] bg-[#0d1117] px-3 py-1.5 text-xs font-medium text-white transition hover:bg-[#1e2227] disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    ← Previous
+                  </button>
+                  <span className="text-xs text-gray-400">
+                    Page {leadsPage + 1} of {totalLeadPages}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setLeadsPage((p) => Math.min(totalLeadPages - 1, p + 1))}
+                    disabled={leadsPage >= totalLeadPages - 1}
+                    className="rounded-md border border-[#373e47] bg-[#0d1117] px-3 py-1.5 text-xs font-medium text-white transition hover:bg-[#1e2227] disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Next →
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Jobs Pipeline - Full Width Below */}
+      <div className={`${activeMobileView === 'leads' ? 'hidden md:block' : ''}`}>
+        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-400">
+          Jobs Pipeline ({jobsCountForSelected})
+        </h2>
+        <div className="flex flex-col gap-3 md:flex-row md:items-start">
+          {JOB_COLUMNS.map((column) => {
+            const isExpanded = expandedJobSections[column.key];
+            const jobsInSection = filteredJobs[column.key];
+            return (
+              <div
+                key={column.key}
+                className={`flex-1 rounded-lg border bg-[#0d1117] transition ${column.accent}`}
+              >
+                <button
+                  type="button"
+                  onClick={() =>
+                    setExpandedJobSections((prev) => ({
+                      ...prev,
+                      [column.key]: !prev[column.key],
+                    }))
+                  }
+                  className="flex w-full items-center justify-between p-4 text-left"
+                >
+                  <div className="flex items-center gap-3">
+                    <svg
+                      className={`h-4 w-4 text-gray-400 transition-transform ${
+                        isExpanded ? 'rotate-90' : ''
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                    <div>
+                      <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-300">
+                        {column.title}
+                      </h3>
+                      <p className="hidden text-xs text-gray-500 lg:block">{column.description}</p>
+                    </div>
+                  </div>
+                  <span className="rounded-full bg-[#1e2227] px-3 py-1 text-xs font-semibold text-gray-300">
+                    {jobsInSection.length}
+                  </span>
+                </button>
+
+                {isExpanded && (
+                  <div
+                    onDragOver={handleDragOver}
+                    onDrop={(event) => handleJobDrop(event, column.key)}
+                    className={`border-t p-4 transition ${
+                      isColumnActive(column.key)
+                        ? 'border-2 border-dashed border-cyan-500/40 bg-cyan-500/5'
+                        : 'border-[#2d333b]'
+                    }`}
+                  >
+                    {jobsInSection.length === 0 ? (
+                      <div className="rounded-md border border-dashed border-[#373e47] bg-[#161c22] p-6 text-center text-xs text-gray-500">
+                        Drop a lead or move an existing job here.
+                      </div>
+                    ) : (
+                      <div className="max-h-[500px] space-y-3 overflow-y-auto pr-2">
+                        {jobsInSection.map(renderJobCard)}
                       </div>
                     )}
                   </div>
-                );
-              })}
-            </div>
-          </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
 
