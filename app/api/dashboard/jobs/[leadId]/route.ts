@@ -46,7 +46,7 @@ export async function PATCH(
 
     let jobStatus: LeadJobStatus | undefined;
     if (typeof status !== 'undefined') {
-      if (!['scheduled', 'in_progress', 'completed'].includes(status)) {
+      if (!['scheduled', 'completed'].includes(status)) {
         return NextResponse.json(
           { error: 'Invalid job status' },
           { status: 400 }

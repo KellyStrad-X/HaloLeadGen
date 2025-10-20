@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
 
     let jobStatus: LeadJobStatus = 'scheduled';
     if (status) {
-      if (!['scheduled', 'in_progress', 'completed'].includes(status)) {
+      if (!['scheduled', 'completed'].includes(status)) {
         return NextResponse.json(
           { error: 'Invalid job status' },
           { status: 400 }

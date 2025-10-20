@@ -83,19 +83,13 @@ const JOB_COLUMNS: Array<{
   {
     key: 'scheduled',
     title: 'Scheduled',
-    description: 'Inspection booked or pending',
+    description: 'Pending jobs & inspections',
     accent: 'border-orange-500/40',
-  },
-  {
-    key: 'in_progress',
-    title: 'In Progress',
-    description: 'On-site or active production',
-    accent: 'border-blue-500/40',
   },
   {
     key: 'completed',
     title: 'Completed',
-    description: 'Ready for marketing assets',
+    description: 'Finished jobs (appears on Halo Map)',
     accent: 'border-emerald-500/40',
   },
 ];
@@ -115,7 +109,6 @@ export default function LeadsTab() {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [jobs, setJobs] = useState<JobBuckets>({
     scheduled: [],
-    in_progress: [],
     completed: [],
   });
   const [loading, setLoading] = useState(true);
@@ -135,7 +128,6 @@ export default function LeadsTab() {
   const [showAllLeadsModal, setShowAllLeadsModal] = useState(false);
   const [expandedJobSections, setExpandedJobSections] = useState<Record<LeadJobStatus, boolean>>({
     scheduled: true,
-    in_progress: true,
     completed: true,
   });
 
@@ -182,8 +174,7 @@ export default function LeadsTab() {
   }, [leads, jobs]);
 
   const campaignOptions = useMemo(() => {
-    const totalJobs =
-      jobs.scheduled.length + jobs.in_progress.length + jobs.completed.length;
+    const totalJobs = jobs.scheduled.length + jobs.completed.length;
 
     return [
       {
@@ -244,7 +235,6 @@ export default function LeadsTab() {
     if (selectedCampaignId === 'all') return jobs;
     return {
       scheduled: jobs.scheduled.filter((job) => job.campaignId === selectedCampaignId),
-      in_progress: jobs.in_progress.filter((job) => job.campaignId === selectedCampaignId),
       completed: jobs.completed.filter((job) => job.campaignId === selectedCampaignId),
     };
   }, [jobs, selectedCampaignId]);
@@ -252,9 +242,7 @@ export default function LeadsTab() {
   const jobIndex = useMemo(() => groupJobsById(filteredJobs), [filteredJobs]);
   const leadsCountForSelected = filteredLeads.length;
   const jobsCountForSelected =
-    filteredJobs.scheduled.length +
-    filteredJobs.in_progress.length +
-    filteredJobs.completed.length;
+    filteredJobs.scheduled.length + filteredJobs.completed.length;
 
   useEffect(() => {
     if (selectedCampaignId === 'all') {
@@ -269,7 +257,7 @@ export default function LeadsTab() {
   const loadData = useCallback(async () => {
     if (!user) {
       setLeads([]);
-      setJobs({ scheduled: [], in_progress: [], completed: [] });
+      setJobs({ scheduled: [], completed: [] });
       setLoading(false);
       return;
     }
@@ -304,7 +292,6 @@ export default function LeadsTab() {
       setLeads(leadsData.leads ?? []);
       setJobs({
         scheduled: jobsData.jobs?.scheduled ?? [],
-        in_progress: jobsData.jobs?.inProgress ?? [],
         completed: jobsData.jobs?.completed ?? [],
       });
     } catch (err) {

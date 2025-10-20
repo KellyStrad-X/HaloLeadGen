@@ -11,7 +11,7 @@ import { geocodeAddressServer, type Location } from './geocoding';
 
 type JobStatus = 'Completed' | 'Pending';
 type CampaignStatus = 'Active' | 'Inactive';
-export type LeadJobStatus = 'scheduled' | 'in_progress' | 'completed';
+export type LeadJobStatus = 'scheduled' | 'completed';
 
 interface LeadJobData {
   status: LeadJobStatus;
@@ -1199,7 +1199,6 @@ export async function getJobsByStatusAdmin(
   contractorId: string
 ): Promise<{
   scheduled: DashboardJob[];
-  inProgress: DashboardJob[];
   completed: DashboardJob[];
 }> {
   const adminDb = getAdminFirestore();
@@ -1212,7 +1211,6 @@ export async function getJobsByStatusAdmin(
   if (campaignsSnapshot.empty) {
     return {
       scheduled: [],
-      inProgress: [],
       completed: [],
     };
   }
@@ -1227,7 +1225,6 @@ export async function getJobsByStatusAdmin(
   });
 
   const scheduled: DashboardJob[] = [];
-  const inProgress: DashboardJob[] = [];
   const completed: DashboardJob[] = [];
 
   const BATCH_SIZE = 10;
@@ -1237,7 +1234,7 @@ export async function getJobsByStatusAdmin(
     const leadsSnapshot = await adminDb
       .collection('leads')
       .where('campaignId', 'in', batchIds)
-      .where('job.status', 'in', ['scheduled', 'in_progress', 'completed'])
+      .where('job.status', 'in', ['scheduled', 'completed'])
       .orderBy('submittedAt', 'desc')
       .get();
 
@@ -1258,23 +1255,16 @@ export async function getJobsByStatusAdmin(
         campaignName: campaignMap.get(campaignId) || 'Unknown Campaign',
       });
 
-      switch (job.status) {
-        case 'completed':
-          completed.push(job);
-          break;
-        case 'in_progress':
-          inProgress.push(job);
-          break;
-        default:
-          scheduled.push(job);
-          break;
+      if (job.status === 'completed') {
+        completed.push(job);
+      } else {
+        scheduled.push(job);
       }
     });
   }
 
   return {
     scheduled,
-    inProgress,
     completed,
   };
 }

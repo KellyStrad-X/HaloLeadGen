@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 
-export type LeadJobStatus = 'scheduled' | 'in_progress' | 'completed';
+export type LeadJobStatus = 'scheduled' | 'completed';
 
 interface BaseJobModalProps {
   isOpen: boolean;
@@ -49,7 +49,6 @@ type JobModalProps = PromoteModeProps | EditModeProps;
 
 const STATUS_OPTIONS: Array<{ value: LeadJobStatus; label: string }> = [
   { value: 'scheduled', label: 'Scheduled' },
-  { value: 'in_progress', label: 'In Progress' },
   { value: 'completed', label: 'Completed' },
 ];
 
