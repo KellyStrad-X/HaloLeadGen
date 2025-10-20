@@ -31,6 +31,7 @@ export default function HaloMap({ campaignId, campaignLocation, contractorName }
   const [mapCenter, setMapCenter] = useState<Location>(
     campaignLocation || { lat: 29.7604, lng: -95.3698 }
   );
+  const [mapZoom, setMapZoom] = useState<number>(campaignLocation ? 12 : 10);
 
   useEffect(() => {
     async function fetchCompletedLocations() {
@@ -42,17 +43,41 @@ export default function HaloMap({ campaignId, campaignLocation, contractorName }
           setLocations(completedLocations);
 
           if (completedLocations.length > 0) {
-            const avgLat =
-              completedLocations.reduce(
-                (sum: number, item: CompletedMapLocation) => sum + item.location.lat,
-                0
-              ) / completedLocations.length;
-            const avgLng =
-              completedLocations.reduce(
-                (sum: number, item: CompletedMapLocation) => sum + item.location.lng,
-                0
-              ) / completedLocations.length;
-            setMapCenter({ lat: avgLat, lng: avgLng });
+            const bounds = completedLocations.reduce(
+              (acc, item) => ({
+                minLat: Math.min(acc.minLat, item.location.lat),
+                maxLat: Math.max(acc.maxLat, item.location.lat),
+                minLng: Math.min(acc.minLng, item.location.lng),
+                maxLng: Math.max(acc.maxLng, item.location.lng),
+              }),
+              {
+                minLat: completedLocations[0].location.lat,
+                maxLat: completedLocations[0].location.lat,
+                minLng: completedLocations[0].location.lng,
+                maxLng: completedLocations[0].location.lng,
+              }
+            );
+
+            const centerLat = (bounds.minLat + bounds.maxLat) / 2;
+            const centerLng = (bounds.minLng + bounds.maxLng) / 2;
+            setMapCenter({ lat: centerLat, lng: centerLng });
+
+            const latDiff = bounds.maxLat - bounds.minLat;
+            const lngDiff = bounds.maxLng - bounds.minLng;
+            const maxDiff = Math.max(latDiff, lngDiff);
+
+            if (maxDiff < 0.01) setMapZoom(14);
+            else if (maxDiff < 0.05) setMapZoom(12);
+            else if (maxDiff < 0.1) setMapZoom(11);
+            else if (maxDiff < 0.5) setMapZoom(10);
+            else if (maxDiff < 1) setMapZoom(9);
+            else setMapZoom(8);
+          } else if (campaignLocation) {
+            setMapCenter(campaignLocation);
+            setMapZoom(12);
+          } else {
+            setMapCenter({ lat: 29.7604, lng: -95.3698 });
+            setMapZoom(10);
           }
         }
       } catch (error) {
@@ -63,7 +88,7 @@ export default function HaloMap({ campaignId, campaignLocation, contractorName }
     }
 
     fetchCompletedLocations();
-  }, [campaignId]);
+  }, [campaignId, campaignLocation]);
 
   if (!apiKey) {
     return null; // Silently hide if no API key
@@ -139,8 +164,8 @@ export default function HaloMap({ campaignId, campaignLocation, contractorName }
         <div className="h-[400px] w-full rounded-xl overflow-hidden shadow-lg border border-gray-200">
           <APIProvider apiKey={apiKey}>
             <Map
-              defaultCenter={mapCenter}
-              defaultZoom={13}
+              center={mapCenter}
+              zoom={mapZoom}
               {...(mapId && { mapId })}
               style={{ width: '100%', height: '100%' }}
               disableDefaultUI={false}
