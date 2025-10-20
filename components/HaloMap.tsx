@@ -22,6 +22,30 @@ interface HaloMapProps {
   contractorName: string;
 }
 
+const MAX_RADIUS_MILES = 10;
+const MIN_NEARBY_MARKERS = 5;
+const DEFAULT_CENTER: Location = { lat: 29.7604, lng: -95.3698 }; // Houston as neutral fallback
+const DEFAULT_ZOOM = 10;
+
+function toRadians(degrees: number): number {
+  return (degrees * Math.PI) / 180;
+}
+
+function distanceInMiles(a: Location, b: Location): number {
+  const earthRadiusMiles = 3958.8;
+  const dLat = toRadians(b.lat - a.lat);
+  const dLng = toRadians(b.lng - a.lng);
+  const lat1 = toRadians(a.lat);
+  const lat2 = toRadians(b.lat);
+
+  const haversine =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.sin(dLng / 2) * Math.sin(dLng / 2) * Math.cos(lat1) * Math.cos(lat2);
+
+  const c = 2 * Math.atan2(Math.sqrt(haversine), Math.sqrt(1 - haversine));
+  return earthRadiusMiles * c;
+}
+
 export default function HaloMap({ campaignId, campaignLocation, contractorName }: HaloMapProps) {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
   const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID;
@@ -29,9 +53,9 @@ export default function HaloMap({ campaignId, campaignLocation, contractorName }
   const [locations, setLocations] = useState<CompletedMapLocation[]>([]);
   const [loading, setLoading] = useState(true);
   const [mapCenter, setMapCenter] = useState<Location>(
-    campaignLocation || { lat: 29.7604, lng: -95.3698 }
+    campaignLocation || DEFAULT_CENTER
   );
-  const [mapZoom, setMapZoom] = useState<number>(campaignLocation ? 12 : 10);
+  const [mapZoom, setMapZoom] = useState<number>(campaignLocation ? 12 : DEFAULT_ZOOM);
 
   useEffect(() => {
     async function fetchCompletedLocations() {
@@ -43,7 +67,37 @@ export default function HaloMap({ campaignId, campaignLocation, contractorName }
           setLocations(completedLocations);
 
           if (completedLocations.length > 0) {
-            const bounds = completedLocations.reduce(
+            let focusLocations: CompletedMapLocation[] = completedLocations;
+
+            if (campaignLocation) {
+              const sortedByDistance = [...completedLocations]
+                .map((item) => ({
+                  item,
+                  distance: distanceInMiles(item.location, campaignLocation),
+                }))
+                .sort((a, b) => a.distance - b.distance);
+
+              const withinRadius = sortedByDistance
+                .filter(({ distance }) => distance <= MAX_RADIUS_MILES)
+                .map(({ item }) => item);
+
+              if (withinRadius.length >= MIN_NEARBY_MARKERS) {
+                focusLocations = withinRadius;
+              } else {
+                focusLocations = sortedByDistance
+                  .slice(0, Math.max(MIN_NEARBY_MARKERS, Math.min(3, sortedByDistance.length)))
+                  .map(({ item }) => item);
+              }
+
+              // Ensure the current campaign location (even if not completed yet) influences framing
+              if (focusLocations.length > 0) {
+                focusLocations = [...focusLocations, { id: 'current', campaignName: 'Current Campaign', showcaseAddress: null, location: campaignLocation, completedAt: null }];
+              }
+            }
+
+            const boundsSource = focusLocations.length > 0 ? focusLocations : completedLocations;
+
+            const bounds = boundsSource.reduce(
               (acc, item) => ({
                 minLat: Math.min(acc.minLat, item.location.lat),
                 maxLat: Math.max(acc.maxLat, item.location.lat),
@@ -51,10 +105,10 @@ export default function HaloMap({ campaignId, campaignLocation, contractorName }
                 maxLng: Math.max(acc.maxLng, item.location.lng),
               }),
               {
-                minLat: completedLocations[0].location.lat,
-                maxLat: completedLocations[0].location.lat,
-                minLng: completedLocations[0].location.lng,
-                maxLng: completedLocations[0].location.lng,
+                minLat: boundsSource[0].location.lat,
+                maxLat: boundsSource[0].location.lat,
+                minLng: boundsSource[0].location.lng,
+                maxLng: boundsSource[0].location.lng,
               }
             );
 
@@ -76,8 +130,8 @@ export default function HaloMap({ campaignId, campaignLocation, contractorName }
             setMapCenter(campaignLocation);
             setMapZoom(12);
           } else {
-            setMapCenter({ lat: 29.7604, lng: -95.3698 });
-            setMapZoom(10);
+            setMapCenter(DEFAULT_CENTER);
+            setMapZoom(DEFAULT_ZOOM);
           }
         }
       } catch (error) {
