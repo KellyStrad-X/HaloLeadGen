@@ -7,6 +7,7 @@ import { useDashboardTab } from './layout';
 import CampaignMap from '@/components/CampaignMap';
 import CampaignsTab from '@/components/CampaignsTab';
 import AnalyticsTab from '@/components/AnalyticsTab';
+import LeadsTab from '@/components/LeadsTab';
 
 interface DashboardStats {
   totalCampaigns: number;
@@ -38,7 +39,7 @@ interface RecentCampaign {
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const { activeTab } = useDashboardTab();
+  const { activeTab, setActiveTab } = useDashboardTab();
   const [stats, setStats] = useState<DashboardStats>({
     totalCampaigns: 0,
     activeCampaigns: 0,
@@ -106,6 +107,10 @@ export default function DashboardPage() {
 
   if (activeTab === 'campaigns') {
     return <CampaignsTab />;
+  }
+
+  if (activeTab === 'leads') {
+    return <LeadsTab />;
   }
 
   // Overview tab (default)
@@ -187,12 +192,12 @@ export default function DashboardPage() {
                   </span>
                 </div>
               ))}
-              <Link
-                href="/dashboard/campaigns"
-                className="block text-center text-cyan-400 hover:text-cyan-300 text-sm font-medium mt-4"
+              <button
+                onClick={() => setActiveTab('leads')}
+                className="block w-full text-center text-cyan-400 hover:text-cyan-300 text-sm font-medium mt-4"
               >
-                View All Campaigns →
-              </Link>
+                View All Leads →
+              </button>
             </div>
           ) : (
             <p className="text-gray-300 text-center py-8">No leads yet</p>
@@ -256,12 +261,12 @@ export default function DashboardPage() {
                   </div>
                 </Link>
               ))}
-              <Link
-                href="/dashboard/campaigns"
-                className="block text-center text-cyan-400 hover:text-cyan-300 text-sm font-medium mt-4"
+              <button
+                onClick={() => setActiveTab('campaigns')}
+                className="block w-full text-center text-cyan-400 hover:text-cyan-300 text-sm font-medium mt-4"
               >
                 View All Campaigns →
-              </Link>
+              </button>
             </div>
           ) : (
             <div className="text-center py-8">

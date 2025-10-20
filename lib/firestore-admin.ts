@@ -797,6 +797,7 @@ export async function getLeadByIdAdmin(
       : null,
     mapConsent: (leadData.mapConsent as boolean | undefined) || false,
     contractorNotes: (leadData.contractorNotes as string | undefined) || '',
+    campaignName: (campaignData.campaignName as string | undefined) || 'Unknown Campaign',
   };
 }
 
@@ -920,4 +921,114 @@ export async function updateCampaignSettingsAdmin({
     serviceRadiusMiles: updatedData.serviceRadiusMiles || 5,
     stormInfo: updatedData.stormInfo || null,
   };
+}
+
+/**
+ * Get all leads across all campaigns for a contractor with optional filtering
+ */
+export interface DashboardLead {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  address: string | null;
+  notes: string | null;
+  submittedAt: string;
+  jobStatus: 'new' | 'contacted' | 'scheduled' | 'completed';
+  campaignId: string;
+  campaignName: string;
+}
+
+export async function getAllLeadsAdmin(
+  contractorId: string,
+  filters?: {
+    campaignId?: string;
+    jobStatus?: 'new' | 'contacted' | 'scheduled' | 'completed';
+  }
+): Promise<DashboardLead[]> {
+  const adminDb = getAdminFirestore();
+
+  // First, get all campaigns for this contractor
+  const campaignsSnapshot = await adminDb
+    .collection('campaigns')
+    .where('contractorId', '==', contractorId)
+    .get();
+
+  if (campaignsSnapshot.empty) {
+    return [];
+  }
+
+  // Build campaign ID to name mapping
+  const campaignMap = new Map<string, string>();
+  const campaignIds: string[] = [];
+
+  campaignsSnapshot.docs.forEach(doc => {
+    const data = doc.data();
+    campaignMap.set(doc.id, data.campaignName as string || 'Unnamed Campaign');
+    campaignIds.push(doc.id);
+  });
+
+  // If filtering by specific campaign, validate it belongs to this contractor
+  let targetCampaignIds: string[];
+
+  if (filters?.campaignId) {
+    // Security check: Only allow querying campaigns the contractor owns
+    if (!campaignIds.includes(filters.campaignId)) {
+      // Contractor tried to filter by a campaign they don't own
+      return [];
+    }
+    targetCampaignIds = [filters.campaignId];
+  } else {
+    targetCampaignIds = campaignIds;
+  }
+
+  if (targetCampaignIds.length === 0) {
+    return [];
+  }
+
+  const allLeads: DashboardLead[] = [];
+
+  // Firestore has a limit of 10 items for 'in' queries, so we need to batch
+  const BATCH_SIZE = 10;
+  for (let i = 0; i < targetCampaignIds.length; i += BATCH_SIZE) {
+    const batchIds = targetCampaignIds.slice(i, i + BATCH_SIZE);
+
+    let leadsQuery = adminDb
+      .collection('leads')
+      .where('campaignId', 'in', batchIds);
+
+    // Add status filter if provided
+    if (filters?.jobStatus) {
+      leadsQuery = leadsQuery.where('jobStatus', '==', filters.jobStatus);
+    }
+
+    const leadsSnapshot = await leadsQuery
+      .orderBy('submittedAt', 'desc')
+      .get();
+
+    leadsSnapshot.docs.forEach(leadDoc => {
+      const data = leadDoc.data() || {};
+      const campaignId = data.campaignId as string;
+
+      allLeads.push({
+        id: leadDoc.id,
+        name: (data.name as string) || '',
+        email: (data.email as string) || '',
+        phone: (data.phone as string) || '',
+        address: (data.address as string | null) || null,
+        notes: (data.notes as string | null) || null,
+        submittedAt: serializeTimestamp(data.submittedAt as Timestamp | undefined),
+        jobStatus: (data.jobStatus as 'new' | 'contacted' | 'scheduled' | 'completed' | undefined) || 'new',
+        campaignId,
+        campaignName: campaignMap.get(campaignId) || 'Unknown Campaign',
+      });
+    });
+  }
+
+  // Sort by submitted date (newest first)
+  allLeads.sort((a, b) => {
+    return new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime();
+  });
+
+  return allLeads;
 }

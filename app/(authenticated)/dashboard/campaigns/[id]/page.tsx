@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/lib/auth-context';
+import LeadDetailsModal from '@/components/LeadDetailsModal';
 
 interface Campaign {
   id: string;
@@ -72,6 +73,10 @@ export default function CampaignDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Modal state
+  const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   useEffect(() => {
     const fetchDetails = async () => {
       if (!user) {
@@ -116,6 +121,41 @@ export default function CampaignDetailsPage() {
 
     fetchDetails();
   }, [campaignId, user]);
+
+  const handleLeadClick = (leadId: string) => {
+    setSelectedLeadId(leadId);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedLeadId(null);
+  };
+
+  const handleLeadUpdated = () => {
+    // Refresh the leads list after an update
+    const fetchDetails = async () => {
+      if (!user) return;
+
+      try {
+        const token = await user.getIdToken();
+        const response = await fetch(`/api/dashboard/campaigns/${campaignId}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setLeads(data.leads);
+        }
+      } catch (err) {
+        console.error('Error refreshing leads:', err);
+      }
+    };
+
+    fetchDetails();
+  };
 
   if (loading) {
     return (
@@ -301,7 +341,7 @@ export default function CampaignDetailsPage() {
                 {leads.map((lead) => (
                   <tr
                     key={lead.id}
-                    onClick={() => router.push(`/dashboard/campaigns/${campaignId}/leads/${lead.id}`)}
+                    onClick={() => handleLeadClick(lead.id)}
                     className="hover:bg-[#373e47]/30 cursor-pointer transition-colors"
                   >
                     <td className="px-4 py-3 text-sm text-white font-medium">
@@ -344,13 +384,15 @@ export default function CampaignDetailsPage() {
                     </td>
                     <td className="px-4 py-3 text-sm" onClick={(e) => e.stopPropagation()}>
                       <div className="flex space-x-3 items-center">
-                        <Link
-                          href={`/dashboard/campaigns/${campaignId}/leads/${lead.id}`}
-                          onClick={(e) => e.stopPropagation()}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleLeadClick(lead.id);
+                          }}
                           className="text-cyan-400 hover:text-cyan-300"
                         >
                           View
-                        </Link>
+                        </button>
                         <a
                           href={`tel:${lead.phone}`}
                           className="text-cyan-400 hover:text-cyan-300"
@@ -376,6 +418,17 @@ export default function CampaignDetailsPage() {
           </div>
         )}
       </div>
+
+      {/* Lead Details Modal */}
+      {selectedLeadId && (
+        <LeadDetailsModal
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          leadId={selectedLeadId}
+          campaignId={campaignId}
+          onLeadUpdated={handleLeadUpdated}
+        />
+      )}
     </div>
   );
 }

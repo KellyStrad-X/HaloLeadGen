@@ -7,7 +7,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useState, createContext, useContext } from 'react';
 import SettingsModal from '@/components/SettingsModal';
 
-type DashboardTab = 'overview' | 'analytics' | 'campaigns';
+type DashboardTab = 'overview' | 'analytics' | 'campaigns' | 'leads';
 
 interface DashboardContextType {
   activeTab: DashboardTab;
@@ -105,7 +105,17 @@ export default function DashboardLayout({
                           : 'text-gray-300 hover:bg-[#2d333b] hover:text-white'
                       }`}
                     >
-                      All Campaigns
+                      Campaigns
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('leads')}
+                      className={`px-4 py-2 rounded-lg text-base font-medium transition-colors ${
+                        activeTab === 'leads'
+                          ? 'bg-cyan-500/20 text-cyan-400'
+                          : 'text-gray-300 hover:bg-[#2d333b] hover:text-white'
+                      }`}
+                    >
+                      Leads
                     </button>
                   </nav>
                 )}
@@ -185,7 +195,17 @@ export default function DashboardLayout({
                     : 'text-gray-200 hover:bg-[#2d333b] hover:text-white'
                 }`}
               >
-                All Campaigns
+                Campaigns
+              </button>
+              <button
+                onClick={() => setActiveTab('leads')}
+                className={`w-full text-left block px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  activeTab === 'leads'
+                    ? 'bg-[#2d333b] text-cyan-400'
+                    : 'text-gray-200 hover:bg-[#2d333b] hover:text-white'
+                }`}
+              >
+                Leads
               </button>
               <Link
                 href="/create-campaign"

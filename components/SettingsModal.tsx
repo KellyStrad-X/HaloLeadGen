@@ -27,10 +27,10 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   // Team members state
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
 
-  // Load existing branding on mount
+  // Load existing settings on mount
   useEffect(() => {
     if (isOpen) {
-      loadBranding();
+      loadSettings();
     }
   }, [isOpen]);
 
@@ -41,7 +41,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     return await user.getIdToken();
   };
 
-  const loadBranding = async () => {
+  const loadSettings = async () => {
     try {
       if (!user) return;
 
@@ -62,7 +62,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
         }
       }
     } catch (error) {
-      console.error('Error loading branding:', error);
+      console.error('Error loading settings:', error);
     }
   };
 
@@ -138,14 +138,14 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       });
 
       if (response.ok) {
-        alert('Branding settings saved successfully!');
+        alert('Settings saved successfully!');
         onClose();
       } else {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to save');
       }
     } catch (error) {
-      console.error('Error saving branding:', error);
+      console.error('Error saving settings:', error);
       alert(`Error saving settings: ${error instanceof Error ? error.message : 'Please try again.'}`);
     } finally {
       setIsSaving(false);
