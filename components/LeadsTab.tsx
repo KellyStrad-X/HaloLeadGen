@@ -47,6 +47,13 @@ interface JobsResponse {
 
 type JobBuckets = Record<LeadJobStatus, Job[]>;
 
+interface CampaignSummary {
+  id: string;
+  name: string;
+  newLeadCount: number;
+  jobCount: number;
+}
+
 interface PromoteModalState {
   mode: 'promote';
   lead: Lead;
@@ -114,6 +121,7 @@ export default function LeadsTab() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeMobileView, setActiveMobileView] = useState<'leads' | 'jobs'>('leads');
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string>('all');
   const [leadModalState, setLeadModalState] = useState<{
     leadId: string;
     campaignId: string;
@@ -123,7 +131,101 @@ export default function LeadsTab() {
   const [isMutating, setIsMutating] = useState(false);
   const [draggingItem, setDraggingItem] = useState<{ type: 'lead' | 'job'; id: string } | null>(null);
 
-  const jobIndex = useMemo(() => groupJobsById(jobs), [jobs]);
+  const campaignSummaries = useMemo<CampaignSummary[]>(() => {
+    const map = new Map<string, CampaignSummary>();
+
+    const upsert = (id: string, name: string) => {
+      if (!map.has(id)) {
+        map.set(id, {
+          id,
+          name,
+          newLeadCount: 0,
+          jobCount: 0,
+        });
+      }
+    };
+
+    leads.forEach((lead) => {
+      upsert(lead.campaignId, lead.campaignName);
+      const entry = map.get(lead.campaignId)!;
+      entry.newLeadCount += 1;
+    });
+
+    Object.values(jobs).forEach((list) => {
+      list.forEach((job) => {
+        upsert(job.campaignId, job.campaignName);
+        const entry = map.get(job.campaignId)!;
+        entry.jobCount += 1;
+      });
+    });
+
+    const result = Array.from(map.values());
+    result.sort((a, b) => {
+      if (a.newLeadCount !== b.newLeadCount) {
+        return b.newLeadCount - a.newLeadCount;
+      }
+      if (a.jobCount !== b.jobCount) {
+        return b.jobCount - a.jobCount;
+      }
+      return a.name.localeCompare(b.name);
+    });
+
+    return result;
+  }, [leads, jobs]);
+
+  const campaignOptions = useMemo(() => {
+    const totalJobs =
+      jobs.scheduled.length + jobs.in_progress.length + jobs.completed.length;
+
+    return [
+      {
+        id: 'all',
+        name: 'All Campaigns',
+        newLeadCount: leads.length,
+        jobCount: totalJobs,
+      },
+      ...campaignSummaries,
+    ];
+  }, [campaignSummaries, leads.length, jobs]);
+
+  const selectedCampaignName = useMemo(() => {
+    if (selectedCampaignId === 'all') {
+      return 'All Campaigns';
+    }
+    const match = campaignSummaries.find((campaign) => campaign.id === selectedCampaignId);
+    return match?.name ?? 'All Campaigns';
+  }, [selectedCampaignId, campaignSummaries]);
+
+  const filteredLeads = useMemo(() => {
+    if (selectedCampaignId === 'all') return leads;
+    return leads.filter((lead) => lead.campaignId === selectedCampaignId);
+  }, [leads, selectedCampaignId]);
+
+  const filteredJobs = useMemo<JobBuckets>(() => {
+    if (selectedCampaignId === 'all') return jobs;
+    return {
+      scheduled: jobs.scheduled.filter((job) => job.campaignId === selectedCampaignId),
+      in_progress: jobs.in_progress.filter((job) => job.campaignId === selectedCampaignId),
+      completed: jobs.completed.filter((job) => job.campaignId === selectedCampaignId),
+    };
+  }, [jobs, selectedCampaignId]);
+
+  const jobIndex = useMemo(() => groupJobsById(filteredJobs), [filteredJobs]);
+  const leadsCountForSelected = filteredLeads.length;
+  const jobsCountForSelected =
+    filteredJobs.scheduled.length +
+    filteredJobs.in_progress.length +
+    filteredJobs.completed.length;
+
+  useEffect(() => {
+    if (selectedCampaignId === 'all') {
+      return;
+    }
+    const exists = campaignSummaries.some((campaign) => campaign.id === selectedCampaignId);
+    if (!exists) {
+      setSelectedCampaignId('all');
+    }
+  }, [campaignSummaries, selectedCampaignId]);
 
   const loadData = useCallback(async () => {
     if (!user) {
@@ -297,9 +399,13 @@ export default function LeadsTab() {
       return;
     }
     const lead = leads.find((item) => item.id === leadId);
-    if (lead) {
-      openPromoteModal(lead, targetStatus);
+    if (!lead) {
+      return;
     }
+    if (selectedCampaignId !== 'all' && lead.campaignId !== selectedCampaignId) {
+      return;
+    }
+    openPromoteModal(lead, targetStatus);
   };
 
   const handleJobDrop = async (
@@ -315,6 +421,9 @@ export default function LeadsTab() {
       if (leadId) {
         const lead = leads.find((item) => item.id === leadId);
         if (lead) {
+          if (selectedCampaignId !== 'all' && lead.campaignId !== selectedCampaignId) {
+            return;
+          }
           openPromoteModal(lead, targetStatus);
         }
       }
@@ -322,7 +431,13 @@ export default function LeadsTab() {
     }
 
     const job = jobIndex.get(jobId);
-    if (!job || job.status === targetStatus) {
+    if (!job) {
+      return;
+    }
+    if (selectedCampaignId !== 'all' && job.campaignId !== selectedCampaignId) {
+      return;
+    }
+    if (job.status === targetStatus) {
       return;
     }
 
@@ -538,7 +653,11 @@ export default function LeadsTab() {
 
   const emptyLeadState = (
     <div className="rounded-lg border border-dashed border-[#373e47] bg-[#0d1117] p-6 text-center">
-      <p className="text-sm text-gray-300">No new leads in your queue right now.</p>
+      <p className="text-sm text-gray-300">
+        {selectedCampaignId === 'all'
+          ? 'No new leads in your queue right now.'
+          : `No new leads for ${selectedCampaignName}.`}
+      </p>
       <p className="mt-2 text-xs text-gray-500">
         Campaign submissions will appear here ready to drag into the job pipeline.
       </p>
@@ -585,20 +704,78 @@ export default function LeadsTab() {
               Jobs
             </button>
           </div>
-        </div>
+      </div>
+    </div>
+
+      <div className="flex flex-wrap items-center gap-3 text-xs text-gray-400">
+        <span className="text-sm font-semibold text-gray-200">{selectedCampaignName}</span>
+        <span>Leads: {leadsCountForSelected}</span>
+        <span>Jobs: {jobsCountForSelected}</span>
+      </div>
+
+      <div className="md:hidden">
+        <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-gray-400">
+          Campaign
+        </label>
+        <select
+          value={selectedCampaignId}
+          onChange={(event) => setSelectedCampaignId(event.target.value)}
+          className="w-full rounded-lg border border-[#373e47] bg-[#0d1117] px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+        >
+          {campaignOptions.map((option) => (
+            <option key={option.id} value={option.id}>
+              {option.name} — {option.newLeadCount} leads / {option.jobCount} jobs
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="flex flex-col gap-6 md:flex-row">
+        <div className="hidden md:block md:w-64 md:flex-shrink-0">
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-400">
+            Campaigns
+          </h2>
+          <div className="space-y-2">
+            {campaignOptions.map((option) => {
+              const isSelected = option.id === selectedCampaignId;
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => setSelectedCampaignId(option.id)}
+                  className={`w-full rounded-lg border px-3 py-3 text-left transition ${
+                    isSelected
+                      ? 'border-cyan-500/60 bg-[#11161d] shadow-cyan-500/10'
+                      : 'border-[#373e47] hover:border-cyan-500/40 hover:bg-[#161c22]'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm font-medium text-white">{option.name}</span>
+                    {option.newLeadCount > 0 && (
+                      <span className="rounded-full bg-cyan-500/20 px-2 py-0.5 text-[11px] font-semibold text-cyan-300">
+                        +{option.newLeadCount}
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-1 text-xs text-gray-500">
+                    {option.jobCount} {option.jobCount === 1 ? 'job' : 'jobs'}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         <div
-          className={`md:w-1/3 ${
+          className={`md:w-80 md:flex-shrink-0 ${
             activeMobileView === 'jobs' ? 'hidden md:block' : ''
           }`}
         >
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-400">
-            Leads ({leads.length})
+            Leads ({leadsCountForSelected})
           </h2>
           <div className="space-y-3">
-            {leads.length === 0 ? emptyLeadState : leads.map(renderLeadCard)}
+            {filteredLeads.length === 0 ? emptyLeadState : filteredLeads.map(renderLeadCard)}
           </div>
         </div>
 
@@ -618,7 +795,7 @@ export default function LeadsTab() {
                     <p className="text-xs text-gray-500">{column.description}</p>
                   </div>
                   <span className="rounded-full bg-[#0d1117] px-2 py-1 text-[10px] text-gray-400">
-                    {jobs[column.key].length}
+                    {filteredJobs[column.key].length}
                   </span>
                 </div>
                 <div
@@ -631,12 +808,12 @@ export default function LeadsTab() {
                   }`}
                 >
                   <div className="space-y-3">
-                    {jobs[column.key].length === 0 ? (
+                    {filteredJobs[column.key].length === 0 ? (
                       <div className="rounded-md border border-dashed border-[#373e47] bg-[#161c22] p-4 text-center text-xs text-gray-500">
                         Drop a lead or move an existing job here.
                       </div>
                     ) : (
-                      jobs[column.key].map(renderJobCard)
+                      filteredJobs[column.key].map(renderJobCard)
                     )}
                   </div>
                 </div>
