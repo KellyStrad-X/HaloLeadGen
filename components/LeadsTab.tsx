@@ -333,7 +333,12 @@ export default function LeadsTab() {
     });
 
     // Add tentative leads to calendar
-    const leadsWithTentativeDate = filteredLeads.filter(l => l.tentativeDate);
+    // Build from full leads array (not filteredLeads) to include leads with tentativeDate
+    let leadsWithTentativeDate = leads.filter(l => l.tentativeDate && !l.isColdLead);
+    // Apply campaign filter if specific campaign selected
+    if (selectedCampaignId !== 'all') {
+      leadsWithTentativeDate = leadsWithTentativeDate.filter(l => l.campaignId === selectedCampaignId);
+    }
     console.log('Leads with tentative dates:', leadsWithTentativeDate.length, leadsWithTentativeDate);
 
     leadsWithTentativeDate.forEach((lead) => {
@@ -360,7 +365,7 @@ export default function LeadsTab() {
 
     console.log('Total calendar events:', events.length, events);
     return events;
-  }, [filteredJobs.scheduled, filteredLeads]);
+  }, [filteredJobs.scheduled, leads, selectedCampaignId]);
 
   useEffect(() => {
     if (selectedCampaignId === 'all') {

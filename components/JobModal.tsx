@@ -66,6 +66,18 @@ function normalizeDateValue(value: string | null | undefined): string {
   return date.toISOString().slice(0, 10);
 }
 
+// Helper to parse date strings in local timezone (not UTC)
+// Appends noon to YYYY-MM-DD strings to avoid timezone shift bugs
+function parseLocalDate(dateStr: string): Date {
+  // If it's already a full timestamp (contains 'T'), parse directly
+  if (dateStr.includes('T')) {
+    return new Date(dateStr);
+  }
+  // If it's just YYYY-MM-DD, append T12:00:00 to parse as noon local time
+  // This avoids the date showing as previous day in western timezones
+  return new Date(`${dateStr}T12:00:00`);
+}
+
 export default function JobModal(props: JobModalProps) {
   const { user } = useAuth();
   const { isOpen, onClose, onSubmit, defaultStatus } = props;
@@ -114,7 +126,9 @@ export default function JobModal(props: JobModalProps) {
 
     if (props.mode === 'promote') {
       setStatus(defaultStatus ?? 'scheduled');
-      setScheduledInspectionDate(null);
+      // Seed with tentativeDate if available (e.g., when lead was just dragged to calendar)
+      const tentativeDateStr = props.lead.tentativeDate;
+      setScheduledInspectionDate(tentativeDateStr ? parseLocalDate(tentativeDateStr) : null);
       setInspector('');
       setInternalNotes('');
       setShowCustomInspector(false);
@@ -122,7 +136,7 @@ export default function JobModal(props: JobModalProps) {
     } else {
       setStatus(props.job.status);
       const dateStr = props.job.scheduledInspectionDate;
-      setScheduledInspectionDate(dateStr ? new Date(dateStr) : null);
+      setScheduledInspectionDate(dateStr ? parseLocalDate(dateStr) : null);
       const jobInspector = props.job.inspector ?? '';
       setInspector(jobInspector);
       // Show custom input if inspector is not in the list

@@ -279,11 +279,9 @@ export default function CalendarView({
 
         /* Custom wrapper for date cells to accept drops */
         .rbc-day-bg-wrapper {
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
+          display: block;
+          height: 100%;
+          width: 100%;
         }
 
         /* Highlight date cell when dragging lead over it */
