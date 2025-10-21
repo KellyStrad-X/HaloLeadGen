@@ -89,14 +89,11 @@ export default function JobModal(props: JobModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [inspectorsList, setInspectorsList] = useState<string[]>([]);
   const [showCustomInspector, setShowCustomInspector] = useState(false);
-  const [contactAction, setContactAction] = useState<'schedule' | '1st' | '2nd' | '3rd' | 'cold'>('schedule');
+  const [contactAction, setContactAction] = useState<'uncontacted' | '1st' | '2nd' | '3rd' | 'cold'>('uncontacted');
   const isEditMode = props.mode === 'edit';
 
   const headerTitle = useMemo(() => {
-    if (props.mode === 'edit') {
-      return 'Update Job';
-    }
-    return 'Contact Lead';
+    return 'Lead Management';
   }, [props.mode]);
 
   // Fetch inspectors list
@@ -139,7 +136,7 @@ export default function JobModal(props: JobModalProps) {
       if (attempt === 1) setContactAction('1st');
       else if (attempt === 2) setContactAction('2nd');
       else if (attempt === 3) setContactAction('3rd');
-      else setContactAction('schedule');
+      else setContactAction('uncontacted');
     } else {
       setStatus(props.job.status);
       const dateStr = props.job.scheduledInspectionDate;
@@ -173,9 +170,9 @@ export default function JobModal(props: JobModalProps) {
     setIsSubmitting(true);
     try {
       // Handle contact attempts and cold bucket for promote mode
-      if (props.mode === 'promote' && contactAction !== 'schedule') {
+      if (props.mode === 'promote' && contactAction !== 'uncontacted') {
         if (props.onContactAttempt) {
-          const attemptMap: Record<string, number> = { '1st': 1, '2nd': 2, '3rd': 3, 'cold': 0 };
+          const attemptMap: Record<string, number> = { 'uncontacted': 0, '1st': 1, '2nd': 2, '3rd': 3, 'cold': 0 };
           const attempt = attemptMap[contactAction] || 0;
           const isCold = contactAction === 'cold';
           await props.onContactAttempt(props.lead.id, attempt, isCold);
@@ -277,18 +274,18 @@ export default function JobModal(props: JobModalProps) {
                 <select
                   id="contact-action"
                   className="mt-2 w-full rounded-lg border border-[#373e47] bg-[#0d1117] px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                  value={contactAction === 'cold' ? 'schedule' : contactAction}
+                  value={contactAction === 'cold' ? 'uncontacted' : contactAction}
                   onChange={(event) => setContactAction(event.target.value as typeof contactAction)}
                   disabled={isSubmitting}
                 >
-                  <option value="schedule">Schedule Job</option>
+                  <option value="uncontacted">Uncontacted</option>
                   <option value="1st">First Contact Attempt</option>
                   <option value="2nd">Second Contact Attempt</option>
                   <option value="3rd">Third Contact Attempt</option>
                 </select>
                 <p className="mt-1 text-xs text-gray-500">
-                  {contactAction === 'schedule'
-                    ? 'Confirm inspection date and create scheduled job'
+                  {contactAction === 'uncontacted'
+                    ? 'Lead is on calendar but not yet contacted'
                     : 'Track contact attempt and keep lead active'}
                 </p>
               </div>
@@ -496,7 +493,7 @@ export default function JobModal(props: JobModalProps) {
               {isSubmitting
                 ? 'Saving...'
                 : props.mode === 'promote'
-                ? contactAction === 'schedule'
+                ? contactAction === 'uncontacted'
                   ? 'Schedule Job'
                   : contactAction === 'cold'
                   ? 'Move to Cold Bucket'
