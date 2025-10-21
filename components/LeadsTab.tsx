@@ -68,7 +68,7 @@ interface EditModalState {
 type ModalState = PromoteModalState | EditModalState | null;
 
 const leadStatusChip: Record<LegacyLeadStatus, string> = {
-  new: 'bg-[#2d333b] text-gray-300',
+  new: 'bg-cyan-500/20 text-cyan-300 ring-1 ring-cyan-500/40',
   contacted: 'bg-blue-900/40 text-blue-200',
   scheduled: 'bg-orange-900/40 text-orange-200',
   completed: 'bg-green-900/50 text-green-300',
@@ -552,16 +552,12 @@ export default function LeadsTab() {
           <span className="line-clamp-1">{lead.address ?? 'Address not provided'}</span>
         </div>
       </div>
-      <div className="mt-4 flex justify-end">
+      <div className="mt-4 flex justify-center">
         <button
           type="button"
           onClick={() => openPromoteModal(lead, 'scheduled')}
-          className="flex items-center gap-2 rounded-md bg-emerald-500 px-4 py-2 text-xs font-semibold text-black transition hover:bg-emerald-400"
+          className="rounded-md bg-emerald-500 px-6 py-2 text-xs font-semibold text-black transition hover:bg-emerald-400"
         >
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h2l3 7-1.34 2.68a1 1 0 00.9 1.45H16" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 13h10l4-8H5.4" />
-          </svg>
           CONTACT!
         </button>
       </div>

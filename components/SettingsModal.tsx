@@ -27,6 +27,9 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   // Team members state
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
 
+  // Inspectors state
+  const [inspectors, setInspectors] = useState<string[]>([]);
+
   // Load existing settings on mount
   useEffect(() => {
     if (isOpen) {
@@ -59,6 +62,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           setCompanyLogo(data.companyLogo || '');
           setSelectedBadges(data.trustBadges || []);
           setTeamMembers(data.crewMembers || []);
+          setInspectors(data.inspectors || []);
         }
       }
     } catch (error) {
@@ -134,6 +138,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           companyLogo: uploadedLogoUrl || undefined,
           trustBadges: selectedBadges,
           crewMembers: updatedTeamMembers,
+          inspectors: inspectors.filter(i => i.trim()),
         }),
       });
 
@@ -213,7 +218,7 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                     : 'border-transparent text-gray-400 hover:text-gray-300'
                 }`}
               >
-                Meet the Team
+                Team
               </button>
             </nav>
           </div>
@@ -241,6 +246,8 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               <TeamTab
                 teamMembers={teamMembers}
                 setTeamMembers={setTeamMembers}
+                inspectors={inspectors}
+                setInspectors={setInspectors}
               />
             )}
           </div>
@@ -468,8 +475,20 @@ function BadgesTab({ selectedBadges, setSelectedBadges }: any) {
 }
 
 // Team Tab Component
-function TeamTab({ teamMembers, setTeamMembers }: any) {
+function TeamTab({ teamMembers, setTeamMembers, inspectors, setInspectors }: any) {
   const [cropData, setCropData] = useState<{memberId: string, imageData: string} | null>(null);
+  const [newInspectorName, setNewInspectorName] = useState('');
+
+  const addInspector = () => {
+    if (newInspectorName.trim() && !inspectors.includes(newInspectorName.trim())) {
+      setInspectors([...inspectors, newInspectorName.trim()]);
+      setNewInspectorName('');
+    }
+  };
+
+  const removeInspector = (index: number) => {
+    setInspectors(inspectors.filter((_: any, i: number) => i !== index));
+  };
 
   const addTeamMember = () => {
     if (teamMembers.length >= 2) return;
@@ -528,7 +547,61 @@ function TeamTab({ teamMembers, setTeamMembers }: any) {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Inspectors Section */}
+      <div>
+        <label className="block font-medium text-white mb-1">Inspectors</label>
+        <p className="text-sm text-gray-400 mb-4">
+          Manage your team of inspectors for job scheduling
+        </p>
+
+        {/* Existing inspectors */}
+        <div className="space-y-2 mb-4">
+          {inspectors.map((inspector: string, index: number) => (
+            <div
+              key={index}
+              className="flex items-center justify-between border border-[#444c56] rounded-lg p-3 bg-[#2d333b]"
+            >
+              <span className="text-white">{inspector}</span>
+              <button
+                onClick={() => removeInspector(index)}
+                className="text-red-400 hover:text-red-300 p-1"
+                type="button"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+
+          {inspectors.length === 0 && (
+            <p className="text-sm text-gray-500 text-center py-4">
+              No inspectors added yet. Add your first inspector below.
+            </p>
+          )}
+        </div>
+
+        {/* Add inspector */}
+        <div className="flex gap-2">
+          <input
+            type="text"
+            placeholder="Inspector name"
+            value={newInspectorName}
+            onChange={(e) => setNewInspectorName(e.target.value)}
+            onKeyPress={(e) => e.key === 'Enter' && addInspector()}
+            className="flex-1 bg-[#1e2227] border border-[#545d68] rounded-lg px-4 py-2 text-white placeholder-gray-400 focus:ring-2 focus:ring-cyan-400 focus:border-transparent"
+          />
+          <button
+            onClick={addInspector}
+            type="button"
+            disabled={!newInspectorName.trim()}
+            className="px-4 py-2 bg-cyan-500 text-black rounded-lg hover:bg-cyan-600 disabled:bg-[#2d333b] disabled:text-gray-500 disabled:cursor-not-allowed transition-colors font-semibold"
+          >
+            Add
+          </button>
+        </div>
+      </div>
+
+      {/* Team Members Section */}
       <div>
         <label className="block font-medium text-white mb-1">Team Members</label>
         <p className="text-sm text-gray-400 mb-4">

@@ -1,6 +1,9 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
+import { useAuth } from '@/lib/auth-context';
 
 export type LeadJobStatus = 'scheduled' | 'completed';
 
@@ -60,12 +63,15 @@ function normalizeDateValue(value: string | null | undefined): string {
 }
 
 export default function JobModal(props: JobModalProps) {
+  const { user } = useAuth();
   const { isOpen, onClose, onSubmit, defaultStatus } = props;
   const [status, setStatus] = useState<LeadJobStatus>(defaultStatus ?? 'scheduled');
-  const [scheduledInspectionDate, setScheduledInspectionDate] = useState<string>('');
+  const [scheduledInspectionDate, setScheduledInspectionDate] = useState<Date | null>(null);
   const [inspector, setInspector] = useState<string>('');
   const [internalNotes, setInternalNotes] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [inspectorsList, setInspectorsList] = useState<string[]>([]);
+  const [showCustomInspector, setShowCustomInspector] = useState(false);
   const isEditMode = props.mode === 'edit';
 
   const headerTitle = useMemo(() => {
@@ -75,6 +81,27 @@ export default function JobModal(props: JobModalProps) {
     return 'Contact Lead';
   }, [props.mode]);
 
+  // Fetch inspectors list
+  useEffect(() => {
+    if (isOpen && user) {
+      const fetchInspectors = async () => {
+        try {
+          const token = await user.getIdToken();
+          const response = await fetch('/api/contractor-branding', {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (response.ok) {
+            const data = await response.json();
+            setInspectorsList(data?.inspectors || []);
+          }
+        } catch (error) {
+          console.error('Error fetching inspectors:', error);
+        }
+      };
+      fetchInspectors();
+    }
+  }, [isOpen, user]);
+
   useEffect(() => {
     if (!isOpen) {
       return;
@@ -82,16 +109,21 @@ export default function JobModal(props: JobModalProps) {
 
     if (props.mode === 'promote') {
       setStatus(defaultStatus ?? 'scheduled');
-      setScheduledInspectionDate('');
+      setScheduledInspectionDate(null);
       setInspector('');
       setInternalNotes('');
+      setShowCustomInspector(false);
     } else {
       setStatus(props.job.status);
-      setScheduledInspectionDate(normalizeDateValue(props.job.scheduledInspectionDate));
-      setInspector(props.job.inspector ?? '');
+      const dateStr = props.job.scheduledInspectionDate;
+      setScheduledInspectionDate(dateStr ? new Date(dateStr) : null);
+      const jobInspector = props.job.inspector ?? '';
+      setInspector(jobInspector);
+      // Show custom input if inspector is not in the list
+      setShowCustomInspector(jobInspector && !inspectorsList.includes(jobInspector));
       setInternalNotes(props.job.internalNotes ?? '');
     }
-  }, [isOpen, props, defaultStatus]);
+  }, [isOpen, props, defaultStatus, inspectorsList]);
 
   if (!isOpen) {
     return null;
@@ -115,7 +147,7 @@ export default function JobModal(props: JobModalProps) {
     try {
       await onSubmit({
         status,
-        scheduledInspectionDate: scheduledInspectionDate ? scheduledInspectionDate : null,
+        scheduledInspectionDate: scheduledInspectionDate ? scheduledInspectionDate.toISOString().slice(0, 10) : null,
         inspector: inspector.trim() ? inspector.trim() : null,
         internalNotes: internalNotes.trim() ? internalNotes.trim() : null,
       });
@@ -133,9 +165,16 @@ export default function JobModal(props: JobModalProps) {
         aria-modal="true"
       >
         <div className="flex items-center justify-between border-b border-[#373e47] px-6 py-4 bg-[#2d333b]">
-          <div>
-            <h2 className="text-2xl font-semibold text-white">{headerTitle}</h2>
-            <p className="text-sm text-gray-400">
+          <div className="flex-1">
+            <div className="flex items-center gap-3">
+              <h2 className="text-2xl font-semibold text-white">{headerTitle}</h2>
+              {props.mode === 'promote' && customerCampaignName && (
+                <span className="rounded-full bg-cyan-500/20 px-3 py-1 text-xs font-semibold text-cyan-300 ring-1 ring-cyan-500/40">
+                  {customerCampaignName}
+                </span>
+              )}
+            </div>
+            <p className="mt-1 text-sm text-gray-400">
               {props.mode === 'promote'
                 ? 'View contact details and schedule an inspection.'
                 : 'Update scheduling details or mark the job as complete.'}
@@ -157,7 +196,7 @@ export default function JobModal(props: JobModalProps) {
           <div className="space-y-4">
             <div>
               <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">
-                Customer
+                Customer & Contact Info
               </h3>
               <p className="mt-2 text-lg font-semibold text-white">{customerName}</p>
               {customerAddress && (
@@ -169,62 +208,62 @@ export default function JobModal(props: JobModalProps) {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12A4 4 0 118 12a4 4 0 018 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14v7m0 0h-3m3 0h3" />
                   </svg>
-                  <span>{customerEmail}</span>
+                  <a href={`mailto:${customerEmail}`} className="hover:text-cyan-300">{customerEmail}</a>
                 </div>
                 <div className="flex items-center gap-2">
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h2l3 7-1.34 2.68a1 1 0 00.9 1.45H16" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 13h10l4-8H5.4" />
                   </svg>
-                  <span>{customerPhone}</span>
+                  <a href={`tel:${customerPhone}`} className="hover:text-cyan-300">{customerPhone}</a>
                 </div>
               </div>
-              {customerNotes && (
-                <div className="mt-4 rounded-lg border border-[#373e47] bg-[#24292e] p-4 text-sm text-gray-300">
-                  <p className="font-medium text-gray-200">Lead Notes</p>
-                  <p className="mt-2 whitespace-pre-wrap text-gray-400">{customerNotes}</p>
-                </div>
-              )}
-              {props.mode === 'promote' && customerCampaignName && (
-                <div className="mt-4 rounded-lg border border-cyan-500/40 bg-cyan-500/10 p-4 text-sm text-cyan-200">
-                  <p className="font-medium text-cyan-100">Campaign</p>
-                  <p className="mt-2">{customerCampaignName}</p>
-                </div>
-              )}
             </div>
+
+            {customerNotes && (
+              <div className="rounded-lg border border-[#373e47] bg-[#24292e] p-4">
+                <p className="text-sm font-semibold text-gray-200 uppercase tracking-wide">Lead Notes</p>
+                <p className="mt-3 whitespace-pre-wrap text-sm text-gray-300 leading-relaxed">{customerNotes}</p>
+              </div>
+            )}
           </div>
 
           <div className="space-y-5">
-            <div>
-              <label className="text-sm font-medium text-gray-300" htmlFor="job-status">
-                Job Status
-              </label>
-              <select
-                id="job-status"
-                className="mt-2 w-full rounded-lg border border-[#373e47] bg-[#0d1117] px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                value={status}
-                onChange={(event) => setStatus(event.target.value as LeadJobStatus)}
-                disabled={isSubmitting}
-              >
-                {STATUS_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {props.mode === 'edit' && (
+              <div>
+                <label className="text-sm font-medium text-gray-300" htmlFor="job-status">
+                  Job Status
+                </label>
+                <select
+                  id="job-status"
+                  className="mt-2 w-full rounded-lg border border-[#373e47] bg-[#0d1117] px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                  value={status}
+                  onChange={(event) => setStatus(event.target.value as LeadJobStatus)}
+                  disabled={isSubmitting}
+                >
+                  {STATUS_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <div>
               <label className="text-sm font-medium text-gray-300" htmlFor="job-date">
                 Scheduled Inspection
               </label>
-              <input
+              <DatePicker
                 id="job-date"
-                type="date"
-                className="mt-2 w-full rounded-lg border border-[#373e47] bg-[#0d1117] px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                value={scheduledInspectionDate}
-                onChange={(event) => setScheduledInspectionDate(event.target.value)}
+                selected={scheduledInspectionDate}
+                onChange={(date) => setScheduledInspectionDate(date)}
+                dateFormat="yyyy-MM-dd"
+                placeholderText="Select a date"
                 disabled={isSubmitting}
+                className="mt-2 w-full rounded-lg border border-[#373e47] bg-[#0d1117] px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                wrapperClassName="w-full"
+                calendarClassName="bg-[#1e2227] border-[#373e47]"
               />
               <p className="mt-1 text-xs text-gray-500">
                 Optional — helps your team keep track of upcoming inspections.
@@ -235,15 +274,52 @@ export default function JobModal(props: JobModalProps) {
               <label className="text-sm font-medium text-gray-300" htmlFor="job-inspector">
                 Inspector
               </label>
-              <input
-                id="job-inspector"
-                type="text"
-                className="mt-2 w-full rounded-lg border border-[#373e47] bg-[#0d1117] px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                value={inspector}
-                onChange={(event) => setInspector(event.target.value)}
-                placeholder="Who will handle this job?"
-                disabled={isSubmitting}
-              />
+              {!showCustomInspector ? (
+                <select
+                  id="job-inspector"
+                  className="mt-2 w-full rounded-lg border border-[#373e47] bg-[#0d1117] px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                  value={inspector}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    if (value === '__custom__') {
+                      setShowCustomInspector(true);
+                      setInspector('');
+                    } else {
+                      setInspector(value);
+                    }
+                  }}
+                  disabled={isSubmitting}
+                >
+                  <option value="">Select an inspector</option>
+                  {inspectorsList.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                  <option value="__custom__">+ Add custom inspector</option>
+                </select>
+              ) : (
+                <div className="mt-2 flex gap-2">
+                  <input
+                    type="text"
+                    className="flex-1 rounded-lg border border-[#373e47] bg-[#0d1117] px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                    value={inspector}
+                    onChange={(event) => setInspector(event.target.value)}
+                    placeholder="Enter inspector name"
+                    disabled={isSubmitting}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowCustomInspector(false);
+                      setInspector('');
+                    }}
+                    className="rounded-lg border border-[#373e47] bg-[#2d333b] px-4 py-2 text-sm text-gray-300 hover:bg-[#373e47]"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
             </div>
 
             <div>
