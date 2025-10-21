@@ -487,6 +487,13 @@ export default function LeadsTab() {
 
         if (!response.ok) {
           const message = await response.json().catch(() => ({}));
+          console.error('Contact attempt API error:', {
+            status: response.status,
+            error: message.error,
+            leadId,
+            attempt,
+            isCold,
+          });
           throw new Error(message.error || 'Failed to update contact attempt');
         }
 
@@ -649,6 +656,7 @@ export default function LeadsTab() {
       </div>
     </div>
   );
+};
 
   const renderJobCard = (job: Job) => (
     <div
