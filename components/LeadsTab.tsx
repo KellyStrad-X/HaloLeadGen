@@ -196,8 +196,8 @@ export default function LeadsTab() {
     let animationFrameId: number;
     let mouseY = 0;
 
-    const SCROLL_ZONE = 125; // pixels from edge to trigger scroll
-    const MAX_SCROLL_SPEED = 15; // max pixels per frame
+    const SCROLL_ZONE = 250; // pixels from edge to trigger scroll
+    const MAX_SCROLL_SPEED = 25; // max pixels per frame
 
     const handleMouseMove = (e: MouseEvent) => {
       mouseY = e.clientY;
