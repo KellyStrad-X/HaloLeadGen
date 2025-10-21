@@ -1340,6 +1340,62 @@ export default function LeadsTab() {
               internalNotes,
             });
           }}
+          onUnschedule={async (leadId) => {
+            if (!user) return;
+            setIsMutating(true);
+            setError(null);
+            try {
+              const token = await user.getIdToken();
+              const response = await fetch(`/api/dashboard/jobs/${leadId}`, {
+                method: 'DELETE',
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              });
+
+              if (!response.ok) {
+                const message = await response.json().catch(() => ({}));
+                throw new Error(message.error || 'Failed to unschedule job');
+              }
+
+              // Refresh data to show lead back in leads list
+              await loadData();
+            } catch (err) {
+              console.error('Unschedule job error:', err);
+              setError(err instanceof Error ? err.message : 'Failed to unschedule job');
+              throw err;
+            } finally {
+              setIsMutating(false);
+            }
+          }}
+          onMarkAsCold={async (leadId) => {
+            if (!user) return;
+            setIsMutating(true);
+            setError(null);
+            try {
+              const token = await user.getIdToken();
+              const response = await fetch(`/api/dashboard/jobs/${leadId}?action=mark-cold`, {
+                method: 'DELETE',
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              });
+
+              if (!response.ok) {
+                const message = await response.json().catch(() => ({}));
+                throw new Error(message.error || 'Failed to mark job as cold');
+              }
+
+              // Refresh data to show lead in cold bucket
+              await loadData();
+            } catch (err) {
+              console.error('Mark job as cold error:', err);
+              setError(err instanceof Error ? err.message : 'Failed to mark job as cold');
+              throw err;
+            } finally {
+              setIsMutating(false);
+            }
+          }}
         />
       )}
 

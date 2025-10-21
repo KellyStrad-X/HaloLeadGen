@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { adminAuth } from '@/lib/firebase-admin';
-import { updateJobAdmin, type LeadJobStatus } from '@/lib/firestore-admin';
+import { updateJobAdmin, unscheduleJobAdmin, markJobAsColdAdmin, type LeadJobStatus } from '@/lib/firestore-admin';
 
 function parseDate(value: unknown): Date | null | undefined {
   if (value === null) {
@@ -90,6 +90,77 @@ export async function PATCH(
       {
         error:
           error instanceof Error ? error.message : 'Failed to update job',
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ leadId: string }> }
+) {
+  try {
+    const authHeader = request.headers.get('Authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { error: 'Unauthorized - No auth token provided' },
+        { status: 401 }
+      );
+    }
+
+    const token = authHeader.split('Bearer ')[1];
+    const decoded = await adminAuth.verifyIdToken(token);
+
+    const { leadId } = await params;
+    if (!leadId) {
+      return NextResponse.json(
+        { error: 'leadId is required' },
+        { status: 400 }
+      );
+    }
+
+    // Check query param for action type
+    const url = new URL(request.url);
+    const action = url.searchParams.get('action');
+
+    if (action === 'mark-cold') {
+      // Mark job as cold lead
+      const success = await markJobAsColdAdmin({
+        leadId,
+        contractorId: decoded.uid,
+      });
+
+      if (!success) {
+        return NextResponse.json(
+          { error: 'Job not found or unauthorized' },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({ success: true, message: 'Job marked as cold lead' });
+    } else {
+      // Default: unschedule job (convert back to active lead)
+      const success = await unscheduleJobAdmin({
+        leadId,
+        contractorId: decoded.uid,
+      });
+
+      if (!success) {
+        return NextResponse.json(
+          { error: 'Job not found or unauthorized' },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({ success: true, message: 'Job unscheduled' });
+    }
+  } catch (error) {
+    console.error('Dashboard jobs DELETE error:', error);
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error ? error.message : 'Failed to delete job',
       },
       { status: 500 }
     );

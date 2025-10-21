@@ -41,6 +41,7 @@ interface EditModeProps extends BaseJobModalProps {
   mode: 'edit';
   lead?: undefined;
   job: {
+    id: string;
     customerName: string;
     email: string;
     phone: string;
@@ -51,6 +52,8 @@ interface EditModeProps extends BaseJobModalProps {
     scheduledInspectionDate: string | null;
     internalNotes: string | null;
   };
+  onUnschedule?: (jobId: string) => Promise<void>;
+  onMarkAsCold?: (jobId: string) => Promise<void>;
 }
 
 type JobModalProps = PromoteModeProps | EditModeProps;
@@ -89,7 +92,7 @@ export default function JobModal(props: JobModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [inspectorsList, setInspectorsList] = useState<string[]>([]);
   const [showCustomInspector, setShowCustomInspector] = useState(false);
-  const [contactAction, setContactAction] = useState<'uncontacted' | '1st' | '2nd' | '3rd' | 'cold'>('uncontacted');
+  const [contactAction, setContactAction] = useState<'uncontacted' | '1st' | '2nd' | '3rd' | 'scheduled' | 'cold'>('uncontacted');
   const isEditMode = props.mode === 'edit';
 
   const headerTitle = useMemo(() => {
@@ -169,8 +172,8 @@ export default function JobModal(props: JobModalProps) {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      // Handle contact attempts and cold bucket for promote mode
-      if (props.mode === 'promote' && contactAction !== 'uncontacted') {
+      // Handle contact attempts (uncontacted/1st/2nd/3rd) for promote mode
+      if (props.mode === 'promote' && contactAction !== 'scheduled') {
         if (props.onContactAttempt) {
           const attemptMap: Record<string, number> = { 'uncontacted': 0, '1st': 1, '2nd': 2, '3rd': 3, 'cold': 0 };
           const attempt = attemptMap[contactAction] || 0;
@@ -282,10 +285,13 @@ export default function JobModal(props: JobModalProps) {
                   <option value="1st">First Contact Attempt</option>
                   <option value="2nd">Second Contact Attempt</option>
                   <option value="3rd">Third Contact Attempt</option>
+                  <option value="scheduled">Scheduled</option>
                 </select>
                 <p className="mt-1 text-xs text-gray-500">
                   {contactAction === 'uncontacted'
                     ? 'Lead is on calendar but not yet contacted'
+                    : contactAction === 'scheduled'
+                    ? 'Confirm inspection date and schedule job'
                     : 'Track contact attempt and keep lead active'}
                 </p>
               </div>
@@ -447,34 +453,82 @@ export default function JobModal(props: JobModalProps) {
                 Remove from Calendar
               </button>
             )}
-            {props.mode === 'edit' && status !== 'completed' && (
-              <button
-                onClick={async () => {
-                  if (props.mode === 'edit') {
-                    setStatus('completed');
-                    setIsSubmitting(true);
-                    try {
-                      await onSubmit({
-                        status: 'completed',
-                        scheduledInspectionDate: scheduledInspectionDate
-                          ? scheduledInspectionDate.toISOString().slice(0, 10)
-                          : null,
-                        inspector: inspector || null,
-                        internalNotes: internalNotes || null,
-                      });
-                      onClose();
-                    } catch (error) {
-                      console.error('Error moving to completed:', error);
-                    } finally {
-                      setIsSubmitting(false);
-                    }
-                  }
-                }}
-                disabled={isSubmitting}
-                className="rounded-lg bg-green-500/10 border border-green-500/40 px-4 py-2 text-sm font-medium text-green-300 transition-colors hover:bg-green-500/20 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                Move to Completed
-              </button>
+            {props.mode === 'edit' && (
+              <>
+                {props.onMarkAsCold && (
+                  <button
+                    onClick={async () => {
+                      if (props.mode === 'edit' && props.onMarkAsCold) {
+                        setIsSubmitting(true);
+                        try {
+                          await props.onMarkAsCold(props.job.id);
+                          onClose();
+                        } catch (error) {
+                          console.error('Error moving job to cold bucket:', error);
+                        } finally {
+                          setIsSubmitting(false);
+                        }
+                      }
+                    }}
+                    disabled={isSubmitting}
+                    className="rounded-lg bg-blue-500/10 border border-blue-500/40 px-4 py-2 text-sm font-medium text-blue-300 transition-colors hover:bg-blue-500/20 disabled:cursor-not-allowed disabled:opacity-60 flex items-center gap-2"
+                    title="Move to Cold Bucket"
+                  >
+                    <span>❄️</span>
+                    <span>Cold Bucket</span>
+                  </button>
+                )}
+                {props.onUnschedule && (
+                  <button
+                    onClick={async () => {
+                      if (props.mode === 'edit' && props.onUnschedule) {
+                        setIsSubmitting(true);
+                        try {
+                          await props.onUnschedule(props.job.id);
+                          onClose();
+                        } catch (error) {
+                          console.error('Error unscheduling job:', error);
+                        } finally {
+                          setIsSubmitting(false);
+                        }
+                      }
+                    }}
+                    disabled={isSubmitting}
+                    className="rounded-lg bg-red-500/10 border border-red-500/40 px-4 py-2 text-sm font-medium text-red-300 transition-colors hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Remove from Calendar
+                  </button>
+                )}
+                {status !== 'completed' && (
+                  <button
+                    onClick={async () => {
+                      if (props.mode === 'edit') {
+                        setStatus('completed');
+                        setIsSubmitting(true);
+                        try {
+                          await onSubmit({
+                            status: 'completed',
+                            scheduledInspectionDate: scheduledInspectionDate
+                              ? scheduledInspectionDate.toISOString().slice(0, 10)
+                              : null,
+                            inspector: inspector || null,
+                            internalNotes: internalNotes || null,
+                          });
+                          onClose();
+                        } catch (error) {
+                          console.error('Error moving to completed:', error);
+                        } finally {
+                          setIsSubmitting(false);
+                        }
+                      }
+                    }}
+                    disabled={isSubmitting}
+                    className="rounded-lg bg-green-500/10 border border-green-500/40 px-4 py-2 text-sm font-medium text-green-300 transition-colors hover:bg-green-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Move to Completed
+                  </button>
+                )}
+              </>
             )}
           </div>
           <div className="flex gap-3">
@@ -493,11 +547,11 @@ export default function JobModal(props: JobModalProps) {
               {isSubmitting
                 ? 'Saving...'
                 : props.mode === 'promote'
-                ? contactAction === 'uncontacted'
+                ? contactAction === 'scheduled'
                   ? 'Schedule Job'
                   : contactAction === 'cold'
                   ? 'Move to Cold Bucket'
-                  : 'Save Contact Attempt'
+                  : 'Save'
                 : 'Save Changes'}
             </button>
           </div>

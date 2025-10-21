@@ -1195,6 +1195,104 @@ export async function updateJobAdmin({
   });
 }
 
+/**
+ * Unschedule a job - converts it back to an active lead
+ * Clears job data and restores lead to leads list
+ */
+export async function unscheduleJobAdmin({
+  leadId,
+  contractorId,
+}: {
+  leadId: string;
+  contractorId: string;
+}): Promise<boolean> {
+  const adminDb = getAdminFirestore();
+  const leadRef = adminDb.collection('leads').doc(leadId);
+  const leadSnap = await leadRef.get();
+
+  if (!leadSnap.exists) {
+    return false;
+  }
+
+  const leadData = leadSnap.data() || {};
+  const campaignId = leadData.campaignId as string;
+  const campaignDoc = await adminDb.collection('campaigns').doc(campaignId).get();
+
+  if (!campaignDoc.exists || campaignDoc.data()?.contractorId !== contractorId) {
+    return false;
+  }
+
+  const now = Timestamp.now();
+  const statusHistory = (leadData.statusHistory as any[]) || [];
+  statusHistory.push({
+    status: 'unscheduled',
+    changedAt: now,
+    changedBy: contractorId,
+  });
+
+  // Clear job data and restore to active lead
+  await leadRef.update({
+    job: null,
+    jobStatus: null,
+    promotedToJob: false,
+    jobStatusUpdatedAt: now,
+    statusHistory,
+    // Optionally clear tentativeDate too if you want it completely removed from calendar
+    // tentativeDate: null,
+  });
+
+  return true;
+}
+
+/**
+ * Mark a job as cold - converts job to cold lead
+ * Clears job data and moves to cold bucket
+ */
+export async function markJobAsColdAdmin({
+  leadId,
+  contractorId,
+}: {
+  leadId: string;
+  contractorId: string;
+}): Promise<boolean> {
+  const adminDb = getAdminFirestore();
+  const leadRef = adminDb.collection('leads').doc(leadId);
+  const leadSnap = await leadRef.get();
+
+  if (!leadSnap.exists) {
+    return false;
+  }
+
+  const leadData = leadSnap.data() || {};
+  const campaignId = leadData.campaignId as string;
+  const campaignDoc = await adminDb.collection('campaigns').doc(campaignId).get();
+
+  if (!campaignDoc.exists || campaignDoc.data()?.contractorId !== contractorId) {
+    return false;
+  }
+
+  const now = Timestamp.now();
+  const statusHistory = (leadData.statusHistory as any[]) || [];
+  statusHistory.push({
+    status: 'marked_cold',
+    changedAt: now,
+    changedBy: contractorId,
+  });
+
+  // Clear job data and mark as cold lead
+  await leadRef.update({
+    job: null,
+    jobStatus: null,
+    promotedToJob: false,
+    isColdLead: true,
+    jobStatusUpdatedAt: now,
+    statusHistory,
+    tentativeDate: null, // Remove from calendar
+  });
+
+  return true;
+}
+
 export async function getJobsByStatusAdmin(
   contractorId: string
 ): Promise<{
