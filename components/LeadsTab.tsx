@@ -1153,15 +1153,19 @@ export default function LeadsTab() {
           }`}
           onDragOver={(e) => {
             // Accept calendar events (tentative leads) being dragged back
+            console.log('[LeadsTab] onDragOver - draggingItem:', draggingItem);
             if (draggingItem?.id?.startsWith('lead-')) {
+              console.log('[LeadsTab] Accepting drag from calendar');
               e.preventDefault();
               e.dataTransfer.dropEffect = 'move';
             }
           }}
           onDrop={async (e) => {
             e.preventDefault();
+            console.log('[LeadsTab] onDrop - draggingItem:', draggingItem);
             if (draggingItem?.id?.startsWith('lead-')) {
               const leadId = draggingItem.id.replace('lead-', '');
+              console.log('[LeadsTab] Removing lead from calendar:', leadId);
               try {
                 // Remove from calendar by clearing tentativeDate
                 await handleRemoveFromCalendar(leadId);

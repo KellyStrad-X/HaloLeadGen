@@ -192,7 +192,22 @@ export default function CalendarView({
             e.dataTransfer.effectAllowed = 'move';
             // CRITICAL: Must set data for HTML5 drag-and-drop to work
             e.dataTransfer.setData('text/plain', event.id);
+
+            // Create custom drag image for visual feedback
+            const dragImage = e.currentTarget.cloneNode(true) as HTMLElement;
+            dragImage.style.opacity = '0.7';
+            dragImage.style.position = 'absolute';
+            dragImage.style.top = '-1000px';
+            dragImage.style.left = '-1000px';
+            dragImage.style.width = e.currentTarget.offsetWidth + 'px';
+            dragImage.style.pointerEvents = 'none';
+            document.body.appendChild(dragImage);
+            e.dataTransfer.setDragImage(dragImage, 0, 0);
+            // Clean up drag image after drag starts
+            setTimeout(() => document.body.removeChild(dragImage), 0);
+
             // Notify parent component about drag state
+            console.log('[CalendarView] Starting drag for event:', event.id);
             onDragStateChange?.({ type: 'lead', id: event.id });
             // Change cursor during drag
             (e.currentTarget as HTMLElement).style.cursor = 'grabbing';
@@ -204,8 +219,9 @@ export default function CalendarView({
             (e.currentTarget as HTMLElement).style.cursor = 'grab';
           }}
           onClick={(e) => {
-            // Prevent drag from blocking clicks
+            // Allow clicks to open modal while still being draggable
             e.stopPropagation();
+            onEventClick(event);
           }}
         >
           <div className="flex items-center justify-between gap-2">
