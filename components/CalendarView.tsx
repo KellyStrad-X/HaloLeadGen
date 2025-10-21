@@ -3,12 +3,9 @@
 import { useMemo } from 'react';
 // @ts-ignore - react-big-calendar types are incomplete
 import { Calendar, dateFnsLocalizer, Event } from 'react-big-calendar';
-// @ts-ignore - react-big-calendar types are incomplete
-import withDragAndDrop from 'react-big-calendar/lib/addons/dragAndDrop';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
 import { enUS } from 'date-fns/locale';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
-import 'react-big-calendar/lib/addons/dragAndDrop/styles.css';
 
 const locales = {
   'en-US': enUS,
@@ -21,9 +18,6 @@ const localizer = dateFnsLocalizer({
   getDay,
   locales,
 });
-
-// Wrap Calendar with drag-and-drop functionality
-const DnDCalendar = withDragAndDrop(Calendar);
 
 export interface CalendarEvent extends Event {
   id: string;
@@ -43,7 +37,6 @@ export interface CalendarEvent extends Event {
 interface CalendarViewProps {
   events: CalendarEvent[];
   onEventClick: (event: CalendarEvent) => void;
-  onEventDrop: (event: CalendarEvent, start: Date, end: Date) => void;
   onSelectSlot: (slotInfo: { start: Date; end: Date }) => void;
   onDragStateChange?: (item: { type: 'lead'; id: string } | null) => void;
 }
@@ -51,7 +44,6 @@ interface CalendarViewProps {
 export default function CalendarView({
   events,
   onEventClick,
-  onEventDrop,
   onSelectSlot,
   onDragStateChange,
 }: CalendarViewProps) {
@@ -281,7 +273,7 @@ export default function CalendarView({
         }
       `}</style>
 
-      <DnDCalendar
+      <Calendar
         localizer={localizer}
         events={events}
         startAccessor="start"
@@ -298,10 +290,6 @@ export default function CalendarView({
         views={['month', 'week']}
         defaultView="month"
         popup
-        onEventDrop={({ event, start, end }: any) => {
-          onEventDrop(event as CalendarEvent, start, end);
-        }}
-        draggableAccessor={() => true}
       />
     </div>
   );

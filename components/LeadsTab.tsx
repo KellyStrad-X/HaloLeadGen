@@ -1274,7 +1274,6 @@ export default function LeadsTab() {
           <CalendarView
             events={calendarEvents}
             onEventClick={handleCalendarEventClick}
-            onEventDrop={handleCalendarEventDrop}
             onSelectSlot={handleCalendarSlotSelect}
             onDragStateChange={setDraggingItem}
           />
