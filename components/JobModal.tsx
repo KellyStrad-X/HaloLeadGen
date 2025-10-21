@@ -22,6 +22,7 @@ interface BaseJobModalProps {
 interface PromoteModeProps extends BaseJobModalProps {
   mode: 'promote';
   lead: {
+    id: string;
     name: string;
     email: string;
     phone: string;
@@ -29,6 +30,7 @@ interface PromoteModeProps extends BaseJobModalProps {
     notes: string | null;
     campaignName: string;
   };
+  onContactAttempt?: (leadId: string, attempt: number, isCold: boolean) => Promise<void>;
   job?: undefined;
 }
 
@@ -72,6 +74,7 @@ export default function JobModal(props: JobModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [inspectorsList, setInspectorsList] = useState<string[]>([]);
   const [showCustomInspector, setShowCustomInspector] = useState(false);
+  const [contactAction, setContactAction] = useState<'schedule' | '1st' | '2nd' | '3rd' | 'cold'>('schedule');
   const isEditMode = props.mode === 'edit';
 
   const headerTitle = useMemo(() => {
@@ -113,6 +116,7 @@ export default function JobModal(props: JobModalProps) {
       setInspector('');
       setInternalNotes('');
       setShowCustomInspector(false);
+      setContactAction('schedule');
     } else {
       setStatus(props.job.status);
       const dateStr = props.job.scheduledInspectionDate;
@@ -145,6 +149,19 @@ export default function JobModal(props: JobModalProps) {
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
+      // Handle contact attempts and cold bucket for promote mode
+      if (props.mode === 'promote' && contactAction !== 'schedule') {
+        if (props.onContactAttempt) {
+          const attemptMap: Record<string, number> = { '1st': 1, '2nd': 2, '3rd': 3, 'cold': 0 };
+          const attempt = attemptMap[contactAction] || 0;
+          const isCold = contactAction === 'cold';
+          await props.onContactAttempt(props.lead.id, attempt, isCold);
+        }
+        onClose();
+        return;
+      }
+
+      // Regular job scheduling/updating
       await onSubmit({
         status,
         scheduledInspectionDate: scheduledInspectionDate ? scheduledInspectionDate.toISOString().slice(0, 10) : null,
@@ -229,6 +246,34 @@ export default function JobModal(props: JobModalProps) {
           </div>
 
           <div className="space-y-5">
+            {props.mode === 'promote' && (
+              <div>
+                <label className="text-sm font-medium text-gray-300" htmlFor="contact-action">
+                  Contact Outcome
+                </label>
+                <select
+                  id="contact-action"
+                  className="mt-2 w-full rounded-lg border border-[#373e47] bg-[#0d1117] px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                  value={contactAction}
+                  onChange={(event) => setContactAction(event.target.value as typeof contactAction)}
+                  disabled={isSubmitting}
+                >
+                  <option value="schedule">Schedule Job</option>
+                  <option value="1st">First Contact Attempt</option>
+                  <option value="2nd">Second Contact Attempt</option>
+                  <option value="3rd">Third Contact Attempt</option>
+                  <option value="cold">Move to Cold Bucket</option>
+                </select>
+                <p className="mt-1 text-xs text-gray-500">
+                  {contactAction === 'schedule'
+                    ? 'Confirm inspection date and create scheduled job'
+                    : contactAction === 'cold'
+                    ? 'Mark lead as unresponsive or not interested'
+                    : 'Track contact attempt and keep lead active'}
+                </p>
+              </div>
+            )}
+
             {props.mode === 'edit' && (
               <div>
                 <label className="text-sm font-medium text-gray-300" htmlFor="job-status">
@@ -355,7 +400,11 @@ export default function JobModal(props: JobModalProps) {
             {isSubmitting
               ? 'Saving...'
               : props.mode === 'promote'
-              ? 'Schedule Job'
+              ? contactAction === 'schedule'
+                ? 'Schedule Job'
+                : contactAction === 'cold'
+                ? 'Move to Cold Bucket'
+                : 'Save Contact Attempt'
               : 'Save Changes'}
           </button>
         </div>

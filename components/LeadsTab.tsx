@@ -18,6 +18,9 @@ interface Lead {
   jobStatus: LegacyLeadStatus;
   campaignId: string;
   campaignName: string;
+  contactAttempt?: number; // 0 = new, 1 = first, 2 = second, 3 = third
+  isColdLead?: boolean;
+  tentativeDate?: string | null;
 }
 
 interface Job {
@@ -74,6 +77,44 @@ const leadStatusChip: Record<LegacyLeadStatus, string> = {
   completed: 'bg-green-900/50 text-green-300',
 };
 
+const getLeadBadge = (lead: Lead): { label: string; className: string } => {
+  if (lead.isColdLead) {
+    return {
+      label: 'COLD',
+      className: 'bg-gray-500/20 text-gray-400 ring-1 ring-gray-500/40',
+    };
+  }
+
+  const attempt = lead.contactAttempt ?? 0;
+  switch (attempt) {
+    case 0:
+      return {
+        label: 'NEW',
+        className: 'bg-cyan-500/20 text-cyan-300 ring-1 ring-cyan-500/40',
+      };
+    case 1:
+      return {
+        label: '1ST ATTEMPT',
+        className: 'bg-yellow-500/20 text-yellow-300 ring-1 ring-yellow-500/40',
+      };
+    case 2:
+      return {
+        label: '2ND ATTEMPT',
+        className: 'bg-orange-500/20 text-orange-300 ring-1 ring-orange-500/40',
+      };
+    case 3:
+      return {
+        label: '3RD ATTEMPT',
+        className: 'bg-red-500/20 text-red-300 ring-1 ring-red-500/40',
+      };
+    default:
+      return {
+        label: 'NEW',
+        className: 'bg-cyan-500/20 text-cyan-300 ring-1 ring-cyan-500/40',
+      };
+  }
+};
+
 const JOB_COLUMNS: Array<{
   key: LeadJobStatus;
   title: string;
@@ -126,6 +167,7 @@ export default function LeadsTab() {
   const [leadSortOrder, setLeadSortOrder] = useState<'newest' | 'oldest'>('newest');
   const [leadsPage, setLeadsPage] = useState(0);
   const [showAllLeadsModal, setShowAllLeadsModal] = useState(false);
+  const [showColdBucketModal, setShowColdBucketModal] = useState(false);
   const [expandedJobSections, setExpandedJobSections] = useState<Record<LeadJobStatus, boolean>>({
     scheduled: true,
     completed: true,
@@ -196,8 +238,15 @@ export default function LeadsTab() {
   }, [selectedCampaignId, campaignSummaries]);
 
   const filteredLeads = useMemo(() => {
-    if (selectedCampaignId === 'all') return leads;
-    return leads.filter((lead) => lead.campaignId === selectedCampaignId);
+    const activeLeads = leads.filter((lead) => !lead.isColdLead);
+    if (selectedCampaignId === 'all') return activeLeads;
+    return activeLeads.filter((lead) => lead.campaignId === selectedCampaignId);
+  }, [leads, selectedCampaignId]);
+
+  const coldLeads = useMemo(() => {
+    const cold = leads.filter((lead) => lead.isColdLead);
+    if (selectedCampaignId === 'all') return cold;
+    return cold.filter((lead) => lead.campaignId === selectedCampaignId);
   }, [leads, selectedCampaignId]);
 
   const sortedLeads = useMemo(() => {
@@ -417,6 +466,41 @@ export default function LeadsTab() {
     [user, loadData]
   );
 
+  const updateLeadContactAttempt = useCallback(
+    async (leadId: string, attempt: number, isCold: boolean) => {
+      if (!user) return;
+      setIsMutating(true);
+      setError(null);
+      try {
+        const token = await user.getIdToken();
+        const response = await fetch(`/api/dashboard/leads/${leadId}/contact-attempt`, {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            contactAttempt: attempt,
+            isColdLead: isCold,
+          }),
+        });
+
+        if (!response.ok) {
+          const message = await response.json().catch(() => ({}));
+          throw new Error(message.error || 'Failed to update contact attempt');
+        }
+
+        await loadData();
+      } catch (err) {
+        console.error('Update contact attempt error', err);
+        setError(err instanceof Error ? err.message : 'Failed to update contact attempt');
+      } finally {
+        setIsMutating(false);
+      }
+    },
+    [user, loadData]
+  );
+
   const handleLeadDrop = (event: React.DragEvent<HTMLDivElement>, targetStatus: LeadJobStatus) => {
     event.preventDefault();
     setDraggingItem(null);
@@ -500,27 +584,29 @@ export default function LeadsTab() {
     );
   }
 
-  const renderLeadCard = (lead: Lead) => (
-    <div
-      key={lead.id}
-      draggable
-      onDragStart={(event) => {
-        setDraggingItem({ type: 'lead', id: lead.id });
-        event.dataTransfer.setData('application/halo-lead', lead.id);
-        event.dataTransfer.effectAllowed = 'move';
-      }}
-      onDragEnd={() => setDraggingItem(null)}
-      className="rounded-lg border border-[#373e47] bg-[#1e2227] p-4 shadow-sm transition ring-cyan-500/40 hover:ring-2"
-    >
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-sm font-semibold text-white">{lead.name}</p>
-          <p className="text-xs text-gray-400">{lead.campaignName}</p>
+  const renderLeadCard = (lead: Lead) => {
+    const badge = getLeadBadge(lead);
+    return (
+      <div
+        key={lead.id}
+        draggable
+        onDragStart={(event) => {
+          setDraggingItem({ type: 'lead', id: lead.id });
+          event.dataTransfer.setData('application/halo-lead', lead.id);
+          event.dataTransfer.effectAllowed = 'move';
+        }}
+        onDragEnd={() => setDraggingItem(null)}
+        className="rounded-lg border border-[#373e47] bg-[#1e2227] p-4 shadow-sm transition ring-cyan-500/40 hover:ring-2"
+      >
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold text-white">{lead.name}</p>
+            <p className="text-xs text-gray-400">{lead.campaignName}</p>
+          </div>
+          <span className={`rounded-full px-2 py-1 text-xs font-semibold ${badge.className}`}>
+            {badge.label}
+          </span>
         </div>
-        <span className={`rounded-full px-2 py-1 text-xs font-semibold ${leadStatusChip[lead.jobStatus]}`}>
-          {lead.jobStatus.toUpperCase()}
-        </span>
-      </div>
       <div className="mt-3 space-y-2 text-xs text-gray-400">
         <div className="flex items-center gap-2">
           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -803,13 +889,22 @@ export default function LeadsTab() {
                 <option value="oldest">Oldest First</option>
               </select>
             </div>
-            <button
-              type="button"
-              onClick={() => setShowAllLeadsModal(true)}
-              className="rounded-md border border-cyan-500/40 bg-cyan-500/10 px-3 py-1.5 text-xs font-medium text-cyan-300 transition hover:bg-cyan-500/20"
-            >
-              View All Leads
-            </button>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setShowAllLeadsModal(true)}
+                className="rounded-md border border-cyan-500/40 bg-cyan-500/10 px-3 py-1.5 text-xs font-medium text-cyan-300 transition hover:bg-cyan-500/20"
+              >
+                View All Leads
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowColdBucketModal(true)}
+                className="rounded-md border border-gray-500/40 bg-gray-500/10 px-3 py-1.5 text-xs font-medium text-gray-300 transition hover:bg-gray-500/20"
+              >
+                Cold Bucket ({coldLeads.length})
+              </button>
+            </div>
           </div>
 
           {sortedLeads.length === 0 ? (
@@ -939,8 +1034,12 @@ export default function LeadsTab() {
           mode="promote"
           isOpen
           onClose={closeJobModal}
-          lead={jobModalState.lead}
+          lead={{
+            ...jobModalState.lead,
+            id: jobModalState.lead.id,
+          }}
           defaultStatus={jobModalState.targetStatus}
+          onContactAttempt={updateLeadContactAttempt}
           onSubmit={async ({ status, scheduledInspectionDate, inspector, internalNotes }) => {
             await promoteLead(jobModalState.lead.id, {
               status,
@@ -1001,6 +1100,51 @@ export default function LeadsTab() {
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {sortedLeads.map(renderLeadCard)}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cold Bucket Modal */}
+      {showColdBucketModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="fixed inset-0 bg-black/75"
+            onClick={() => setShowColdBucketModal(false)}
+          />
+          <div className="relative z-10 w-full max-w-6xl max-h-[90vh] overflow-hidden rounded-lg border border-[#373e47] bg-[#1e2227] shadow-xl">
+            <div className="flex items-center justify-between border-b border-[#373e47] p-4 bg-[#2d333b]">
+              <div>
+                <h2 className="text-lg font-semibold text-white">
+                  Cold Bucket ({coldLeads.length})
+                </h2>
+                <p className="text-sm text-gray-400">
+                  Unresponsive or not interested leads
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowColdBucketModal(false)}
+                className="rounded-md p-2 text-gray-400 transition hover:bg-[#2d333b] hover:text-white"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="overflow-y-auto p-4" style={{ maxHeight: 'calc(90vh - 80px)' }}>
+              {coldLeads.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <p className="text-gray-400">No cold leads yet</p>
+                  <p className="mt-2 text-sm text-gray-500">
+                    Leads marked as unresponsive or not interested will appear here
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {coldLeads.map(renderLeadCard)}
+                </div>
+              )}
             </div>
           </div>
         </div>

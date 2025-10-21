@@ -1342,6 +1342,9 @@ export interface DashboardLead {
   jobStatus: 'new' | 'contacted' | 'scheduled' | 'completed';
   campaignId: string;
   campaignName: string;
+  contactAttempt?: number;
+  isColdLead?: boolean;
+  tentativeDate?: string | null;
 }
 
 export interface DashboardJob {
@@ -1496,6 +1499,9 @@ export async function getAllLeadsAdmin(
         jobStatus: legacyStatus,
         campaignId,
         campaignName: campaignMap.get(campaignId) || 'Unknown Campaign',
+        contactAttempt: (data.contactAttempt as number | undefined) ?? undefined,
+        isColdLead: (data.isColdLead as boolean | undefined) ?? undefined,
+        tentativeDate: (data.tentativeDate as string | null | undefined) ?? undefined,
       });
     });
   }
