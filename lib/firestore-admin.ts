@@ -1237,8 +1237,8 @@ export async function unscheduleJobAdmin({
     promotedToJob: false,
     jobStatusUpdatedAt: now,
     statusHistory,
-    // Optionally clear tentativeDate too if you want it completely removed from calendar
-    // tentativeDate: null,
+    // Clear tentativeDate to remove from calendar completely
+    tentativeDate: null,
   });
 
   return true;
@@ -1288,6 +1288,50 @@ export async function markJobAsColdAdmin({
     jobStatusUpdatedAt: now,
     statusHistory,
     tentativeDate: null, // Remove from calendar
+  });
+
+  return true;
+}
+
+/**
+ * Restore a cold lead - converts cold lead back to active lead
+ * Clears isColdLead flag and moves back to leads list
+ */
+export async function restoreColdLeadAdmin({
+  leadId,
+  contractorId,
+}: {
+  leadId: string;
+  contractorId: string;
+}): Promise<boolean> {
+  const adminDb = getAdminFirestore();
+  const leadRef = adminDb.collection('leads').doc(leadId);
+  const leadSnap = await leadRef.get();
+
+  if (!leadSnap.exists) {
+    return false;
+  }
+
+  const leadData = leadSnap.data() || {};
+  const campaignId = leadData.campaignId as string;
+  const campaignDoc = await adminDb.collection('campaigns').doc(campaignId).get();
+
+  if (!campaignDoc.exists || campaignDoc.data()?.contractorId !== contractorId) {
+    return false;
+  }
+
+  const now = Timestamp.now();
+  const statusHistory = (leadData.statusHistory as any[]) || [];
+  statusHistory.push({
+    status: 'restored_from_cold',
+    changedAt: now,
+    changedBy: contractorId,
+  });
+
+  // Restore lead to active status
+  await leadRef.update({
+    isColdLead: false,
+    statusHistory,
   });
 
   return true;

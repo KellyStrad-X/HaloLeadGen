@@ -81,7 +81,7 @@ const leadStatusChip: Record<LegacyLeadStatus, string> = {
 const getLeadBadge = (lead: Lead): { label: string; className: string } => {
   if (lead.isColdLead) {
     return {
-      label: 'COLD',
+      label: '❄️',
       className: 'bg-gray-500/20 text-gray-400 ring-1 ring-gray-500/40',
     };
   }
@@ -582,6 +582,37 @@ export default function LeadsTab() {
     [user, loadData]
   );
 
+  const restoreColdLead = useCallback(
+    async (leadId: string) => {
+      if (!user) return;
+      setIsMutating(true);
+      setError(null);
+      try {
+        const token = await user.getIdToken();
+        const response = await fetch(`/api/dashboard/leads/${leadId}/restore`, {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          const message = await response.json().catch(() => ({}));
+          throw new Error(message.error || 'Failed to restore cold lead');
+        }
+
+        await loadData();
+      } catch (err) {
+        console.error('Restore cold lead error', err);
+        setError(err instanceof Error ? err.message : 'Failed to restore cold lead');
+      } finally {
+        setIsMutating(false);
+      }
+    },
+    [user, loadData]
+  );
+
   // Calendar event handlers
   const handleCalendarEventClick = useCallback((event: CalendarEvent) => {
     if (event.jobId) {
@@ -908,14 +939,25 @@ export default function LeadsTab() {
           <span className="line-clamp-1">{lead.address ?? 'Address not provided'}</span>
         </div>
       </div>
-      <div className="mt-4 flex justify-center">
-        <button
-          type="button"
-          onClick={() => openPromoteModal(lead, 'scheduled')}
-          className="rounded-md bg-emerald-500 px-6 py-2 text-xs font-semibold text-black transition hover:bg-emerald-400"
-        >
-          CONTACT!
-        </button>
+      <div className="mt-4 flex justify-center gap-2">
+        {lead.isColdLead ? (
+          <button
+            type="button"
+            onClick={() => restoreColdLead(lead.id)}
+            disabled={isMutating}
+            className="rounded-md bg-cyan-500 px-6 py-2 text-xs font-semibold text-black transition hover:bg-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            🔄 RESTORE
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => openPromoteModal(lead, 'scheduled')}
+            className="rounded-md bg-emerald-500 px-6 py-2 text-xs font-semibold text-black transition hover:bg-emerald-400"
+          >
+            CONTACT!
+          </button>
+        )}
       </div>
     </div>
   );
@@ -1207,7 +1249,7 @@ export default function LeadsTab() {
                 onClick={() => setShowAllLeadsModal(true)}
                 className="rounded-md border border-cyan-500/40 bg-cyan-500/10 px-3 py-1.5 text-xs font-medium text-cyan-300 transition hover:bg-cyan-500/20"
               >
-                View All Leads
+                Lead Bucket
               </button>
               <button
                 type="button"
@@ -1267,7 +1309,7 @@ export default function LeadsTab() {
             onClick={() => setShowCompletedJobsModal(true)}
             className="rounded-md border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-300 transition hover:bg-emerald-500/20"
           >
-            View Completed Jobs ({filteredJobs.completed.length})
+            Completed Bucket ({filteredJobs.completed.length})
           </button>
         </div>
 
@@ -1410,7 +1452,7 @@ export default function LeadsTab() {
             <div className="flex items-center justify-between border-b border-[#373e47] p-4">
               <div>
                 <h2 className="text-lg font-semibold text-white">
-                  All Leads ({sortedLeads.length})
+                  Lead Bucket ({sortedLeads.length})
                 </h2>
                 <p className="text-sm text-gray-400">
                   {selectedCampaignId === 'all' ? 'All campaigns' : selectedCampaignName}
@@ -1491,7 +1533,7 @@ export default function LeadsTab() {
             <div className="flex items-center justify-between border-b border-[#373e47] p-4 bg-[#2d333b]">
               <div>
                 <h2 className="text-lg font-semibold text-white">
-                  Completed Jobs ({filteredJobs.completed.length})
+                  Completed Bucket ({filteredJobs.completed.length})
                 </h2>
                 <p className="text-sm text-gray-400">
                   Finished inspections (visible on Halo Map for billing)
