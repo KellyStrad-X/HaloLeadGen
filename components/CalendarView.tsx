@@ -47,6 +47,41 @@ export default function CalendarView({
   onSelectSlot,
   onDragStateChange,
 }: CalendarViewProps) {
+  // Custom date cell wrapper to accept drops from external sources
+  const DateCellWrapper = ({ value, children }: { value: Date; children: React.ReactNode }) => {
+    return (
+      <div
+        className="rbc-day-bg-wrapper"
+        onDragOver={(e) => {
+          // Accept any dragged items
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          // Add highlight class
+          e.currentTarget.classList.add('rbc-drag-over');
+        }}
+        onDragLeave={(e) => {
+          // Remove highlight when drag leaves
+          e.currentTarget.classList.remove('rbc-drag-over');
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          e.currentTarget.classList.remove('rbc-drag-over');
+
+          // Fire onSelectSlot with the date of this cell
+          // Create end date as same day for single-day selection
+          const start = new Date(value);
+          start.setHours(12, 0, 0, 0); // Set to noon to avoid timezone issues
+          const end = new Date(start);
+
+          onSelectSlot({ start, end });
+        }}
+        style={{ height: '100%', width: '100%' }}
+      >
+        {children}
+      </div>
+    );
+  };
+
   // Custom toolbar to hide Today/Back/Next buttons
   const CustomToolbar = (toolbar: any) => {
     return (
@@ -145,34 +180,52 @@ export default function CalendarView({
       </span>
     ) : null;
 
-    return (
-      <div
-        className="flex flex-col gap-1 overflow-hidden"
-        style={{ cursor: event.type === 'tentative' ? 'grab' : 'pointer' }}
-        draggable={event.type === 'tentative'}
-        onDragStart={(e) => {
-          if (event.type === 'tentative' && event.leadId) {
+    // For tentative events, wrap in a draggable container
+    if (event.type === 'tentative' && event.leadId) {
+      return (
+        <div
+          className="flex flex-col gap-1 overflow-hidden relative h-full w-full"
+          draggable={true}
+          style={{ cursor: 'grab' }}
+          onDragStart={(e) => {
+            e.stopPropagation(); // Prevent calendar from handling
             e.dataTransfer.effectAllowed = 'move';
             // CRITICAL: Must set data for HTML5 drag-and-drop to work
             e.dataTransfer.setData('text/plain', event.id);
             // Notify parent component about drag state
             onDragStateChange?.({ type: 'lead', id: event.id });
             // Change cursor during drag
-            if (e.currentTarget instanceof HTMLElement) {
-              e.currentTarget.style.cursor = 'grabbing';
-            }
-          }
-        }}
-        onDragEnd={(e) => {
-          onDragStateChange?.(null);
-          // Reset cursor
-          if (e.currentTarget instanceof HTMLElement) {
-            e.currentTarget.style.cursor = 'grab';
-          }
-        }}
-      >
+            (e.currentTarget as HTMLElement).style.cursor = 'grabbing';
+          }}
+          onDragEnd={(e) => {
+            e.stopPropagation(); // Prevent calendar from handling
+            onDragStateChange?.(null);
+            // Reset cursor
+            (e.currentTarget as HTMLElement).style.cursor = 'grab';
+          }}
+          onClick={(e) => {
+            // Prevent drag from blocking clicks
+            e.stopPropagation();
+          }}
+        >
+          <div className="flex items-center justify-between gap-2">
+            <span className="truncate font-semibold text-xs">{event.customerName}</span>
+            {badge}
+          </div>
+          {event.inspector && (
+            <span className="text-xs truncate opacity-90">
+              Inspector: {event.inspector}
+            </span>
+          )}
+        </div>
+      );
+    }
+
+    // For confirmed events, no drag
+    return (
+      <div className="flex flex-col gap-1 overflow-hidden">
         <div className="flex items-center justify-between gap-2">
-          <span className="truncate font-semibold">{event.customerName}</span>
+          <span className="truncate font-semibold text-xs">{event.customerName}</span>
           {badge}
         </div>
         {event.inspector && (
@@ -217,18 +270,28 @@ export default function CalendarView({
           background: #1e2227;
           border-color: #373e47 !important;
           transition: all 0.2s ease;
+          position: relative;
         }
 
         .rbc-day-bg:hover {
           background: #2d333b;
         }
 
+        /* Custom wrapper for date cells to accept drops */
+        .rbc-day-bg-wrapper {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+        }
+
         /* Highlight date cell when dragging lead over it */
-        .rbc-day-bg.rbc-drag-over {
-          background: #06b6d4 !important;
+        .rbc-day-bg-wrapper.rbc-drag-over {
           background: linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(6, 182, 212, 0.05) 100%) !important;
           border: 2px solid #06b6d4 !important;
           box-shadow: inset 0 0 20px rgba(6, 182, 212, 0.2);
+          border-radius: 4px;
         }
 
         .rbc-month-view {
@@ -264,6 +327,9 @@ export default function CalendarView({
           cursor: pointer;
           user-select: none;
           -webkit-user-select: none;
+          position: relative;
+          /* Ensure events can be dragged */
+          pointer-events: all;
         }
 
         .rbc-event:hover {
@@ -272,6 +338,12 @@ export default function CalendarView({
 
         .rbc-event:active {
           cursor: grabbing;
+        }
+
+        /* Make event wrapper fill the space for proper dragging */
+        .rbc-event-content {
+          height: 100%;
+          width: 100%;
         }
 
         .rbc-show-more {
@@ -303,6 +375,7 @@ export default function CalendarView({
         components={{
           event: EventComponent,
           toolbar: CustomToolbar,
+          dateCellWrapper: DateCellWrapper,
         }}
         views={['month', 'week']}
         defaultView="month"
