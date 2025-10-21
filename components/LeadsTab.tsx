@@ -193,7 +193,7 @@ export default function LeadsTab() {
     let animationFrameId: number;
     let mouseY = 0;
 
-    const SCROLL_ZONE = 100; // pixels from edge to trigger scroll
+    const SCROLL_ZONE = 125; // pixels from edge to trigger scroll
     const MAX_SCROLL_SPEED = 15; // max pixels per frame
 
     const handleMouseMove = (e: MouseEvent) => {
@@ -1470,7 +1470,7 @@ export default function LeadsTab() {
         </div>
 
         {/* Calendar - Full Width */}
-        <div className="relative -mx-6">
+        <div className="relative -mx-16 lg:-mx-24">
           {draggingItem?.type === 'lead' && (
             <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-cyan-500/10 border border-cyan-500/40 rounded-lg px-6 py-3 text-center text-sm text-cyan-300 pointer-events-none">
               <svg className="inline-block w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
