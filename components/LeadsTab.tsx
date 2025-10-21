@@ -181,6 +181,9 @@ export default function LeadsTab() {
   const [leadSortOrder, setLeadSortOrder] = useState<'newest' | 'oldest'>('newest');
   const [leadsPage, setLeadsPage] = useState(0);
   const [activeBucket, setActiveBucket] = useState<'leads' | 'cold' | 'completed'>('leads');
+  const [showAllLeadsModal, setShowAllLeadsModal] = useState(false);
+  const [showColdBucketModal, setShowColdBucketModal] = useState(false);
+  const [showCompletedJobsModal, setShowCompletedJobsModal] = useState(false);
   const [expandedJobSections, setExpandedJobSections] = useState<Record<LeadJobStatus, boolean>>({
     scheduled: true,
     completed: true,
@@ -1353,20 +1356,14 @@ export default function LeadsTab() {
             <div className="flex gap-2">
               <button
                 type="button"
-                onClick={() => {
-                  setActiveBucket('leads');
-                  setLeadsPage(0);
-                }}
+                onClick={() => setShowAllLeadsModal(true)}
                 className="rounded-md border border-cyan-500/40 bg-cyan-500/10 px-3 py-1.5 text-xs font-medium text-cyan-300 transition hover:bg-cyan-500/20"
               >
                 Lead Bucket
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setActiveBucket('cold');
-                  setLeadsPage(0);
-                }}
+                onClick={() => setShowColdBucketModal(true)}
                 className="rounded-md border border-gray-500/40 bg-gray-500/10 px-3 py-1.5 text-xs font-medium text-gray-300 transition hover:bg-gray-500/20 flex items-center gap-1.5"
               >
                 <span>❄️</span>
@@ -1374,10 +1371,7 @@ export default function LeadsTab() {
               </button>
               <button
                 type="button"
-                onClick={() => {
-                  setActiveBucket('completed');
-                  setLeadsPage(0);
-                }}
+                onClick={() => setShowCompletedJobsModal(true)}
                 className="rounded-md border border-gray-500/40 bg-gray-500/10 px-3 py-1.5 text-xs font-medium text-gray-300 transition hover:bg-gray-500/20 flex items-center gap-1.5"
               >
                 <span>✓</span>
@@ -1386,46 +1380,84 @@ export default function LeadsTab() {
             </div>
           </div>
 
-          {/* Display cards based on active bucket */}
-          {activeBucket === 'leads' && (
-            <>
-              {sortedLeads.length === 0 ? (
-                emptyLeadState
-              ) : (
-                <>
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                    {paginatedLeads.map(renderLeadCard)}
+          {/* Desktop: Always show leads */}
+          <div className="hidden md:block">
+            {sortedLeads.length === 0 ? (
+              emptyLeadState
+            ) : (
+              <>
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {paginatedLeads.map(renderLeadCard)}
+                </div>
+
+                {totalLeadPages > 1 && (
+                  <div className="mt-4 flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={() => setLeadsPage((p) => Math.max(0, p - 1))}
+                      disabled={leadsPage === 0}
+                      className="rounded-md border border-[#373e47] bg-[#0d1117] px-3 py-1.5 text-xs font-medium text-white transition hover:bg-[#1e2227] disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      ← Previous
+                    </button>
+                    <span className="text-xs text-gray-400">
+                      Page {leadsPage + 1} of {totalLeadPages}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setLeadsPage((p) => Math.min(totalLeadPages - 1, p + 1))}
+                      disabled={leadsPage >= totalLeadPages - 1}
+                      className="rounded-md border border-[#373e47] bg-[#0d1117] px-3 py-1.5 text-xs font-medium text-white transition hover:bg-[#1e2227] disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      Next →
+                    </button>
                   </div>
+                )}
+              </>
+            )}
+          </div>
 
-                  {totalLeadPages > 1 && (
-                    <div className="mt-4 flex items-center justify-between">
-                      <button
-                        type="button"
-                        onClick={() => setLeadsPage((p) => Math.max(0, p - 1))}
-                        disabled={leadsPage === 0}
-                        className="rounded-md border border-[#373e47] bg-[#0d1117] px-3 py-1.5 text-xs font-medium text-white transition hover:bg-[#1e2227] disabled:cursor-not-allowed disabled:opacity-40"
-                      >
-                        ← Previous
-                      </button>
-                      <span className="text-xs text-gray-400">
-                        Page {leadsPage + 1} of {totalLeadPages}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setLeadsPage((p) => Math.min(totalLeadPages - 1, p + 1))}
-                        disabled={leadsPage >= totalLeadPages - 1}
-                        className="rounded-md border border-[#373e47] bg-[#0d1117] px-3 py-1.5 text-xs font-medium text-white transition hover:bg-[#1e2227] disabled:cursor-not-allowed disabled:opacity-40"
-                      >
-                        Next →
-                      </button>
+          {/* Mobile: Display cards based on active bucket */}
+          <div className="md:hidden">
+            {activeBucket === 'leads' && (
+              <>
+                {sortedLeads.length === 0 ? (
+                  emptyLeadState
+                ) : (
+                  <>
+                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                      {paginatedLeads.map(renderLeadCard)}
                     </div>
-                  )}
-                </>
-              )}
-            </>
-          )}
 
-          {activeBucket === 'cold' && (
+                    {totalLeadPages > 1 && (
+                      <div className="mt-4 flex items-center justify-between">
+                        <button
+                          type="button"
+                          onClick={() => setLeadsPage((p) => Math.max(0, p - 1))}
+                          disabled={leadsPage === 0}
+                          className="rounded-md border border-[#373e47] bg-[#0d1117] px-3 py-1.5 text-xs font-medium text-white transition hover:bg-[#1e2227] disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          ← Previous
+                        </button>
+                        <span className="text-xs text-gray-400">
+                          Page {leadsPage + 1} of {totalLeadPages}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setLeadsPage((p) => Math.min(totalLeadPages - 1, p + 1))}
+                          disabled={leadsPage >= totalLeadPages - 1}
+                          className="rounded-md border border-[#373e47] bg-[#0d1117] px-3 py-1.5 text-xs font-medium text-white transition hover:bg-[#1e2227] disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          Next →
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
+              </>
+            )}
+
+            {activeBucket === 'cold' && (
             <>
               {coldLeads.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -1442,22 +1474,23 @@ export default function LeadsTab() {
             </>
           )}
 
-          {activeBucket === 'completed' && (
-            <>
-              {filteredJobs.completed.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <p className="text-gray-400">No completed jobs yet</p>
-                  <p className="mt-2 text-sm text-gray-500">
-                    Jobs marked as completed will appear here
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {filteredJobs.completed.map(renderJobCard)}
-                </div>
-              )}
-            </>
-          )}
+            {activeBucket === 'completed' && (
+              <>
+                {filteredJobs.completed.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <p className="text-gray-400">No completed jobs yet</p>
+                    <p className="mt-2 text-sm text-gray-500">
+                      Jobs marked as completed will appear here
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                    {filteredJobs.completed.map(renderJobCard)}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </div>
       </div>
 
@@ -1487,6 +1520,132 @@ export default function LeadsTab() {
           />
         </div>
       </div>
+
+      {/* View All Leads Modal */}
+      {showAllLeadsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="fixed inset-0 bg-black/75"
+            onClick={() => setShowAllLeadsModal(false)}
+          />
+          <div className="relative z-10 w-full max-w-6xl max-h-[90vh] overflow-hidden rounded-lg border border-[#373e47] bg-[#1e2227] shadow-xl">
+            <div className="flex items-center justify-between border-b border-[#373e47] p-4">
+              <div>
+                <h2 className="text-lg font-semibold text-white">
+                  Lead Bucket ({sortedLeads.length})
+                </h2>
+                <p className="text-sm text-gray-400">
+                  {selectedCampaignId === 'all' ? 'All campaigns' : selectedCampaignName}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAllLeadsModal(false)}
+                className="rounded-md p-2 text-gray-400 transition hover:bg-[#2d333b] hover:text-white"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="overflow-y-auto p-4" style={{ maxHeight: 'calc(90vh - 80px)' }}>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {sortedLeads.map(renderLeadCard)}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cold Bucket Modal */}
+      {showColdBucketModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="fixed inset-0 bg-black/75"
+            onClick={() => setShowColdBucketModal(false)}
+          />
+          <div className="relative z-10 w-full max-w-6xl max-h-[90vh] overflow-hidden rounded-lg border border-[#373e47] bg-[#1e2227] shadow-xl">
+            <div className="flex items-center justify-between border-b border-[#373e47] p-4 bg-[#2d333b]">
+              <div>
+                <h2 className="text-lg font-semibold text-white">
+                  Cold Bucket ({coldLeads.length})
+                </h2>
+                <p className="text-sm text-gray-400">
+                  Unresponsive or not interested leads
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowColdBucketModal(false)}
+                className="rounded-md p-2 text-gray-400 transition hover:bg-[#2d333b] hover:text-white"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="overflow-y-auto p-4" style={{ maxHeight: 'calc(90vh - 80px)' }}>
+              {coldLeads.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <p className="text-gray-400">No cold leads yet</p>
+                  <p className="mt-2 text-sm text-gray-500">
+                    Leads marked as unresponsive or not interested will appear here
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {coldLeads.map(renderLeadCard)}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Completed Jobs Modal */}
+      {showCompletedJobsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="fixed inset-0 bg-black/75"
+            onClick={() => setShowCompletedJobsModal(false)}
+          />
+          <div className="relative z-10 w-full max-w-6xl max-h-[90vh] overflow-hidden rounded-lg border border-[#373e47] bg-[#1e2227] shadow-xl">
+            <div className="flex items-center justify-between border-b border-[#373e47] p-4 bg-[#2d333b]">
+              <div>
+                <h2 className="text-lg font-semibold text-white">
+                  Completed Bucket ({filteredJobs.completed.length})
+                </h2>
+                <p className="text-sm text-gray-400">
+                  Finished inspections (visible on Halo Map for billing)
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCompletedJobsModal(false)}
+                className="rounded-md p-2 text-gray-400 transition hover:bg-[#2d333b] hover:text-white"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="overflow-y-auto p-4" style={{ maxHeight: 'calc(90vh - 80px)' }}>
+              {filteredJobs.completed.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <p className="text-gray-400">No completed jobs yet</p>
+                  <p className="mt-2 text-sm text-gray-500">
+                    Jobs marked as completed will appear here
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {filteredJobs.completed.map(renderJobCard)}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Lead Modal */}
       {leadModalState.isOpen && (
