@@ -942,6 +942,15 @@ export default function LeadsTab() {
           setDraggingItem({ type: 'lead', id: lead.id });
           event.dataTransfer.setData('application/halo-lead', lead.id);
           event.dataTransfer.effectAllowed = 'move';
+
+          // Set drag image to show the card being dragged
+          const target = event.currentTarget as HTMLElement;
+          const clone = target.cloneNode(true) as HTMLElement;
+          clone.style.opacity = '0.8';
+          clone.style.width = target.offsetWidth + 'px';
+          document.body.appendChild(clone);
+          event.dataTransfer.setDragImage(clone, 0, 0);
+          setTimeout(() => document.body.removeChild(clone), 0);
         }}
         onDragEnd={() => setDraggingItem(null)}
         className="rounded-lg border border-[#373e47] bg-[#1e2227] p-4 shadow-sm transition ring-cyan-500/40 hover:ring-2"
@@ -1018,6 +1027,15 @@ export default function LeadsTab() {
         setDraggingItem({ type: 'job', id: job.id });
         event.dataTransfer.setData('application/halo-job', job.id);
         event.dataTransfer.effectAllowed = 'move';
+
+        // Set drag image to show the card being dragged
+        const target = event.currentTarget as HTMLElement;
+        const clone = target.cloneNode(true) as HTMLElement;
+        clone.style.opacity = '0.8';
+        clone.style.width = target.offsetWidth + 'px';
+        document.body.appendChild(clone);
+        event.dataTransfer.setDragImage(clone, 0, 0);
+        setTimeout(() => document.body.removeChild(clone), 0);
       }}
       onDragEnd={() => setDraggingItem(null)}
       className="rounded-lg border border-[#373e47] bg-[#1e2227] p-4 shadow-sm transition ring-blue-500/40 hover:ring-2"
@@ -1193,7 +1211,7 @@ export default function LeadsTab() {
       <div className="flex flex-col gap-6 md:flex-row">
         {/* Left: Campaigns Column */}
         <div className="hidden md:block md:w-64 md:flex-shrink-0">
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-400">
+          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-400">
             Campaigns
           </h2>
           <div className="max-h-[600px] space-y-2 overflow-y-auto pr-2">
@@ -1504,7 +1522,7 @@ export default function LeadsTab() {
 
       {/* Scheduled Inspections Calendar - Full Width Below with More Spacing */}
       <div className={`mt-8 ${activeMobileView === 'leads' ? 'hidden md:block' : ''}`}>
-        <div className="mb-4">
+        <div className="mb-4 flex justify-end">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
             Scheduled Inspections ({filteredJobs.scheduled.length + leads.filter(l => l.tentativeDate && !l.isColdLead).length})
           </h2>

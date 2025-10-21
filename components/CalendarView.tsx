@@ -84,6 +84,23 @@ export default function CalendarView({
 
   // Custom toolbar to hide Today/Back/Next buttons
   const CustomToolbar = (toolbar: any) => {
+    const goToBack = () => {
+      toolbar.onNavigate('PREV');
+    };
+
+    const goToNext = () => {
+      toolbar.onNavigate('NEXT');
+    };
+
+    const goToToday = () => {
+      toolbar.onNavigate('TODAY');
+    };
+
+    const label = () => {
+      const date = toolbar.date;
+      return format(date, 'MMMM yyyy');
+    };
+
     return (
       <div className="flex items-center justify-between mb-4 px-2">
         {/* Left side - Halo branding */}
@@ -93,6 +110,31 @@ export default function CalendarView({
             alt="Halo"
             className="h-10 w-auto"
           />
+        </div>
+
+        {/* Center - Month navigation */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={goToBack}
+            className="px-3 py-2 rounded-lg text-sm font-medium bg-[#2d333b] text-white hover:bg-[#373e47] border border-[#373e47] transition-all"
+          >
+            ←
+          </button>
+          <button
+            onClick={goToToday}
+            className="px-4 py-2 rounded-lg text-sm font-medium bg-[#2d333b] text-white hover:bg-[#373e47] border border-[#373e47] transition-all"
+          >
+            Today
+          </button>
+          <span className="text-lg font-semibold text-white min-w-[180px] text-center">
+            {label()}
+          </span>
+          <button
+            onClick={goToNext}
+            className="px-3 py-2 rounded-lg text-sm font-medium bg-[#2d333b] text-white hover:bg-[#373e47] border border-[#373e47] transition-all"
+          >
+            →
+          </button>
         </div>
 
         {/* Right side - View toggle (Month/Week only) */}
