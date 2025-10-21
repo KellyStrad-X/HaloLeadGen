@@ -70,7 +70,7 @@ export default function DashboardLayout({
                   <img
                     src="/halo-logo.png"
                     alt="Halo Lead Gen"
-                    className="h-20 w-auto"
+                    className="h-10 w-auto"
                   />
                 </Link>
 

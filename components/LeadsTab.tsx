@@ -1221,10 +1221,10 @@ export default function LeadsTab() {
               ↓ Drop here to remove from calendar ↓
             </div>
           )}
-          {/* Bucket Tabs - Mobile/Desktop */}
-          <div className="mb-4 flex flex-col gap-3">
-            {/* Tab Buttons */}
-            <div className="flex gap-2 overflow-x-auto">
+          {/* Mobile: Bucket Tabs */}
+          <div className="mb-4 flex flex-col gap-3 md:hidden">
+            {/* Tab Buttons - Mobile Only */}
+            <div className="flex gap-2">
               <button
                 type="button"
                 onClick={() => {
@@ -1285,6 +1285,57 @@ export default function LeadsTab() {
                 </select>
               </div>
             )}
+          </div>
+
+          {/* Desktop: Header with buttons */}
+          <div className="mb-4 hidden md:flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
+                Leads ({sortedLeads.length})
+              </h2>
+              <select
+                value={leadSortOrder}
+                onChange={(e) => setLeadSortOrder(e.target.value as 'newest' | 'oldest')}
+                className="rounded-md border border-[#373e47] bg-[#0d1117] px-3 py-1.5 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              >
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+              </select>
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveBucket('leads');
+                  setLeadsPage(0);
+                }}
+                className="rounded-md border border-cyan-500/40 bg-cyan-500/10 px-3 py-1.5 text-xs font-medium text-cyan-300 transition hover:bg-cyan-500/20"
+              >
+                Lead Bucket
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveBucket('cold');
+                  setLeadsPage(0);
+                }}
+                className="rounded-md border border-gray-500/40 bg-gray-500/10 px-3 py-1.5 text-xs font-medium text-gray-300 transition hover:bg-gray-500/20 flex items-center gap-1.5"
+              >
+                <span>❄️</span>
+                <span>Cold Bucket</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveBucket('completed');
+                  setLeadsPage(0);
+                }}
+                className="rounded-md border border-gray-500/40 bg-gray-500/10 px-3 py-1.5 text-xs font-medium text-gray-300 transition hover:bg-gray-500/20 flex items-center gap-1.5"
+              >
+                <span>✓</span>
+                <span>Completed Bucket</span>
+              </button>
+            </div>
           </div>
 
           {/* Display cards based on active bucket */}
