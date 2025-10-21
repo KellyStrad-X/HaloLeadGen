@@ -53,6 +53,47 @@ export default function CalendarView({
   onEventDrop,
   onSelectSlot,
 }: CalendarViewProps) {
+  // Custom toolbar to hide Today/Back/Next buttons
+  const CustomToolbar = (toolbar: any) => {
+    return (
+      <div className="flex items-center justify-between mb-4 px-2">
+        {/* Left side - Halo Calendar branding */}
+        <div className="flex items-center gap-3">
+          <img
+            src="/Halo_Alone_Logo.png"
+            alt="Halo"
+            className="h-8 w-auto"
+          />
+          <h2 className="text-xl font-bold text-white">Halo Calendar</h2>
+        </div>
+
+        {/* Right side - View toggle (Month/Week only) */}
+        <div className="flex gap-2">
+          <button
+            onClick={() => toolbar.onView('month')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              toolbar.view === 'month'
+                ? 'bg-cyan-500 text-black'
+                : 'bg-[#2d333b] text-white hover:bg-[#373e47] border border-[#373e47]'
+            }`}
+          >
+            Month
+          </button>
+          <button
+            onClick={() => toolbar.onView('week')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              toolbar.view === 'week'
+                ? 'bg-cyan-500 text-black'
+                : 'bg-[#2d333b] text-white hover:bg-[#373e47] border border-[#373e47]'
+            }`}
+          >
+            Week
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   // Custom event styling based on type and contact attempt
   const eventStyleGetter = (event: CalendarEvent) => {
     let backgroundColor = '#22c55e'; // Default green for confirmed
@@ -186,30 +227,7 @@ export default function CalendarView({
         }
 
         .rbc-toolbar {
-          padding: 16px 0;
-          margin-bottom: 16px;
-          color: #e5e7eb;
-        }
-
-        .rbc-toolbar button {
-          color: #e5e7eb;
-          background: #2d333b;
-          border: 1px solid #373e47;
-          padding: 8px 16px;
-          border-radius: 6px;
-          font-weight: 500;
-          transition: all 0.2s;
-        }
-
-        .rbc-toolbar button:hover {
-          background: #373e47;
-        }
-
-        .rbc-toolbar button:active,
-        .rbc-toolbar button.rbc-active {
-          background: #06b6d4;
-          color: #000;
-          border-color: #0891b2;
+          display: none; /* Hide default toolbar, using custom */
         }
 
         .rbc-event {
@@ -241,15 +259,16 @@ export default function CalendarView({
         events={events}
         startAccessor="start"
         endAccessor="end"
-        style={{ height: '600px' }}
+        style={{ height: '800px' }}
         onSelectEvent={onEventClick}
         onSelectSlot={onSelectSlot}
         selectable
         eventPropGetter={eventStyleGetter}
         components={{
           event: EventComponent,
+          toolbar: CustomToolbar,
         }}
-        views={['month', 'week', 'day']}
+        views={['month', 'week']}
         defaultView="month"
         popup
         onEventDrop={({ event, start, end }: any) => {

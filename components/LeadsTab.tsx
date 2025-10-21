@@ -327,24 +327,32 @@ export default function LeadsTab() {
     });
 
     // Add tentative leads to calendar
-    filteredLeads.forEach((lead) => {
-      if (lead.tentativeDate) {
-        const date = parseLocalDate(lead.tentativeDate);
-        events.push({
-          id: `lead-${lead.id}`,
-          title: lead.name,
-          start: date,
-          end: date,
-          type: 'tentative',
-          leadId: lead.id,
-          contactAttempt: lead.contactAttempt,
-          customerName: lead.name,
-          phone: lead.phone,
-          email: lead.email,
-        });
-      }
+    const leadsWithTentativeDate = filteredLeads.filter(l => l.tentativeDate);
+    console.log('Leads with tentative dates:', leadsWithTentativeDate.length, leadsWithTentativeDate);
+
+    leadsWithTentativeDate.forEach((lead) => {
+      const date = parseLocalDate(lead.tentativeDate!);
+      console.log(`Creating event for lead ${lead.name}:`, {
+        tentativeDate: lead.tentativeDate,
+        parsedDate: date,
+        isValidDate: !isNaN(date.getTime())
+      });
+
+      events.push({
+        id: `lead-${lead.id}`,
+        title: lead.name,
+        start: date,
+        end: date,
+        type: 'tentative',
+        leadId: lead.id,
+        contactAttempt: lead.contactAttempt,
+        customerName: lead.name,
+        phone: lead.phone,
+        email: lead.email,
+      });
     });
 
+    console.log('Total calendar events:', events.length, events);
     return events;
   }, [filteredJobs.scheduled, filteredLeads]);
 
