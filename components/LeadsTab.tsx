@@ -1345,7 +1345,7 @@ export default function LeadsTab() {
                 emptyLeadState
               ) : (
                 <>
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {paginatedLeads.map(renderLeadCard)}
                   </div>
 
@@ -1387,7 +1387,7 @@ export default function LeadsTab() {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {coldLeads.map(renderLeadCard)}
                 </div>
               )}
@@ -1404,7 +1404,7 @@ export default function LeadsTab() {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {filteredJobs.completed.map(renderJobCard)}
                 </div>
               )}
@@ -1414,7 +1414,7 @@ export default function LeadsTab() {
       </div>
 
       {/* Scheduled Inspections Calendar - Full Width Below with More Spacing */}
-      <div className={`mt-4 md:mt-6 ${activeMobileView === 'leads' ? 'hidden md:block' : ''}`}>
+      <div className={`mt-8 ${activeMobileView === 'leads' ? 'hidden md:block' : ''}`}>
         <div className="mb-4">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
             Scheduled Inspections ({filteredJobs.scheduled.length + leads.filter(l => l.tentativeDate && !l.isColdLead).length})
