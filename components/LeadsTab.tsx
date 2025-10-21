@@ -1224,14 +1224,14 @@ export default function LeadsTab() {
           {/* Mobile: Bucket Tabs */}
           <div className="mb-4 flex flex-col gap-3 md:hidden">
             {/* Tab Buttons - Mobile Only */}
-            <div className="flex gap-2">
+            <div className="flex gap-1.5">
               <button
                 type="button"
                 onClick={() => {
                   setActiveBucket('leads');
                   setLeadsPage(0);
                 }}
-                className={`flex-1 rounded-md border px-3 py-2 text-xs font-medium transition ${
+                className={`flex-1 rounded border px-2 py-1.5 text-[10px] font-medium transition ${
                   activeBucket === 'leads'
                     ? 'border-cyan-500/60 bg-cyan-500/20 text-cyan-300'
                     : 'border-gray-500/40 bg-gray-500/10 text-gray-300 hover:bg-gray-500/20'
@@ -1245,13 +1245,13 @@ export default function LeadsTab() {
                   setActiveBucket('cold');
                   setLeadsPage(0);
                 }}
-                className={`flex-1 rounded-md border px-3 py-2 text-xs font-medium transition flex items-center justify-center gap-1 ${
+                className={`flex-1 rounded border px-1.5 py-1.5 text-[10px] font-medium transition flex items-center justify-center gap-0.5 ${
                   activeBucket === 'cold'
                     ? 'border-cyan-500/60 bg-cyan-500/20 text-cyan-300'
                     : 'border-gray-500/40 bg-gray-500/10 text-gray-300 hover:bg-gray-500/20'
                 }`}
               >
-                <span>❄️</span>
+                <span className="text-xs">❄️</span>
                 <span>Cold ({coldLeads.length})</span>
               </button>
               <button
@@ -1260,13 +1260,13 @@ export default function LeadsTab() {
                   setActiveBucket('completed');
                   setLeadsPage(0);
                 }}
-                className={`flex-1 rounded-md border px-3 py-2 text-xs font-medium transition flex items-center justify-center gap-1 ${
+                className={`flex-1 rounded border px-1.5 py-1.5 text-[10px] font-medium transition flex items-center justify-center gap-0.5 ${
                   activeBucket === 'completed'
                     ? 'border-cyan-500/60 bg-cyan-500/20 text-cyan-300'
                     : 'border-gray-500/40 bg-gray-500/10 text-gray-300 hover:bg-gray-500/20'
                 }`}
               >
-                <span>✓</span>
+                <span className="text-xs">✓</span>
                 <span>Completed ({filteredJobs.completed.length})</span>
               </button>
             </div>
@@ -1345,7 +1345,7 @@ export default function LeadsTab() {
                 emptyLeadState
               ) : (
                 <>
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
                     {paginatedLeads.map(renderLeadCard)}
                   </div>
 
@@ -1387,7 +1387,7 @@ export default function LeadsTab() {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
                   {coldLeads.map(renderLeadCard)}
                 </div>
               )}
@@ -1404,7 +1404,7 @@ export default function LeadsTab() {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
                   {filteredJobs.completed.map(renderJobCard)}
                 </div>
               )}
@@ -1414,7 +1414,7 @@ export default function LeadsTab() {
       </div>
 
       {/* Scheduled Inspections Calendar - Full Width Below with More Spacing */}
-      <div className={`mt-8 ${activeMobileView === 'leads' ? 'hidden md:block' : ''}`}>
+      <div className={`mt-4 md:mt-6 ${activeMobileView === 'leads' ? 'hidden md:block' : ''}`}>
         <div className="mb-4">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
             Scheduled Inspections ({filteredJobs.scheduled.length + leads.filter(l => l.tentativeDate && !l.isColdLead).length})
