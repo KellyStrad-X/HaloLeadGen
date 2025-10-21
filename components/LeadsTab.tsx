@@ -196,8 +196,8 @@ export default function LeadsTab() {
     let animationFrameId: number;
     let mouseY = 0;
 
-    const SCROLL_ZONE = 300; // pixels from edge to trigger scroll
-    const SCROLL_SPEED = 40; // pixels per frame - constant speed
+    const SCROLL_ZONE = 150; // pixels from edge to trigger scroll
+    const SCROLL_SPEED = 20; // pixels per frame - constant speed
 
     const handleDragOver = (e: DragEvent) => {
       mouseY = e.clientY;
@@ -1166,7 +1166,7 @@ export default function LeadsTab() {
       </div>
     </div>
 
-      <div className="flex flex-wrap items-center gap-3 text-xs text-gray-400">
+      <div className="flex flex-wrap items-center gap-3 text-xs text-gray-400 md:hidden">
         <span className="text-sm font-semibold text-gray-200">{selectedCampaignName}</span>
         <span>Leads: {leadsCountForSelected}</span>
         <span>Jobs: {jobsCountForSelected}</span>
@@ -1338,18 +1338,28 @@ export default function LeadsTab() {
 
           {/* Desktop: Header with buttons */}
           <div className="mb-4 hidden md:flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
-                Leads ({sortedLeads.length})
-              </h2>
-              <select
-                value={leadSortOrder}
-                onChange={(e) => setLeadSortOrder(e.target.value as 'newest' | 'oldest')}
-                className="rounded-md border border-[#373e47] bg-[#0d1117] px-3 py-1.5 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
-              >
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
-              </select>
+            <div className="flex items-center gap-6">
+              {/* Campaign Stats */}
+              <div className="flex items-center gap-3 text-xs text-gray-400">
+                <span className="text-sm font-semibold text-gray-200">{selectedCampaignName}</span>
+                <span>Leads: {leadsCountForSelected}</span>
+                <span>Jobs: {jobsCountForSelected}</span>
+              </div>
+
+              {/* Leads Header & Sort */}
+              <div className="flex items-center gap-3">
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
+                  Leads ({sortedLeads.length})
+                </h2>
+                <select
+                  value={leadSortOrder}
+                  onChange={(e) => setLeadSortOrder(e.target.value as 'newest' | 'oldest')}
+                  className="rounded-md border border-[#373e47] bg-[#0d1117] px-3 py-1.5 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                >
+                  <option value="newest">Newest First</option>
+                  <option value="oldest">Oldest First</option>
+                </select>
+              </div>
             </div>
             <div className="flex gap-2">
               <button
