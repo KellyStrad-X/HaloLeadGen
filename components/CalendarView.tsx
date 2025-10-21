@@ -45,6 +45,7 @@ interface CalendarViewProps {
   onEventClick: (event: CalendarEvent) => void;
   onEventDrop: (event: CalendarEvent, start: Date, end: Date) => void;
   onSelectSlot: (slotInfo: { start: Date; end: Date }) => void;
+  onDragStateChange?: (item: { type: 'lead'; id: string } | null) => void;
 }
 
 export default function CalendarView({
@@ -52,19 +53,19 @@ export default function CalendarView({
   onEventClick,
   onEventDrop,
   onSelectSlot,
+  onDragStateChange,
 }: CalendarViewProps) {
   // Custom toolbar to hide Today/Back/Next buttons
   const CustomToolbar = (toolbar: any) => {
     return (
       <div className="flex items-center justify-between mb-4 px-2">
-        {/* Left side - Halo Calendar branding */}
+        {/* Left side - Halo branding */}
         <div className="flex items-center gap-3">
           <img
             src="/Halo Logo 2.png"
             alt="Halo"
             className="h-10 w-auto"
           />
-          <h2 className="text-xl font-bold text-white">Calendar</h2>
         </div>
 
         {/* Right side - View toggle (Month/Week only) */}
@@ -153,7 +154,20 @@ export default function CalendarView({
     ) : null;
 
     return (
-      <div className="flex flex-col gap-1 overflow-hidden">
+      <div
+        className="flex flex-col gap-1 overflow-hidden"
+        draggable={event.type === 'tentative'}
+        onDragStart={(e) => {
+          if (event.type === 'tentative' && event.leadId) {
+            e.dataTransfer.effectAllowed = 'move';
+            // Notify parent component about drag state
+            onDragStateChange?.({ type: 'lead', id: event.id });
+          }
+        }}
+        onDragEnd={() => {
+          onDragStateChange?.(null);
+        }}
+      >
         <div className="flex items-center justify-between gap-2">
           <span className="truncate font-semibold">{event.customerName}</span>
           {badge}
@@ -199,6 +213,19 @@ export default function CalendarView({
         .rbc-day-bg {
           background: #1e2227;
           border-color: #373e47 !important;
+          transition: all 0.2s ease;
+        }
+
+        .rbc-day-bg:hover {
+          background: #2d333b;
+        }
+
+        /* Highlight date cell when dragging lead over it */
+        .rbc-day-bg.rbc-drag-over {
+          background: #06b6d4 !important;
+          background: linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(6, 182, 212, 0.05) 100%) !important;
+          border: 2px solid #06b6d4 !important;
+          box-shadow: inset 0 0 20px rgba(6, 182, 212, 0.2);
         }
 
         .rbc-month-view {

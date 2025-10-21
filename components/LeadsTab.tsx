@@ -655,6 +655,15 @@ export default function LeadsTab() {
         if (!lead || !user) return;
 
         const leadId = lead.id; // Store ID to re-fetch after refresh
+        const tentativeDate = slotInfo.start.toISOString().slice(0, 10);
+
+        // Optimistic update: immediately set tentativeDate in local state
+        const originalLeads = leads;
+        setLeads((prevLeads) =>
+          prevLeads.map((l) =>
+            l.id === leadId ? { ...l, tentativeDate } : l
+          )
+        );
 
         setIsMutating(true);
         try {
@@ -666,7 +675,7 @@ export default function LeadsTab() {
               Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify({
-              tentativeDate: slotInfo.start.toISOString().slice(0, 10),
+              tentativeDate,
             }),
           });
 
@@ -694,12 +703,17 @@ export default function LeadsTab() {
               openPromoteModal(updatedLead, 'scheduled');
             }
           }
+
+          // Only clear drag state if successful
+          setDraggingItem(null);
         } catch (err) {
           console.error('Error setting tentative date:', err);
           setError(err instanceof Error ? err.message : 'Failed to set tentative date');
+          // Revert optimistic update on error
+          setLeads(originalLeads);
+          // Keep drag state on error so user knows it failed
         } finally {
           setIsMutating(false);
-          setDraggingItem(null);
         }
       }
     },
@@ -709,6 +723,14 @@ export default function LeadsTab() {
   const handleRemoveFromCalendar = useCallback(
     async (leadId: string) => {
       if (!user) return;
+
+      // Optimistic update: immediately clear tentativeDate in local state
+      const originalLeads = leads;
+      setLeads((prevLeads) =>
+        prevLeads.map((lead) =>
+          lead.id === leadId ? { ...lead, tentativeDate: null } : lead
+        )
+      );
 
       setIsMutating(true);
       try {
@@ -729,16 +751,19 @@ export default function LeadsTab() {
           throw new Error(errorData.error || 'Failed to remove from calendar');
         }
 
+        // Refresh data to get authoritative state from server
         await loadData();
       } catch (err) {
         console.error('Error removing from calendar:', err);
         setError(err instanceof Error ? err.message : 'Failed to remove from calendar');
+        // Revert optimistic update on error
+        setLeads(originalLeads);
         throw err; // Re-throw so JobModal can handle it
       } finally {
         setIsMutating(false);
       }
     },
-    [user, loadData]
+    [user, loadData, leads]
   );
 
   const handleLeadDrop = (event: React.DragEvent<HTMLDivElement>, targetStatus: LeadJobStatus) => {
@@ -1114,8 +1139,45 @@ export default function LeadsTab() {
           </div>
         </div>
 
-        {/* Right: Leads Section */}
-        <div className={`flex-1 ${activeMobileView === 'jobs' ? 'hidden md:block' : ''}`}>
+        {/* Right: Leads Section - Drop Zone for Calendar Events */}
+        <div
+          className={`flex-1 ${activeMobileView === 'jobs' ? 'hidden md:block' : ''} ${
+            draggingItem?.id?.startsWith('lead-')
+              ? 'ring-2 ring-orange-500/50 bg-orange-500/5 rounded-lg p-4'
+              : ''
+          }`}
+          onDragOver={(e) => {
+            // Accept calendar events (tentative leads) being dragged back
+            if (draggingItem?.id?.startsWith('lead-')) {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = 'move';
+            }
+          }}
+          onDrop={async (e) => {
+            e.preventDefault();
+            if (draggingItem?.id?.startsWith('lead-')) {
+              const leadId = draggingItem.id.replace('lead-', '');
+              try {
+                // Remove from calendar by clearing tentativeDate
+                await handleRemoveFromCalendar(leadId);
+                // Only clear drag state if API call succeeds
+                setDraggingItem(null);
+              } catch (err) {
+                console.error('Error removing from calendar:', err);
+                // Keep drag state and show error to user
+                setError(err instanceof Error ? err.message : 'Failed to remove from calendar');
+              }
+            } else {
+              // No lead being dragged, safe to clear
+              setDraggingItem(null);
+            }
+          }}
+        >
+          {draggingItem?.id?.startsWith('lead-') && (
+            <div className="mb-4 text-center text-sm text-orange-300 font-medium animate-pulse">
+              ↓ Drop here to remove from calendar ↓
+            </div>
+          )}
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
@@ -1184,11 +1246,11 @@ export default function LeadsTab() {
         </div>
       </div>
 
-      {/* Scheduled Inspections Calendar - Full Width Below */}
-      <div className={`${activeMobileView === 'leads' ? 'hidden md:block' : ''}`}>
+      {/* Scheduled Inspections Calendar - Full Width Below with More Spacing */}
+      <div className={`mt-8 ${activeMobileView === 'leads' ? 'hidden md:block' : ''}`}>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
-            Scheduled Inspections ({filteredJobs.scheduled.length + filteredLeads.filter(l => l.tentativeDate).length})
+            Scheduled Inspections ({filteredJobs.scheduled.length + leads.filter(l => l.tentativeDate && !l.isColdLead).length})
           </h2>
           <button
             type="button"
@@ -1199,31 +1261,23 @@ export default function LeadsTab() {
           </button>
         </div>
 
-        {/* Calendar drop zone */}
-        <div
-          className={`relative ${
-            draggingItem?.type === 'lead' ? 'ring-2 ring-cyan-500/50 rounded-lg' : ''
-          }`}
-          onDragOver={(e) => {
-            if (draggingItem?.type === 'lead') {
-              e.preventDefault();
-              e.dataTransfer.dropEffect = 'copy';
-            }
-          }}
-        >
+        {/* Calendar - Full Width */}
+        <div className="relative -mx-6">
           {draggingItem?.type === 'lead' && (
-            <div className="absolute top-0 left-0 right-0 z-10 bg-cyan-500/10 border border-cyan-500/40 rounded-t-lg p-3 text-center text-sm text-cyan-300">
-              Click on a date to schedule this lead
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-cyan-500/10 border border-cyan-500/40 rounded-lg px-6 py-3 text-center text-sm text-cyan-300 pointer-events-none">
+              <svg className="inline-block w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              Hover over a date to schedule
             </div>
           )}
-          <div className={draggingItem?.type === 'lead' ? 'mt-12' : ''}>
-            <CalendarView
-              events={calendarEvents}
-              onEventClick={handleCalendarEventClick}
-              onEventDrop={handleCalendarEventDrop}
-              onSelectSlot={handleCalendarSlotSelect}
-            />
-          </div>
+          <CalendarView
+            events={calendarEvents}
+            onEventClick={handleCalendarEventClick}
+            onEventDrop={handleCalendarEventDrop}
+            onSelectSlot={handleCalendarSlotSelect}
+            onDragStateChange={setDraggingItem}
+          />
         </div>
       </div>
 
