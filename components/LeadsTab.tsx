@@ -196,10 +196,10 @@ export default function LeadsTab() {
     let animationFrameId: number;
     let mouseY = 0;
 
-    const SCROLL_ZONE = 250; // pixels from edge to trigger scroll
-    const MAX_SCROLL_SPEED = 25; // max pixels per frame
+    const SCROLL_ZONE = 300; // pixels from edge to trigger scroll
+    const SCROLL_SPEED = 40; // pixels per frame - constant speed
 
-    const handleMouseMove = (e: MouseEvent) => {
+    const handleDragOver = (e: DragEvent) => {
       mouseY = e.clientY;
     };
 
@@ -210,15 +210,13 @@ export default function LeadsTab() {
 
       let scrollAmount = 0;
 
-      // Near bottom - scroll down
+      // Near bottom - scroll down at full speed
       if (distanceFromBottom < SCROLL_ZONE && distanceFromBottom > 0) {
-        const intensity = 1 - distanceFromBottom / SCROLL_ZONE;
-        scrollAmount = intensity * MAX_SCROLL_SPEED;
+        scrollAmount = SCROLL_SPEED;
       }
-      // Near top - scroll up
+      // Near top - scroll up at full speed
       else if (distanceFromTop < SCROLL_ZONE && distanceFromTop > 0) {
-        const intensity = 1 - distanceFromTop / SCROLL_ZONE;
-        scrollAmount = -(intensity * MAX_SCROLL_SPEED);
+        scrollAmount = -SCROLL_SPEED;
       }
 
       if (scrollAmount !== 0) {
@@ -228,11 +226,11 @@ export default function LeadsTab() {
       animationFrameId = requestAnimationFrame(autoScroll);
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('dragover', handleDragOver);
     animationFrameId = requestAnimationFrame(autoScroll);
 
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('dragover', handleDragOver);
       cancelAnimationFrame(animationFrameId);
     };
   }, [draggingItem]);
