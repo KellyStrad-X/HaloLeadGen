@@ -30,6 +30,7 @@ interface PromoteModeProps extends BaseJobModalProps {
     notes: string | null;
     campaignName: string;
     tentativeDate?: string | null;
+    contactAttempt?: number;
   };
   onContactAttempt?: (leadId: string, attempt: number, isCold: boolean) => Promise<void>;
   onRemoveFromCalendar?: (leadId: string) => Promise<void>;
@@ -132,7 +133,13 @@ export default function JobModal(props: JobModalProps) {
       setInspector('');
       setInternalNotes('');
       setShowCustomInspector(false);
-      setContactAction('schedule');
+
+      // Initialize contactAction based on existing contactAttempt
+      const attempt = props.lead.contactAttempt || 0;
+      if (attempt === 1) setContactAction('1st');
+      else if (attempt === 2) setContactAction('2nd');
+      else if (attempt === 3) setContactAction('3rd');
+      else setContactAction('schedule');
     } else {
       setStatus(props.job.status);
       const dateStr = props.job.scheduledInspectionDate;
@@ -270,7 +277,7 @@ export default function JobModal(props: JobModalProps) {
                 <select
                   id="contact-action"
                   className="mt-2 w-full rounded-lg border border-[#373e47] bg-[#0d1117] px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                  value={contactAction}
+                  value={contactAction === 'cold' ? 'schedule' : contactAction}
                   onChange={(event) => setContactAction(event.target.value as typeof contactAction)}
                   disabled={isSubmitting}
                 >
@@ -278,13 +285,10 @@ export default function JobModal(props: JobModalProps) {
                   <option value="1st">First Contact Attempt</option>
                   <option value="2nd">Second Contact Attempt</option>
                   <option value="3rd">Third Contact Attempt</option>
-                  <option value="cold">Move to Cold Bucket</option>
                 </select>
                 <p className="mt-1 text-xs text-gray-500">
                   {contactAction === 'schedule'
                     ? 'Confirm inspection date and create scheduled job'
-                    : contactAction === 'cold'
-                    ? 'Mark lead as unresponsive or not interested'
                     : 'Track contact attempt and keep lead active'}
                 </p>
               </div>
@@ -401,7 +405,30 @@ export default function JobModal(props: JobModalProps) {
         </div>
 
         <div className="flex justify-between gap-3 border-t border-[#373e47] bg-[#1e2227] px-6 py-4">
-          <div>
+          <div className="flex gap-3">
+            {props.mode === 'promote' && props.onContactAttempt && (
+              <button
+                onClick={async () => {
+                  if (props.mode === 'promote' && props.onContactAttempt) {
+                    setIsSubmitting(true);
+                    try {
+                      await props.onContactAttempt(props.lead.id, 0, true);
+                      onClose();
+                    } catch (error) {
+                      console.error('Error moving to cold bucket:', error);
+                    } finally {
+                      setIsSubmitting(false);
+                    }
+                  }
+                }}
+                disabled={isSubmitting}
+                className="rounded-lg bg-blue-500/10 border border-blue-500/40 px-4 py-2 text-sm font-medium text-blue-300 transition-colors hover:bg-blue-500/20 disabled:cursor-not-allowed disabled:opacity-60 flex items-center gap-2"
+                title="Move to Cold Bucket"
+              >
+                <span>❄️</span>
+                <span>Cold Bucket</span>
+              </button>
+            )}
             {props.mode === 'promote' && props.lead.tentativeDate && props.onRemoveFromCalendar && (
               <button
                 onClick={async () => {
@@ -421,6 +448,35 @@ export default function JobModal(props: JobModalProps) {
                 className="rounded-lg bg-red-500/10 border border-red-500/40 px-4 py-2 text-sm font-medium text-red-300 transition-colors hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Remove from Calendar
+              </button>
+            )}
+            {props.mode === 'edit' && status !== 'completed' && (
+              <button
+                onClick={async () => {
+                  if (props.mode === 'edit') {
+                    setStatus('completed');
+                    setIsSubmitting(true);
+                    try {
+                      await onSubmit({
+                        status: 'completed',
+                        scheduledInspectionDate: scheduledInspectionDate
+                          ? scheduledInspectionDate.toISOString().slice(0, 10)
+                          : null,
+                        inspector: inspector || null,
+                        internalNotes: internalNotes || null,
+                      });
+                      onClose();
+                    } catch (error) {
+                      console.error('Error moving to completed:', error);
+                    } finally {
+                      setIsSubmitting(false);
+                    }
+                  }
+                }}
+                disabled={isSubmitting}
+                className="rounded-lg bg-green-500/10 border border-green-500/40 px-4 py-2 text-sm font-medium text-green-300 transition-colors hover:bg-green-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Move to Completed
               </button>
             )}
           </div>

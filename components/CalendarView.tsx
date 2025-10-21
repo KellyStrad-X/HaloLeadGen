@@ -186,7 +186,7 @@ export default function CalendarView({
         <div
           className="flex flex-col gap-1 overflow-hidden relative h-full w-full"
           draggable={true}
-          style={{ cursor: 'grab' }}
+          style={{ cursor: 'grab', userSelect: 'none', WebkitUserSelect: 'none' }}
           onDragStart={(e) => {
             e.stopPropagation(); // Prevent calendar from handling
             e.dataTransfer.effectAllowed = 'move';

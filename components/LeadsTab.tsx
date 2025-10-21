@@ -1212,9 +1212,10 @@ export default function LeadsTab() {
               <button
                 type="button"
                 onClick={() => setShowColdBucketModal(true)}
-                className="rounded-md border border-gray-500/40 bg-gray-500/10 px-3 py-1.5 text-xs font-medium text-gray-300 transition hover:bg-gray-500/20"
+                className="rounded-md border border-gray-500/40 bg-gray-500/10 px-3 py-1.5 text-xs font-medium text-gray-300 transition hover:bg-gray-500/20 flex items-center gap-1.5"
               >
-                Cold Bucket ({coldLeads.length})
+                <span>❄️</span>
+                <span>Cold Bucket ({coldLeads.length})</span>
               </button>
             </div>
           </div>
