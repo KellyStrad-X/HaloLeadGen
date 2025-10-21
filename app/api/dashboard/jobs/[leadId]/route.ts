@@ -8,7 +8,9 @@ function parseDate(value: unknown): Date | null | undefined {
   }
 
   if (typeof value === 'string' && value.trim().length > 0) {
-    const date = new Date(value);
+    // Parse YYYY-MM-DD strings as local noon to avoid timezone shift
+    const dateStr = value.trim();
+    const date = new Date(dateStr.includes('T') ? dateStr : `${dateStr}T12:00:00`);
     if (!Number.isNaN(date.getTime())) {
       return date;
     }
