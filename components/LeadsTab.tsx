@@ -147,10 +147,15 @@ function groupJobsById(jobs: JobBuckets) {
 }
 
 // Helper to parse date strings in local timezone (not UTC)
-// YYYY-MM-DD strings are treated as UTC midnight by Date constructor,
-// causing calendar to show previous day for negative timezone offsets (US)
+// Handles both YYYY-MM-DD strings and full ISO timestamps
 function parseLocalDate(dateStr: string): Date {
-  // Append T12:00:00 to parse as noon local time, avoiding day shifts
+  // If it's already a full timestamp (contains 'T'), parse directly
+  if (dateStr.includes('T')) {
+    return new Date(dateStr);
+  }
+
+  // If it's just YYYY-MM-DD, append T12:00:00 to parse as noon local time
+  // This avoids calendar showing previous day for negative timezone offsets (US)
   return new Date(`${dateStr}T12:00:00`);
 }
 
@@ -248,7 +253,8 @@ export default function LeadsTab() {
   }, [selectedCampaignId, campaignSummaries]);
 
   const filteredLeads = useMemo(() => {
-    const activeLeads = leads.filter((lead) => !lead.isColdLead);
+    // Filter out cold leads AND leads with tentative dates (those are on calendar)
+    const activeLeads = leads.filter((lead) => !lead.isColdLead && !lead.tentativeDate);
     if (selectedCampaignId === 'all') return activeLeads;
     return activeLeads.filter((lead) => lead.campaignId === selectedCampaignId);
   }, [leads, selectedCampaignId]);

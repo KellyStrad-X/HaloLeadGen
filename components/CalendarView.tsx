@@ -60,11 +60,11 @@ export default function CalendarView({
         {/* Left side - Halo Calendar branding */}
         <div className="flex items-center gap-3">
           <img
-            src="/Halo_Alone_Logo.png"
+            src="/Halo Logo 2.png"
             alt="Halo"
-            className="h-8 w-auto"
+            className="h-10 w-auto"
           />
-          <h2 className="text-xl font-bold text-white">Halo Calendar</h2>
+          <h2 className="text-xl font-bold text-white">Calendar</h2>
         </div>
 
         {/* Right side - View toggle (Month/Week only) */}
