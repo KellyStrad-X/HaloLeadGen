@@ -186,6 +186,54 @@ export default function LeadsTab() {
     completed: true,
   });
 
+  // Auto-scroll when dragging near viewport edges
+  useEffect(() => {
+    if (!draggingItem) return;
+
+    let animationFrameId: number;
+    let mouseY = 0;
+
+    const SCROLL_ZONE = 100; // pixels from edge to trigger scroll
+    const MAX_SCROLL_SPEED = 15; // max pixels per frame
+
+    const handleMouseMove = (e: MouseEvent) => {
+      mouseY = e.clientY;
+    };
+
+    const autoScroll = () => {
+      const viewportHeight = window.innerHeight;
+      const distanceFromBottom = viewportHeight - mouseY;
+      const distanceFromTop = mouseY;
+
+      let scrollAmount = 0;
+
+      // Near bottom - scroll down
+      if (distanceFromBottom < SCROLL_ZONE && distanceFromBottom > 0) {
+        const intensity = 1 - distanceFromBottom / SCROLL_ZONE;
+        scrollAmount = intensity * MAX_SCROLL_SPEED;
+      }
+      // Near top - scroll up
+      else if (distanceFromTop < SCROLL_ZONE && distanceFromTop > 0) {
+        const intensity = 1 - distanceFromTop / SCROLL_ZONE;
+        scrollAmount = -(intensity * MAX_SCROLL_SPEED);
+      }
+
+      if (scrollAmount !== 0) {
+        window.scrollBy({ top: scrollAmount, behavior: 'instant' });
+      }
+
+      animationFrameId = requestAnimationFrame(autoScroll);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    animationFrameId = requestAnimationFrame(autoScroll);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [draggingItem]);
+
   const campaignSummaries = useMemo<CampaignSummary[]>(() => {
     const map = new Map<string, CampaignSummary>();
 
