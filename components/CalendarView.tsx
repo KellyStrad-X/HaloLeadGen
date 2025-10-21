@@ -148,16 +148,27 @@ export default function CalendarView({
     return (
       <div
         className="flex flex-col gap-1 overflow-hidden"
+        style={{ cursor: event.type === 'tentative' ? 'grab' : 'pointer' }}
         draggable={event.type === 'tentative'}
         onDragStart={(e) => {
           if (event.type === 'tentative' && event.leadId) {
             e.dataTransfer.effectAllowed = 'move';
+            // CRITICAL: Must set data for HTML5 drag-and-drop to work
+            e.dataTransfer.setData('text/plain', event.id);
             // Notify parent component about drag state
             onDragStateChange?.({ type: 'lead', id: event.id });
+            // Change cursor during drag
+            if (e.currentTarget instanceof HTMLElement) {
+              e.currentTarget.style.cursor = 'grabbing';
+            }
           }
         }}
-        onDragEnd={() => {
+        onDragEnd={(e) => {
           onDragStateChange?.(null);
+          // Reset cursor
+          if (e.currentTarget instanceof HTMLElement) {
+            e.currentTarget.style.cursor = 'grab';
+          }
         }}
       >
         <div className="flex items-center justify-between gap-2">
@@ -251,10 +262,16 @@ export default function CalendarView({
 
         .rbc-event {
           cursor: pointer;
+          user-select: none;
+          -webkit-user-select: none;
         }
 
         .rbc-event:hover {
           opacity: 0.9;
+        }
+
+        .rbc-event:active {
+          cursor: grabbing;
         }
 
         .rbc-show-more {
