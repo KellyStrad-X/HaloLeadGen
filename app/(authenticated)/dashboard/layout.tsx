@@ -62,7 +62,7 @@ export default function DashboardLayout({
       <div className="min-h-screen bg-[#24292e]">
         {/* Header */}
         <header className="bg-[#1e2227] border-b border-[#373e47]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               {/* Logo & Navigation */}
               <div className="flex items-center gap-8">
@@ -70,7 +70,7 @@ export default function DashboardLayout({
                   <img
                     src="/halo-logo.png"
                     alt="Halo Lead Gen"
-                    className="h-16 w-auto"
+                    className="h-20 w-auto"
                   />
                 </Link>
 

@@ -1088,13 +1088,7 @@ export default function LeadsTab() {
         </div>
       )}
 
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold text-white">Lead Pipeline</h1>
-          <p className="text-sm text-gray-400">
-            Drag leads into the job board to schedule inspections and track progress.
-          </p>
-        </div>
+      <div className="flex items-center justify-end gap-3">
         <div className="md:hidden">
           <div className="flex rounded-lg border border-[#373e47] bg-[#0d1117] p-1 text-xs font-medium text-gray-400">
             <button
@@ -1237,13 +1231,13 @@ export default function LeadsTab() {
                   setActiveBucket('leads');
                   setLeadsPage(0);
                 }}
-                className={`flex-shrink-0 rounded-md border px-4 py-2 text-xs font-medium transition ${
+                className={`flex-1 rounded-md border px-3 py-2 text-xs font-medium transition ${
                   activeBucket === 'leads'
                     ? 'border-cyan-500/60 bg-cyan-500/20 text-cyan-300'
                     : 'border-gray-500/40 bg-gray-500/10 text-gray-300 hover:bg-gray-500/20'
                 }`}
               >
-                Lead Bucket ({sortedLeads.length})
+                Leads ({sortedLeads.length})
               </button>
               <button
                 type="button"
@@ -1251,14 +1245,14 @@ export default function LeadsTab() {
                   setActiveBucket('cold');
                   setLeadsPage(0);
                 }}
-                className={`flex-shrink-0 rounded-md border px-4 py-2 text-xs font-medium transition flex items-center gap-1.5 ${
+                className={`flex-1 rounded-md border px-3 py-2 text-xs font-medium transition flex items-center justify-center gap-1 ${
                   activeBucket === 'cold'
                     ? 'border-cyan-500/60 bg-cyan-500/20 text-cyan-300'
                     : 'border-gray-500/40 bg-gray-500/10 text-gray-300 hover:bg-gray-500/20'
                 }`}
               >
                 <span>❄️</span>
-                <span>Cold Bucket ({coldLeads.length})</span>
+                <span>Cold ({coldLeads.length})</span>
               </button>
               <button
                 type="button"
@@ -1266,14 +1260,14 @@ export default function LeadsTab() {
                   setActiveBucket('completed');
                   setLeadsPage(0);
                 }}
-                className={`flex-shrink-0 rounded-md border px-4 py-2 text-xs font-medium transition flex items-center gap-1.5 ${
+                className={`flex-1 rounded-md border px-3 py-2 text-xs font-medium transition flex items-center justify-center gap-1 ${
                   activeBucket === 'completed'
                     ? 'border-cyan-500/60 bg-cyan-500/20 text-cyan-300'
                     : 'border-gray-500/40 bg-gray-500/10 text-gray-300 hover:bg-gray-500/20'
                 }`}
               >
                 <span>✓</span>
-                <span>Completed Bucket ({filteredJobs.completed.length})</span>
+                <span>Completed ({filteredJobs.completed.length})</span>
               </button>
             </div>
 
@@ -1300,7 +1294,7 @@ export default function LeadsTab() {
                 emptyLeadState
               ) : (
                 <>
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {paginatedLeads.map(renderLeadCard)}
                   </div>
 
@@ -1342,7 +1336,7 @@ export default function LeadsTab() {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {coldLeads.map(renderLeadCard)}
                 </div>
               )}
@@ -1359,7 +1353,7 @@ export default function LeadsTab() {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {filteredJobs.completed.map(renderJobCard)}
                 </div>
               )}
