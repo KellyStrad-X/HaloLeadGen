@@ -29,8 +29,10 @@ interface PromoteModeProps extends BaseJobModalProps {
     address: string | null;
     notes: string | null;
     campaignName: string;
+    tentativeDate?: string | null;
   };
   onContactAttempt?: (leadId: string, attempt: number, isCold: boolean) => Promise<void>;
+  onRemoveFromCalendar?: (leadId: string) => Promise<void>;
   job?: undefined;
 }
 
@@ -124,7 +126,7 @@ export default function JobModal(props: JobModalProps) {
       const jobInspector = props.job.inspector ?? '';
       setInspector(jobInspector);
       // Show custom input if inspector is not in the list
-      setShowCustomInspector(jobInspector && !inspectorsList.includes(jobInspector));
+      setShowCustomInspector(Boolean(jobInspector && !inspectorsList.includes(jobInspector)));
       setInternalNotes(props.job.internalNotes ?? '');
     }
   }, [isOpen, props, defaultStatus, inspectorsList]);
@@ -384,29 +386,54 @@ export default function JobModal(props: JobModalProps) {
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 border-t border-[#373e47] bg-[#1e2227] px-6 py-4">
-          <button
-            onClick={onClose}
-            disabled={isSubmitting}
-            className="rounded-lg bg-[#2d333b] px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-[#373e47] disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-            className="rounded-lg bg-cyan-500 px-6 py-2 text-sm font-semibold text-black transition-colors hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isSubmitting
-              ? 'Saving...'
-              : props.mode === 'promote'
-              ? contactAction === 'schedule'
-                ? 'Schedule Job'
-                : contactAction === 'cold'
-                ? 'Move to Cold Bucket'
-                : 'Save Contact Attempt'
-              : 'Save Changes'}
-          </button>
+        <div className="flex justify-between gap-3 border-t border-[#373e47] bg-[#1e2227] px-6 py-4">
+          <div>
+            {props.mode === 'promote' && props.lead.tentativeDate && props.onRemoveFromCalendar && (
+              <button
+                onClick={async () => {
+                  if (props.mode === 'promote' && props.onRemoveFromCalendar) {
+                    setIsSubmitting(true);
+                    try {
+                      await props.onRemoveFromCalendar(props.lead.id);
+                      onClose();
+                    } catch (error) {
+                      console.error('Error removing from calendar:', error);
+                    } finally {
+                      setIsSubmitting(false);
+                    }
+                  }
+                }}
+                disabled={isSubmitting}
+                className="rounded-lg bg-red-500/10 border border-red-500/40 px-4 py-2 text-sm font-medium text-red-300 transition-colors hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Remove from Calendar
+              </button>
+            )}
+          </div>
+          <div className="flex gap-3">
+            <button
+              onClick={onClose}
+              disabled={isSubmitting}
+              className="rounded-lg bg-[#2d333b] px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-[#373e47] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className="rounded-lg bg-cyan-500 px-6 py-2 text-sm font-semibold text-black transition-colors hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isSubmitting
+                ? 'Saving...'
+                : props.mode === 'promote'
+                ? contactAction === 'schedule'
+                  ? 'Schedule Job'
+                  : contactAction === 'cold'
+                  ? 'Move to Cold Bucket'
+                  : 'Save Contact Attempt'
+                : 'Save Changes'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

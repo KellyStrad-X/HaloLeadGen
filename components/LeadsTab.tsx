@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import LeadDetailsModal from './LeadDetailsModal';
 import JobModal, { type LeadJobStatus } from './JobModal';
+import CalendarView, { type CalendarEvent } from './CalendarView';
 
 type LegacyLeadStatus = 'new' | 'contacted' | 'scheduled' | 'completed';
 
@@ -145,6 +146,14 @@ function groupJobsById(jobs: JobBuckets) {
   return index;
 }
 
+// Helper to parse date strings in local timezone (not UTC)
+// YYYY-MM-DD strings are treated as UTC midnight by Date constructor,
+// causing calendar to show previous day for negative timezone offsets (US)
+function parseLocalDate(dateStr: string): Date {
+  // Append T12:00:00 to parse as noon local time, avoiding day shifts
+  return new Date(`${dateStr}T12:00:00`);
+}
+
 export default function LeadsTab() {
   const { user } = useAuth();
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -168,6 +177,7 @@ export default function LeadsTab() {
   const [leadsPage, setLeadsPage] = useState(0);
   const [showAllLeadsModal, setShowAllLeadsModal] = useState(false);
   const [showColdBucketModal, setShowColdBucketModal] = useState(false);
+  const [showCompletedJobsModal, setShowCompletedJobsModal] = useState(false);
   const [expandedJobSections, setExpandedJobSections] = useState<Record<LeadJobStatus, boolean>>({
     scheduled: true,
     completed: true,
@@ -292,6 +302,51 @@ export default function LeadsTab() {
   const leadsCountForSelected = filteredLeads.length;
   const jobsCountForSelected =
     filteredJobs.scheduled.length + filteredJobs.completed.length;
+
+  // Convert jobs and tentative leads to calendar events
+  const calendarEvents = useMemo<CalendarEvent[]>(() => {
+    const events: CalendarEvent[] = [];
+
+    // Add confirmed scheduled jobs to calendar
+    filteredJobs.scheduled.forEach((job) => {
+      if (job.scheduledInspectionDate) {
+        const date = parseLocalDate(job.scheduledInspectionDate);
+        events.push({
+          id: `job-${job.id}`,
+          title: job.customerName,
+          start: date,
+          end: date,
+          type: 'confirmed',
+          jobId: job.id,
+          customerName: job.customerName,
+          phone: job.phone,
+          email: job.email,
+          inspector: job.inspector,
+        });
+      }
+    });
+
+    // Add tentative leads to calendar
+    filteredLeads.forEach((lead) => {
+      if (lead.tentativeDate) {
+        const date = parseLocalDate(lead.tentativeDate);
+        events.push({
+          id: `lead-${lead.id}`,
+          title: lead.name,
+          start: date,
+          end: date,
+          type: 'tentative',
+          leadId: lead.id,
+          contactAttempt: lead.contactAttempt,
+          customerName: lead.name,
+          phone: lead.phone,
+          email: lead.email,
+        });
+      }
+    });
+
+    return events;
+  }, [filteredJobs.scheduled, filteredLeads]);
 
   useEffect(() => {
     if (selectedCampaignId === 'all') {
@@ -501,6 +556,170 @@ export default function LeadsTab() {
       } catch (err) {
         console.error('Update contact attempt error', err);
         setError(err instanceof Error ? err.message : 'Failed to update contact attempt');
+      } finally {
+        setIsMutating(false);
+      }
+    },
+    [user, loadData]
+  );
+
+  // Calendar event handlers
+  const handleCalendarEventClick = useCallback((event: CalendarEvent) => {
+    if (event.jobId) {
+      // Open edit modal for confirmed job
+      const job = jobIndex.get(event.jobId);
+      if (job) {
+        setJobModalState({
+          mode: 'edit',
+          job: {
+            ...job,
+          },
+        });
+      }
+    } else if (event.leadId) {
+      // Open contact modal for tentative lead
+      const lead = leads.find((l) => l.id === event.leadId);
+      if (lead) {
+        setJobModalState({
+          mode: 'promote',
+          lead: {
+            ...lead,
+          },
+          targetStatus: 'scheduled',
+        });
+      }
+    }
+  }, [jobIndex, leads]);
+
+  const handleCalendarEventDrop = useCallback(
+    async (event: CalendarEvent, start: Date, end: Date) => {
+      if (event.jobId) {
+        // Reschedule confirmed job
+        await updateJob(event.jobId, {
+          scheduledInspectionDate: start.toISOString().slice(0, 10),
+        });
+      } else if (event.leadId) {
+        // Update tentative date for lead
+        if (!user) return;
+
+        setIsMutating(true);
+        try {
+          const token = await user.getIdToken();
+          const response = await fetch(`/api/dashboard/leads/${event.leadId}/tentative-date`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              tentativeDate: start.toISOString().slice(0, 10),
+            }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || 'Failed to update tentative date');
+          }
+
+          await loadData();
+        } catch (err) {
+          console.error('Error updating tentative date:', err);
+          setError(err instanceof Error ? err.message : 'Failed to update tentative date');
+        } finally {
+          setIsMutating(false);
+        }
+      }
+    },
+    [updateJob, user, loadData]
+  );
+
+  const handleCalendarSlotSelect = useCallback(
+    async (slotInfo: { start: Date; end: Date }) => {
+      // If we're dragging a lead, set its tentative date to the selected slot
+      if (draggingItem && draggingItem.type === 'lead') {
+        const lead = leads.find((l) => l.id === draggingItem.id);
+        if (!lead || !user) return;
+
+        const leadId = lead.id; // Store ID to re-fetch after refresh
+
+        setIsMutating(true);
+        try {
+          const token = await user.getIdToken();
+          const response = await fetch(`/api/dashboard/leads/${leadId}/tentative-date`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              tentativeDate: slotInfo.start.toISOString().slice(0, 10),
+            }),
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || 'Failed to set tentative date');
+          }
+
+          // Refresh data to get updated lead with tentativeDate
+          await loadData();
+
+          // Re-fetch the lead from updated state to get fresh tentativeDate
+          // We need to use a slight delay or fetch directly from API since React state updates are async
+          // For now, we'll fetch the updated lead list synchronously from the API
+          const leadsResponse = await fetch('/api/dashboard/leads', {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          if (leadsResponse.ok) {
+            const leadsData = await leadsResponse.json();
+            const updatedLead = leadsData.leads?.find((l: Lead) => l.id === leadId);
+
+            if (updatedLead) {
+              // Open contact modal with the FRESH lead object that includes tentativeDate
+              openPromoteModal(updatedLead, 'scheduled');
+            }
+          }
+        } catch (err) {
+          console.error('Error setting tentative date:', err);
+          setError(err instanceof Error ? err.message : 'Failed to set tentative date');
+        } finally {
+          setIsMutating(false);
+          setDraggingItem(null);
+        }
+      }
+    },
+    [draggingItem, leads, user, loadData, openPromoteModal]
+  );
+
+  const handleRemoveFromCalendar = useCallback(
+    async (leadId: string) => {
+      if (!user) return;
+
+      setIsMutating(true);
+      try {
+        const token = await user.getIdToken();
+        const response = await fetch(`/api/dashboard/leads/${leadId}/tentative-date`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            tentativeDate: null,
+          }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || 'Failed to remove from calendar');
+        }
+
+        await loadData();
+      } catch (err) {
+        console.error('Error removing from calendar:', err);
+        setError(err instanceof Error ? err.message : 'Failed to remove from calendar');
+        throw err; // Re-throw so JobModal can handle it
       } finally {
         setIsMutating(false);
       }
@@ -951,77 +1170,46 @@ export default function LeadsTab() {
         </div>
       </div>
 
-      {/* Jobs Pipeline - Full Width Below */}
+      {/* Scheduled Inspections Calendar - Full Width Below */}
       <div className={`${activeMobileView === 'leads' ? 'hidden md:block' : ''}`}>
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-400">
-          Jobs Pipeline ({jobsCountForSelected})
-        </h2>
-        <div className="flex flex-col gap-3 md:flex-row md:items-start">
-          {JOB_COLUMNS.map((column) => {
-            const isExpanded = expandedJobSections[column.key];
-            const jobsInSection = filteredJobs[column.key];
-            return (
-              <div
-                key={column.key}
-                className={`flex-1 rounded-lg border bg-[#0d1117] transition ${column.accent}`}
-              >
-                <button
-                  type="button"
-                  onClick={() =>
-                    setExpandedJobSections((prev) => ({
-                      ...prev,
-                      [column.key]: !prev[column.key],
-                    }))
-                  }
-                  className="flex w-full items-center justify-between p-4 text-left"
-                >
-                  <div className="flex items-center gap-3">
-                    <svg
-                      className={`h-4 w-4 text-gray-400 transition-transform ${
-                        isExpanded ? 'rotate-90' : ''
-                      }`}
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                    <div>
-                      <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-300">
-                        {column.title}
-                      </h3>
-                      <p className="hidden text-xs text-gray-500 lg:block">{column.description}</p>
-                    </div>
-                  </div>
-                  <span className="rounded-full bg-[#1e2227] px-3 py-1 text-xs font-semibold text-gray-300">
-                    {jobsInSection.length}
-                  </span>
-                </button>
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
+            Scheduled Inspections ({filteredJobs.scheduled.length + filteredLeads.filter(l => l.tentativeDate).length})
+          </h2>
+          <button
+            type="button"
+            onClick={() => setShowCompletedJobsModal(true)}
+            className="rounded-md border border-emerald-500/40 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-300 transition hover:bg-emerald-500/20"
+          >
+            View Completed Jobs ({filteredJobs.completed.length})
+          </button>
+        </div>
 
-                {isExpanded && (
-                  <div
-                    onDragOver={handleDragOver}
-                    onDrop={(event) => handleJobDrop(event, column.key)}
-                    className={`border-t p-4 transition ${
-                      isColumnActive(column.key)
-                        ? 'border-2 border-dashed border-cyan-500/40 bg-cyan-500/5'
-                        : 'border-[#2d333b]'
-                    }`}
-                  >
-                    {jobsInSection.length === 0 ? (
-                      <div className="rounded-md border border-dashed border-[#373e47] bg-[#161c22] p-6 text-center text-xs text-gray-500">
-                        Drop a lead or move an existing job here.
-                      </div>
-                    ) : (
-                      <div className="max-h-[500px] space-y-3 overflow-y-auto pr-2">
-                        {jobsInSection.map(renderJobCard)}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+        {/* Calendar drop zone */}
+        <div
+          className={`relative ${
+            draggingItem?.type === 'lead' ? 'ring-2 ring-cyan-500/50 rounded-lg' : ''
+          }`}
+          onDragOver={(e) => {
+            if (draggingItem?.type === 'lead') {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = 'copy';
+            }
+          }}
+        >
+          {draggingItem?.type === 'lead' && (
+            <div className="absolute top-0 left-0 right-0 z-10 bg-cyan-500/10 border border-cyan-500/40 rounded-t-lg p-3 text-center text-sm text-cyan-300">
+              Click on a date to schedule this lead
+            </div>
+          )}
+          <div className={draggingItem?.type === 'lead' ? 'mt-12' : ''}>
+            <CalendarView
+              events={calendarEvents}
+              onEventClick={handleCalendarEventClick}
+              onEventDrop={handleCalendarEventDrop}
+              onSelectSlot={handleCalendarSlotSelect}
+            />
+          </div>
         </div>
       </div>
 
@@ -1048,6 +1236,7 @@ export default function LeadsTab() {
           }}
           defaultStatus={jobModalState.targetStatus}
           onContactAttempt={updateLeadContactAttempt}
+          onRemoveFromCalendar={handleRemoveFromCalendar}
           onSubmit={async ({ status, scheduledInspectionDate, inspector, internalNotes }) => {
             await promoteLead(jobModalState.lead.id, {
               status,
@@ -1151,6 +1340,51 @@ export default function LeadsTab() {
               ) : (
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {coldLeads.map(renderLeadCard)}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Completed Jobs Modal */}
+      {showCompletedJobsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="fixed inset-0 bg-black/75"
+            onClick={() => setShowCompletedJobsModal(false)}
+          />
+          <div className="relative z-10 w-full max-w-6xl max-h-[90vh] overflow-hidden rounded-lg border border-[#373e47] bg-[#1e2227] shadow-xl">
+            <div className="flex items-center justify-between border-b border-[#373e47] p-4 bg-[#2d333b]">
+              <div>
+                <h2 className="text-lg font-semibold text-white">
+                  Completed Jobs ({filteredJobs.completed.length})
+                </h2>
+                <p className="text-sm text-gray-400">
+                  Finished inspections (visible on Halo Map for billing)
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCompletedJobsModal(false)}
+                className="rounded-md p-2 text-gray-400 transition hover:bg-[#2d333b] hover:text-white"
+              >
+                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="overflow-y-auto p-4" style={{ maxHeight: 'calc(90vh - 80px)' }}>
+              {filteredJobs.completed.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <p className="text-gray-400">No completed jobs yet</p>
+                  <p className="mt-2 text-sm text-gray-500">
+                    Jobs marked as completed will appear here
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {filteredJobs.completed.map(renderJobCard)}
                 </div>
               )}
             </div>
