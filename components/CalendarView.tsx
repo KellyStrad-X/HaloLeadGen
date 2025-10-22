@@ -447,17 +447,14 @@ export default function CalendarView({
 
         .rbc-month-row {
           border-color: #373e47 !important;
-          flex: 1 1 0;
-          min-height: 0;
-          /* Equal height distribution - each row gets equal share of 1200px */
+          height: 150px;
+          /* Fixed height: ~30px heading + 3 events × ~35px = 135px, rounded to 150px */
+          /* This constrains eventSpace so react-big-calendar calculates rowLimit = 3 */
         }
 
         .rbc-row-content {
           position: relative;
-          max-height: 120px;
-          /* Limit to fit 3 events (~30px each) + spacing, then trigger +X more */
-          display: flex;
-          flex-direction: column;
+          /* Height constraint is on .rbc-month-row above - that's what react-big-calendar measures */
         }
 
         /* When dragging external lead, make row content transparent to allow drops */
