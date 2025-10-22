@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 // @ts-ignore - react-big-calendar types are incomplete
 import { Calendar, dateFnsLocalizer, Event } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
@@ -47,6 +47,9 @@ export default function CalendarView({
   onSelectSlot,
   onDragStateChange,
 }: CalendarViewProps) {
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentView, setCurrentView] = useState<'month' | 'week'>('month');
+
   // Custom date cell wrapper to accept drops from external sources
   const DateCellWrapper = ({ value, children }: { value: Date; children: React.ReactNode }) => {
     return (
@@ -82,7 +85,7 @@ export default function CalendarView({
     );
   };
 
-  // Custom toolbar to hide Today/Back/Next buttons
+  // Custom toolbar with working navigation
   const CustomToolbar = (toolbar: any) => {
     const goToBack = () => {
       toolbar.onNavigate('PREV');
@@ -97,8 +100,7 @@ export default function CalendarView({
     };
 
     const label = () => {
-      const date = toolbar.date;
-      return format(date, 'MMMM yyyy');
+      return format(currentDate, 'MMMM yyyy');
     };
 
     return (
@@ -140,9 +142,12 @@ export default function CalendarView({
         {/* Right side - View toggle (Month/Week only) */}
         <div className="flex gap-2">
           <button
-            onClick={() => toolbar.onView('month')}
+            onClick={() => {
+              setCurrentView('month');
+              toolbar.onView('month');
+            }}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              toolbar.view === 'month'
+              currentView === 'month'
                 ? 'bg-cyan-500 text-black'
                 : 'bg-[#2d333b] text-white hover:bg-[#373e47] border border-[#373e47]'
             }`}
@@ -150,9 +155,12 @@ export default function CalendarView({
             Month
           </button>
           <button
-            onClick={() => toolbar.onView('week')}
+            onClick={() => {
+              setCurrentView('week');
+              toolbar.onView('week');
+            }}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              toolbar.view === 'week'
+              currentView === 'week'
                 ? 'bg-cyan-500 text-black'
                 : 'bg-[#2d333b] text-white hover:bg-[#373e47] border border-[#373e47]'
             }`}
@@ -402,19 +410,64 @@ export default function CalendarView({
           width: 100%;
         }
 
+        /* Day cell event container - scrollable when overflow */
+        .rbc-row-content {
+          max-height: 120px;
+          overflow-y: auto;
+          overflow-x: hidden;
+        }
+
+        .rbc-row-content::-webkit-scrollbar {
+          width: 4px;
+        }
+
+        .rbc-row-content::-webkit-scrollbar-track {
+          background: transparent;
+        }
+
+        .rbc-row-content::-webkit-scrollbar-thumb {
+          background: #373e47;
+          border-radius: 2px;
+        }
+
+        .rbc-row-content::-webkit-scrollbar-thumb:hover {
+          background: #4a5158;
+        }
+
         .rbc-show-more {
           background-color: #2d333b;
           color: #06b6d4;
-          padding: 4px 8px;
-          border-radius: 4px;
+          padding: 6px 12px;
+          border-radius: 6px;
           font-size: 0.75rem;
+          font-weight: 600;
+          cursor: pointer;
+          transition: all 0.2s;
         }
 
+        .rbc-show-more:hover {
+          background-color: #373e47;
+          color: #22d3ee;
+        }
+
+        /* Enhanced overlay popup */
         .rbc-overlay {
           background: #1e2227;
-          border: 1px solid #373e47;
-          border-radius: 8px;
-          padding: 8px;
+          border: 2px solid #06b6d4;
+          border-radius: 12px;
+          padding: 16px;
+          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
+          z-index: 1000;
+          max-height: 400px;
+          overflow-y: auto;
+          min-width: 300px;
+        }
+
+        .rbc-overlay-header {
+          color: #06b6d4;
+          font-weight: 600;
+          margin-bottom: 12px;
+          font-size: 0.875rem;
         }
       `}</style>
 
@@ -424,6 +477,10 @@ export default function CalendarView({
         startAccessor="start"
         endAccessor="end"
         style={{ height: '1200px' }}
+        date={currentDate}
+        view={currentView}
+        onNavigate={(date: Date) => setCurrentDate(date)}
+        onView={(view: string) => setCurrentView(view as 'month' | 'week')}
         onSelectEvent={onEventClick}
         onSelectSlot={onSelectSlot}
         selectable
@@ -434,7 +491,6 @@ export default function CalendarView({
           dateCellWrapper: DateCellWrapper,
         }}
         views={['month', 'week']}
-        defaultView="month"
         popup
       />
     </div>

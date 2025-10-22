@@ -56,6 +56,14 @@ interface CampaignSummary {
   name: string;
   newLeadCount: number;
   jobCount: number;
+  campaignStatus?: 'Active' | 'Inactive';
+}
+
+interface DashboardCampaign {
+  id: string;
+  campaignName: string;
+  campaignStatus: 'Active' | 'Inactive';
+  leadCount: number;
 }
 
 interface PromoteModalState {
@@ -188,6 +196,7 @@ export default function LeadsTab() {
     scheduled: true,
     completed: true,
   });
+  const [allCampaigns, setAllCampaigns] = useState<DashboardCampaign[]>([]);
 
   // Auto-scroll when dragging near viewport edges
   useEffect(() => {
@@ -238,26 +247,44 @@ export default function LeadsTab() {
   const campaignSummaries = useMemo<CampaignSummary[]>(() => {
     const map = new Map<string, CampaignSummary>();
 
-    const upsert = (id: string, name: string) => {
-      if (!map.has(id)) {
-        map.set(id, {
-          id,
-          name,
+    // First, add ALL campaigns from the fetched list
+    allCampaigns.forEach((campaign) => {
+      map.set(campaign.id, {
+        id: campaign.id,
+        name: campaign.campaignName,
+        newLeadCount: 0,
+        jobCount: 0,
+        campaignStatus: campaign.campaignStatus,
+      });
+    });
+
+    // Then update counts from leads (excluding promoted leads)
+    leads.forEach((lead) => {
+      if (!map.has(lead.campaignId)) {
+        // Campaign exists in leads but not in allCampaigns (shouldn't happen, but defensive)
+        map.set(lead.campaignId, {
+          id: lead.campaignId,
+          name: lead.campaignName,
           newLeadCount: 0,
           jobCount: 0,
         });
       }
-    };
-
-    leads.forEach((lead) => {
-      upsert(lead.campaignId, lead.campaignName);
       const entry = map.get(lead.campaignId)!;
       entry.newLeadCount += 1;
     });
 
+    // Update job counts
     Object.values(jobs).forEach((list) => {
       list.forEach((job) => {
-        upsert(job.campaignId, job.campaignName);
+        if (!map.has(job.campaignId)) {
+          // Campaign exists in jobs but not in allCampaigns (shouldn't happen, but defensive)
+          map.set(job.campaignId, {
+            id: job.campaignId,
+            name: job.campaignName,
+            newLeadCount: 0,
+            jobCount: 0,
+          });
+        }
         const entry = map.get(job.campaignId)!;
         entry.jobCount += 1;
       });
@@ -265,6 +292,12 @@ export default function LeadsTab() {
 
     const result = Array.from(map.values());
     result.sort((a, b) => {
+      // Sort active campaigns before inactive
+      if (a.campaignStatus !== b.campaignStatus) {
+        if (a.campaignStatus === 'Active') return -1;
+        if (b.campaignStatus === 'Active') return 1;
+      }
+      // Within same status, sort by lead count, then job count, then name
       if (a.newLeadCount !== b.newLeadCount) {
         return b.newLeadCount - a.newLeadCount;
       }
@@ -275,7 +308,7 @@ export default function LeadsTab() {
     });
 
     return result;
-  }, [leads, jobs]);
+  }, [leads, jobs, allCampaigns]);
 
   const campaignOptions = useMemo(() => {
     const totalJobs = jobs.scheduled.length + jobs.completed.length;
@@ -437,11 +470,14 @@ export default function LeadsTab() {
 
     try {
       const token = await user.getIdToken();
-      const [leadsResponse, jobsResponse] = await Promise.all([
+      const [leadsResponse, jobsResponse, campaignsResponse] = await Promise.all([
         fetch('/api/dashboard/leads', {
           headers: { Authorization: `Bearer ${token}` },
         }),
         fetch('/api/dashboard/jobs', {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch('/api/dashboard/campaigns', {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
@@ -456,14 +492,21 @@ export default function LeadsTab() {
         throw new Error(payload.error || 'Failed to load jobs');
       }
 
+      if (!campaignsResponse.ok) {
+        const payload = await campaignsResponse.json().catch(() => ({}));
+        throw new Error(payload.error || 'Failed to load campaigns');
+      }
+
       const leadsData = await leadsResponse.json();
       const jobsData: JobsResponse = await jobsResponse.json();
+      const campaignsData = await campaignsResponse.json();
 
       setLeads(leadsData.leads ?? []);
       setJobs({
         scheduled: jobsData.jobs?.scheduled ?? [],
         completed: jobsData.jobs?.completed ?? [],
       });
+      setAllCampaigns(campaignsData.campaigns ?? []);
     } catch (err) {
       console.error('Error loading leads/jobs', err);
       setError(err instanceof Error ? err.message : 'Failed to load leads and jobs');
@@ -770,22 +813,8 @@ export default function LeadsTab() {
           // Refresh data to get updated lead with tentativeDate
           await loadData();
 
-          // Re-fetch the lead from updated state to get fresh tentativeDate
-          // We need to use a slight delay or fetch directly from API since React state updates are async
-          // For now, we'll fetch the updated lead list synchronously from the API
-          const leadsResponse = await fetch('/api/dashboard/leads', {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-
-          if (leadsResponse.ok) {
-            const leadsData = await leadsResponse.json();
-            const updatedLead = leadsData.leads?.find((l: Lead) => l.id === leadId);
-
-            if (updatedLead) {
-              // Open contact modal with the FRESH lead object that includes tentativeDate
-              openPromoteModal(updatedLead, 'scheduled');
-            }
-          }
+          // Modal removed for faster workflow - contractors can drag multiple leads
+          // and click them later to contact
 
           // Only clear drag state if successful
           setDraggingItem(null);
@@ -946,11 +975,22 @@ export default function LeadsTab() {
           // Set drag image to show the card being dragged
           const target = event.currentTarget as HTMLElement;
           const clone = target.cloneNode(true) as HTMLElement;
+          clone.style.position = 'absolute';
+          clone.style.top = '-9999px';
+          clone.style.left = '-9999px';
           clone.style.opacity = '0.8';
           clone.style.width = target.offsetWidth + 'px';
+          clone.style.pointerEvents = 'none';
           document.body.appendChild(clone);
           event.dataTransfer.setDragImage(clone, 0, 0);
-          setTimeout(() => document.body.removeChild(clone), 0);
+          // Remove clone after drag starts (longer delay for browser to capture)
+          requestAnimationFrame(() => {
+            setTimeout(() => {
+              if (clone.parentNode) {
+                document.body.removeChild(clone);
+              }
+            }, 50);
+          });
         }}
         onDragEnd={() => setDraggingItem(null)}
         className="rounded-lg border border-[#373e47] bg-[#1e2227] p-4 shadow-sm transition ring-cyan-500/40 hover:ring-2"
@@ -1031,11 +1071,22 @@ export default function LeadsTab() {
         // Set drag image to show the card being dragged
         const target = event.currentTarget as HTMLElement;
         const clone = target.cloneNode(true) as HTMLElement;
+        clone.style.position = 'absolute';
+        clone.style.top = '-9999px';
+        clone.style.left = '-9999px';
         clone.style.opacity = '0.8';
         clone.style.width = target.offsetWidth + 'px';
+        clone.style.pointerEvents = 'none';
         document.body.appendChild(clone);
         event.dataTransfer.setDragImage(clone, 0, 0);
-        setTimeout(() => document.body.removeChild(clone), 0);
+        // Remove clone after drag starts (longer delay for browser to capture)
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            if (clone.parentNode) {
+              document.body.removeChild(clone);
+            }
+          }, 50);
+        });
       }}
       onDragEnd={() => setDraggingItem(null)}
       className="rounded-lg border border-[#373e47] bg-[#1e2227] p-4 shadow-sm transition ring-blue-500/40 hover:ring-2"
@@ -1217,6 +1268,15 @@ export default function LeadsTab() {
           <div className="max-h-[600px] space-y-2 overflow-y-auto pr-2">
             {campaignOptions.map((option) => {
               const isSelected = option.id === selectedCampaignId;
+              const hasNoActivity = option.newLeadCount === 0 && option.jobCount === 0;
+              const statusTag = option.id === 'all'
+                ? null
+                : option.campaignStatus === 'Inactive'
+                ? '(Inactive)'
+                : hasNoActivity
+                ? '(Active) (No Leads)'
+                : '(Active)';
+
               return (
                 <button
                   key={option.id}
@@ -1229,7 +1289,14 @@ export default function LeadsTab() {
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm font-medium text-white">{option.name}</span>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-sm font-medium text-white">{option.name}</span>
+                      {statusTag && (
+                        <span className="ml-1.5 text-[10px] text-gray-500">
+                          {statusTag}
+                        </span>
+                      )}
+                    </div>
                     {option.newLeadCount > 0 && (
                       <span className="rounded-full bg-cyan-500/20 px-2 py-0.5 text-[11px] font-semibold text-cyan-300">
                         +{option.newLeadCount}
@@ -1383,7 +1450,7 @@ export default function LeadsTab() {
               <button
                 type="button"
                 onClick={() => setShowAllLeadsModal(true)}
-                className="rounded-md border border-cyan-500/40 bg-cyan-500/10 px-3 py-1.5 text-xs font-medium text-cyan-300 transition hover:bg-cyan-500/20"
+                className="rounded-md border border-gray-500/40 bg-gray-500/10 px-3 py-1.5 text-xs font-medium text-gray-300 transition hover:bg-gray-500/20"
               >
                 Lead Bucket
               </button>
@@ -1522,7 +1589,7 @@ export default function LeadsTab() {
 
       {/* Scheduled Inspections Calendar - Full Width Below with More Spacing */}
       <div className={`mt-8 ${activeMobileView === 'leads' ? 'hidden md:block' : ''}`}>
-        <div className="mb-4 flex justify-end">
+        <div className="mb-4 -mx-16 lg:-mx-24 px-16 lg:px-24">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
             Scheduled Inspections ({filteredJobs.scheduled.length + leads.filter(l => l.tentativeDate && !l.isColdLead).length})
           </h2>
@@ -1531,7 +1598,7 @@ export default function LeadsTab() {
         {/* Calendar - Full Width */}
         <div className="relative -mx-16 lg:-mx-24">
           {draggingItem?.type === 'lead' && (
-            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-cyan-500/10 border border-cyan-500/40 rounded-lg px-6 py-3 text-center text-sm text-cyan-300 pointer-events-none">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 bg-cyan-500/10 border border-cyan-500/40 rounded-lg px-6 py-3 text-center text-sm text-cyan-300 pointer-events-none animate-pulse">
               <svg className="inline-block w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
