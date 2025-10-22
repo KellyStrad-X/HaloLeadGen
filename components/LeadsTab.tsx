@@ -1275,24 +1275,21 @@ export default function LeadsTab() {
               if (option.id !== 'all') {
                 if (option.campaignStatus === 'Inactive') {
                   statusBadge = (
-                    <span
-                      className="inline-block h-2 w-2 rounded-full bg-gray-500"
-                      title="Inactive"
-                    />
+                    <span className="inline-flex items-center rounded-full bg-gray-500/20 px-2 py-0.5 text-[10px] font-semibold text-gray-400">
+                      Inactive
+                    </span>
                   );
                 } else if (hasNoActivity) {
                   statusBadge = (
-                    <span
-                      className="inline-block h-2 w-2 rounded-full bg-yellow-500"
-                      title="Active (No Leads)"
-                    />
+                    <span className="inline-flex items-center rounded-full bg-yellow-500/20 px-2 py-0.5 text-[10px] font-semibold text-yellow-400">
+                      No Leads
+                    </span>
                   );
                 } else {
                   statusBadge = (
-                    <span
-                      className="inline-block h-2 w-2 rounded-full bg-blue-500"
-                      title="Active"
-                    />
+                    <span className="inline-flex items-center rounded-full bg-blue-500/20 px-2 py-0.5 text-[10px] font-semibold text-blue-400">
+                      Active
+                    </span>
                   );
                 }
               }
@@ -1605,7 +1602,7 @@ export default function LeadsTab() {
 
       {/* Scheduled Inspections Calendar - Full Width Below with More Spacing */}
       <div className={`mt-8 ${activeMobileView === 'leads' ? 'hidden md:block' : ''}`}>
-        <div className="mb-4 -mx-16 lg:-mx-24 px-16 lg:px-24">
+        <div className="mb-4">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
             Scheduled Inspections ({filteredJobs.scheduled.length + leads.filter(l => l.tentativeDate && !l.isColdLead).length})
           </h2>
@@ -1626,6 +1623,10 @@ export default function LeadsTab() {
             onEventClick={handleCalendarEventClick}
             onSelectSlot={handleCalendarSlotSelect}
             onDragStateChange={setDraggingItem}
+            currentDate={calendarDate}
+            currentView={calendarView}
+            onDateChange={setCalendarDate}
+            onViewChange={setCalendarView}
           />
         </div>
       </div>
