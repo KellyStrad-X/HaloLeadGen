@@ -1267,30 +1267,34 @@ export default function LeadsTab() {
           <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-400">
             Campaigns
           </h2>
-          <div className="max-h-[480px] space-y-2 overflow-y-auto pr-2">
+          <div className="max-h-[400px] space-y-2 overflow-y-auto pr-2">
             {campaignOptions.map((option) => {
               const isSelected = option.id === selectedCampaignId;
               const hasNoActivity = option.newLeadCount === 0 && option.jobCount === 0;
-              let statusBadge: React.ReactNode = null;
+              // Status badges for bottom right
+              const statusBadges: React.ReactNode[] = [];
               if (option.id !== 'all') {
                 if (option.campaignStatus === 'Inactive') {
-                  statusBadge = (
-                    <span className="inline-flex items-center rounded-full bg-gray-500/20 px-2 py-0.5 text-[10px] font-semibold text-gray-400">
+                  statusBadges.push(
+                    <span key="inactive" className="inline-flex items-center rounded-full bg-gray-500/20 px-2 py-0.5 text-[10px] font-semibold text-gray-400">
                       Inactive
                     </span>
                   );
-                } else if (hasNoActivity) {
-                  statusBadge = (
-                    <span className="inline-flex items-center rounded-full bg-yellow-500/20 px-2 py-0.5 text-[10px] font-semibold text-yellow-400">
-                      No Leads
-                    </span>
-                  );
                 } else {
-                  statusBadge = (
-                    <span className="inline-flex items-center rounded-full bg-blue-500/20 px-2 py-0.5 text-[10px] font-semibold text-blue-400">
+                  // Active campaign - show Active badge
+                  statusBadges.push(
+                    <span key="active" className="inline-flex items-center rounded-full bg-blue-500/20 px-2 py-0.5 text-[10px] font-semibold text-blue-400">
                       Active
                     </span>
                   );
+                  // If no leads, also show No Leads badge
+                  if (hasNoActivity) {
+                    statusBadges.push(
+                      <span key="no-leads" className="inline-flex items-center rounded-full bg-yellow-500/20 px-2 py-0.5 text-[10px] font-semibold text-yellow-400">
+                        No Leads
+                      </span>
+                    );
+                  }
                 }
               }
 
@@ -1305,20 +1309,26 @@ export default function LeadsTab() {
                       : 'border-[#373e47] hover:border-cyan-500/40 hover:bg-[#161c22]'
                   }`}
                 >
+                  {/* Top row: Campaign name and new lead count */}
                   <div className="flex items-center justify-between gap-2">
-                    <div className="flex min-w-0 flex-1 items-center gap-2">
-                      {statusBadge}
-                      <span className="truncate text-sm font-medium text-white">{option.name}</span>
-                    </div>
+                    <span className="truncate text-sm font-medium text-white">{option.name}</span>
                     {option.newLeadCount > 0 && (
                       <span className="flex-shrink-0 rounded-full bg-cyan-500/20 px-2 py-0.5 text-[11px] font-semibold text-cyan-300">
                         +{option.newLeadCount}
                       </span>
                     )}
                   </div>
-                  <p className="mt-1 text-xs text-gray-500">
-                    {option.jobCount} {option.jobCount === 1 ? 'job' : 'jobs'}
-                  </p>
+                  {/* Bottom row: Job count (left) and status badges (right) */}
+                  <div className="mt-1 flex items-center justify-between gap-2">
+                    <p className="text-xs text-gray-500">
+                      {option.jobCount} {option.jobCount === 1 ? 'job' : 'jobs'}
+                    </p>
+                    {statusBadges.length > 0 && (
+                      <div className="flex gap-1">
+                        {statusBadges}
+                      </div>
+                    )}
+                  </div>
                 </button>
               );
             })}

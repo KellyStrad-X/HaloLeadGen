@@ -501,8 +501,13 @@ export default function CalendarView({
           toolbar: CustomToolbar,
           dateCellWrapper: DateCellWrapper,
         }}
-        views={['month', 'week']}
+        views={{
+          month: true,
+          week: true,
+        }}
+        max={3}
         popup
+        showMultiDayTimes
       />
     </div>
   );
