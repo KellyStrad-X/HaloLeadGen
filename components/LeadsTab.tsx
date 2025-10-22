@@ -1267,7 +1267,7 @@ export default function LeadsTab() {
           <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-400">
             Campaigns
           </h2>
-          <div className="max-h-[400px] space-y-2 overflow-y-auto pr-2">
+          <div className="max-h-[400px] space-y-2 overflow-y-auto pr-2 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-700 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-600">
             {campaignOptions.map((option) => {
               const isSelected = option.id === selectedCampaignId;
               const hasNoActivity = option.newLeadCount === 0 && option.jobCount === 0;
@@ -1454,20 +1454,15 @@ export default function LeadsTab() {
                 <span>Jobs: {jobsCountForSelected}</span>
               </div>
 
-              {/* Leads Header & Sort */}
-              <div className="flex items-center gap-3">
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
-                  Leads ({sortedLeads.length})
-                </h2>
-                <select
-                  value={leadSortOrder}
-                  onChange={(e) => setLeadSortOrder(e.target.value as 'newest' | 'oldest')}
-                  className="rounded-md border border-[#373e47] bg-[#0d1117] px-3 py-1.5 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                >
-                  <option value="newest">Newest First</option>
-                  <option value="oldest">Oldest First</option>
-                </select>
-              </div>
+              {/* Sort Dropdown Only */}
+              <select
+                value={leadSortOrder}
+                onChange={(e) => setLeadSortOrder(e.target.value as 'newest' | 'oldest')}
+                className="rounded-md border border-[#373e47] bg-[#0d1117] px-3 py-1.5 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              >
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+              </select>
             </div>
             <div className="flex gap-2">
               <button

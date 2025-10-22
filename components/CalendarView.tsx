@@ -57,6 +57,7 @@ export default function CalendarView({
 }: CalendarViewProps) {
   const [internalDate, setInternalDate] = useState(new Date());
   const [internalView, setInternalView] = useState<'month' | 'week'>('month');
+  const [isDraggingExternal, setIsDraggingExternal] = useState(false);
 
   // Prefer external state when provided so parent can control navigation
   const currentDate = externalDate || internalDate;
@@ -326,7 +327,29 @@ export default function CalendarView({
   };
 
   return (
-    <div className="h-full rounded-lg border border-[#373e47] bg-[#1e2227] p-4">
+    <div
+      className={`h-full rounded-lg border border-[#373e47] bg-[#1e2227] p-4 ${isDraggingExternal ? 'dragging-external-lead' : ''}`}
+      onDragEnter={(e) => {
+        // Only set dragging state if it's an external drag (from lead list)
+        // Calendar event drags will have originated from within the calendar
+        const draggedFromCalendar = e.dataTransfer.types.includes('text/plain');
+        if (!draggedFromCalendar || e.currentTarget === e.target) {
+          setIsDraggingExternal(true);
+        }
+      }}
+      onDragLeave={(e) => {
+        // Only clear if leaving the calendar container itself
+        if (e.currentTarget === e.target || !e.currentTarget.contains(e.relatedTarget as Node)) {
+          setIsDraggingExternal(false);
+        }
+      }}
+      onDragOver={(e) => {
+        e.preventDefault(); // Allow drop
+      }}
+      onDrop={() => {
+        setIsDraggingExternal(false);
+      }}
+    >
       <style jsx global>{`
         .rbc-calendar {
           font-family: inherit;
@@ -387,6 +410,13 @@ export default function CalendarView({
 
         .rbc-month-row {
           border-color: #373e47 !important;
+          min-height: 140px;
+          max-height: 140px;
+        }
+
+        .rbc-row-content {
+          max-height: 110px;
+          overflow: hidden;
         }
 
         .rbc-time-view {
@@ -416,6 +446,11 @@ export default function CalendarView({
           position: relative;
           /* Ensure events can be dragged */
           pointer-events: all;
+        }
+
+        /* Disable pointer events on calendar events when dragging external lead */
+        .dragging-external-lead .rbc-event {
+          pointer-events: none;
         }
 
         .rbc-event:hover {
@@ -505,7 +540,6 @@ export default function CalendarView({
           month: true,
           week: true,
         }}
-        max={3}
         popup
         showMultiDayTimes
       />
