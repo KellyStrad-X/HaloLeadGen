@@ -242,6 +242,43 @@ export default function CalendarView({
     };
   };
 
+  // Custom Popup component - only shows overflow events (not already visible ones)
+  const CustomPopup = ({ events, onSelectEvent }: { events: CalendarEvent[]; onSelectEvent: (event: CalendarEvent) => void }) => {
+    // react-big-calendar passes all events for the day
+    // We want to show only the overflow events (skip the first 3 that are already visible)
+    const visibleEventCount = 3; // We show 3 events in the calendar cell
+    const overflowEvents = events.slice(visibleEventCount);
+
+    return (
+      <div className="overflow-auto max-h-[300px]">
+        {overflowEvents.map((event) => (
+          <div
+            key={event.id}
+            onClick={() => onSelectEvent(event)}
+            className="cursor-pointer hover:bg-[#373e47] p-2 rounded transition-colors border-b border-[#373e47] last:border-b-0"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-semibold text-sm text-white">{event.customerName}</span>
+              {event.type === 'tentative' && (
+                <span className="text-xs font-bold text-white">
+                  {event.contactAttempt === 1 && '1ST'}
+                  {event.contactAttempt === 2 && '2ND'}
+                  {event.contactAttempt === 3 && '3RD'}
+                  {!event.contactAttempt && 'NEW'}
+                </span>
+              )}
+            </div>
+            {event.inspector && (
+              <span className="text-xs text-gray-400">
+                Inspector: {event.inspector}
+              </span>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   // Custom event component
   const EventComponent = ({ event }: { event: CalendarEvent }) => {
     const badge = event.type === 'tentative' ? (
@@ -420,6 +457,8 @@ export default function CalendarView({
           height: 100%;
           display: flex;
           flex-direction: column;
+          /* Allow pointer events to pass through to drop zones underneath */
+          pointer-events: none;
         }
 
         .rbc-event-content {
@@ -484,6 +523,7 @@ export default function CalendarView({
           font-weight: 600;
           cursor: pointer;
           transition: all 0.2s;
+          pointer-events: auto;
         }
 
         .rbc-show-more:hover {
@@ -517,7 +557,7 @@ export default function CalendarView({
         events={events}
         startAccessor="start"
         endAccessor="end"
-        style={{ height: '1200px' }}
+        style={{ height: '1400px' }}
         date={currentDate}
         view={currentView}
         onNavigate={(date: Date) => {
@@ -543,6 +583,7 @@ export default function CalendarView({
           event: EventComponent,
           toolbar: CustomToolbar,
           dateCellWrapper: DateCellWrapper,
+          popup: CustomPopup,
         }}
         views={{
           month: true,
