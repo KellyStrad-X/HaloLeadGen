@@ -197,6 +197,8 @@ export default function LeadsTab() {
     completed: true,
   });
   const [allCampaigns, setAllCampaigns] = useState<DashboardCampaign[]>([]);
+  const [calendarDate, setCalendarDate] = useState(new Date());
+  const [calendarView, setCalendarView] = useState<'month' | 'week'>('month');
 
   // Auto-scroll when dragging near viewport edges
   useEffect(() => {
@@ -1265,17 +1267,35 @@ export default function LeadsTab() {
           <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-400">
             Campaigns
           </h2>
-          <div className="max-h-[600px] space-y-2 overflow-y-auto pr-2">
+          <div className="max-h-[480px] space-y-2 overflow-y-auto pr-2">
             {campaignOptions.map((option) => {
               const isSelected = option.id === selectedCampaignId;
               const hasNoActivity = option.newLeadCount === 0 && option.jobCount === 0;
-              const statusTag = option.id === 'all'
-                ? null
-                : option.campaignStatus === 'Inactive'
-                ? '(Inactive)'
-                : hasNoActivity
-                ? '(Active) (No Leads)'
-                : '(Active)';
+              let statusBadge: React.ReactNode = null;
+              if (option.id !== 'all') {
+                if (option.campaignStatus === 'Inactive') {
+                  statusBadge = (
+                    <span
+                      className="inline-block h-2 w-2 rounded-full bg-gray-500"
+                      title="Inactive"
+                    />
+                  );
+                } else if (hasNoActivity) {
+                  statusBadge = (
+                    <span
+                      className="inline-block h-2 w-2 rounded-full bg-yellow-500"
+                      title="Active (No Leads)"
+                    />
+                  );
+                } else {
+                  statusBadge = (
+                    <span
+                      className="inline-block h-2 w-2 rounded-full bg-blue-500"
+                      title="Active"
+                    />
+                  );
+                }
+              }
 
               return (
                 <button
@@ -1289,16 +1309,12 @@ export default function LeadsTab() {
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <span className="text-sm font-medium text-white">{option.name}</span>
-                      {statusTag && (
-                        <span className="ml-1.5 text-[10px] text-gray-500">
-                          {statusTag}
-                        </span>
-                      )}
+                    <div className="flex min-w-0 flex-1 items-center gap-2">
+                      {statusBadge}
+                      <span className="truncate text-sm font-medium text-white">{option.name}</span>
                     </div>
                     {option.newLeadCount > 0 && (
-                      <span className="rounded-full bg-cyan-500/20 px-2 py-0.5 text-[11px] font-semibold text-cyan-300">
+                      <span className="flex-shrink-0 rounded-full bg-cyan-500/20 px-2 py-0.5 text-[11px] font-semibold text-cyan-300">
                         +{option.newLeadCount}
                       </span>
                     )}

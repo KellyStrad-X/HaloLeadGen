@@ -39,6 +39,10 @@ interface CalendarViewProps {
   onEventClick: (event: CalendarEvent) => void;
   onSelectSlot: (slotInfo: { start: Date; end: Date }) => void;
   onDragStateChange?: (item: { type: 'lead'; id: string } | null) => void;
+  currentDate?: Date;
+  currentView?: 'month' | 'week';
+  onDateChange?: (date: Date) => void;
+  onViewChange?: (view: 'month' | 'week') => void;
 }
 
 export default function CalendarView({
@@ -46,9 +50,17 @@ export default function CalendarView({
   onEventClick,
   onSelectSlot,
   onDragStateChange,
+  currentDate: externalDate,
+  currentView: externalView,
+  onDateChange,
+  onViewChange,
 }: CalendarViewProps) {
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [currentView, setCurrentView] = useState<'month' | 'week'>('month');
+  const [internalDate, setInternalDate] = useState(new Date());
+  const [internalView, setInternalView] = useState<'month' | 'week'>('month');
+
+  // Prefer external state when provided so parent can control navigation
+  const currentDate = externalDate || internalDate;
+  const currentView = externalView || internalView;
 
   // Custom date cell wrapper to accept drops from external sources
   const DateCellWrapper = ({ value, children }: { value: Date; children: React.ReactNode }) => {
@@ -143,8 +155,13 @@ export default function CalendarView({
         <div className="flex gap-2">
           <button
             onClick={() => {
-              setCurrentView('month');
-              toolbar.onView('month');
+              const newView: 'month' | 'week' = 'month';
+              if (onViewChange) {
+                onViewChange(newView);
+              } else {
+                setInternalView(newView);
+              }
+              toolbar.onView(newView);
             }}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
               currentView === 'month'
@@ -156,8 +173,13 @@ export default function CalendarView({
           </button>
           <button
             onClick={() => {
-              setCurrentView('week');
-              toolbar.onView('week');
+              const newView: 'month' | 'week' = 'week';
+              if (onViewChange) {
+                onViewChange(newView);
+              } else {
+                setInternalView(newView);
+              }
+              toolbar.onView(newView);
             }}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
               currentView === 'week'
@@ -410,30 +432,6 @@ export default function CalendarView({
           width: 100%;
         }
 
-        /* Day cell event container - scrollable when overflow */
-        .rbc-row-content {
-          max-height: 120px;
-          overflow-y: auto;
-          overflow-x: hidden;
-        }
-
-        .rbc-row-content::-webkit-scrollbar {
-          width: 4px;
-        }
-
-        .rbc-row-content::-webkit-scrollbar-track {
-          background: transparent;
-        }
-
-        .rbc-row-content::-webkit-scrollbar-thumb {
-          background: #373e47;
-          border-radius: 2px;
-        }
-
-        .rbc-row-content::-webkit-scrollbar-thumb:hover {
-          background: #4a5158;
-        }
-
         .rbc-show-more {
           background-color: #2d333b;
           color: #06b6d4;
@@ -479,8 +477,21 @@ export default function CalendarView({
         style={{ height: '1200px' }}
         date={currentDate}
         view={currentView}
-        onNavigate={(date: Date) => setCurrentDate(date)}
-        onView={(view: string) => setCurrentView(view as 'month' | 'week')}
+        onNavigate={(date: Date) => {
+          if (onDateChange) {
+            onDateChange(date);
+          } else {
+            setInternalDate(date);
+          }
+        }}
+        onView={(view: string) => {
+          const nextView = view as 'month' | 'week';
+          if (onViewChange) {
+            onViewChange(nextView);
+          } else {
+            setInternalView(nextView);
+          }
+        }}
         onSelectEvent={onEventClick}
         onSelectSlot={onSelectSlot}
         selectable
