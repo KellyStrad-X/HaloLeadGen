@@ -247,7 +247,7 @@ export default function CalendarView({
     // react-big-calendar passes all events for the day
     // We want to show only the overflow events (skip the first 3 that are already visible)
     const visibleEventCount = 3; // We show 3 events in the calendar cell
-    const overflowEvents = events.slice(visibleEventCount);
+    const overflowEvents = events.slice(visibleEventCount); // Shows events starting from the 4th
 
     return (
       <div className="overflow-auto max-h-[300px]">
@@ -454,11 +454,20 @@ export default function CalendarView({
 
         .rbc-row-content {
           position: relative;
-          height: 100%;
+          max-height: 120px;
+          /* Limit to fit 3 events (~30px each) + spacing, then trigger +X more */
           display: flex;
           flex-direction: column;
-          /* Allow pointer events to pass through to drop zones underneath */
+        }
+
+        /* When dragging external lead, make row content transparent to allow drops */
+        .dragging-external-lead .rbc-row-content {
           pointer-events: none;
+        }
+
+        /* But keep show-more button interactive even when dragging */
+        .dragging-external-lead .rbc-show-more {
+          pointer-events: auto;
         }
 
         .rbc-event-content {
@@ -557,7 +566,7 @@ export default function CalendarView({
         events={events}
         startAccessor="start"
         endAccessor="end"
-        style={{ height: '1400px' }}
+        style={{ height: '1200px' }}
         date={currentDate}
         view={currentView}
         onNavigate={(date: Date) => {
