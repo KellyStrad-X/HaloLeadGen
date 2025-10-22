@@ -410,13 +410,21 @@ export default function CalendarView({
 
         .rbc-month-row {
           border-color: #373e47 !important;
-          min-height: 140px;
-          max-height: 140px;
+          flex: 1 1 0;
+          min-height: 0;
+          /* Equal height distribution - each row gets equal share of 1200px */
         }
 
         .rbc-row-content {
-          max-height: 110px;
+          position: relative;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+        }
+
+        .rbc-event-content {
           overflow: hidden;
+          text-overflow: ellipsis;
         }
 
         .rbc-time-view {
