@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useDashboardSidebar } from '@/lib/dashboard-sidebar-context';
-import LeadDetailsModal from './LeadDetailsModal';
+import JobModal, { type LeadJobStatus } from './JobModal';
 
 type LegacyLeadStatus = 'new' | 'contacted' | 'scheduled' | 'completed';
 
@@ -21,6 +21,7 @@ interface Lead {
   contactAttempt?: number;
   isColdLead?: boolean;
   tentativeDate?: string | null;
+  inspector?: string | null; // Can be assigned at any stage
 }
 
 interface Job {
@@ -116,10 +117,9 @@ export default function GlobalSidebar() {
   const [leadsPage, setLeadsPage] = useState(0);
   const [activeBucket, setActiveBucket] = useState<'leads' | 'cold' | 'completed'>('leads');
   const [leadModalState, setLeadModalState] = useState<{
-    leadId: string;
-    campaignId: string;
+    lead: Lead | null;
     isOpen: boolean;
-  }>({ leadId: '', campaignId: '', isOpen: false });
+  }>({ lead: null, isOpen: false });
 
   // Data fetching
   const loadData = useCallback(async () => {
@@ -340,8 +340,7 @@ export default function GlobalSidebar() {
         }}
         onClick={() => {
           setLeadModalState({
-            leadId: lead.id,
-            campaignId: lead.campaignId,
+            lead: lead,
             isOpen: true,
           });
         }}
@@ -703,14 +702,77 @@ export default function GlobalSidebar() {
         )}
       </div>
 
-      {/* Lead Modal */}
-      {leadModalState.isOpen && (
-        <LeadDetailsModal
-          isOpen={leadModalState.isOpen}
-          leadId={leadModalState.leadId}
-          campaignId={leadModalState.campaignId}
-          onClose={() => setLeadModalState({ leadId: '', campaignId: '', isOpen: false })}
-          onLeadUpdated={loadData}
+      {/* Lead Management Modal */}
+      {leadModalState.isOpen && leadModalState.lead && (
+        <JobModal
+          mode="promote"
+          isOpen
+          onClose={() => setLeadModalState({ lead: null, isOpen: false })}
+          lead={leadModalState.lead}
+          defaultStatus="scheduled"
+          onContactAttempt={async (leadId: string, attempt: number) => {
+            // Update contact attempt via API
+            if (!user) return;
+            try {
+              const token = await user.getIdToken();
+              await fetch(`/api/dashboard/leads/${leadId}/contact-attempt`, {
+                method: 'PATCH',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ contactAttempt: attempt }),
+              });
+              await loadData();
+            } catch (error) {
+              console.error('Error updating contact attempt:', error);
+            }
+          }}
+          onRemoveFromCalendar={async (leadId: string) => {
+            // Remove tentative date
+            if (!user) return;
+            try {
+              const token = await user.getIdToken();
+              await fetch(`/api/dashboard/leads/${leadId}/tentative-date`, {
+                method: 'DELETE',
+                headers: { Authorization: `Bearer ${token}` },
+              });
+              await loadData();
+            } catch (error) {
+              console.error('Error removing from calendar:', error);
+            }
+          }}
+          onSubmit={async ({ status, scheduledInspectionDate, inspector, internalNotes }) => {
+            // Promote lead to job
+            if (!user || !leadModalState.lead) return;
+            try {
+              const token = await user.getIdToken();
+              const response = await fetch('/api/dashboard/jobs', {
+                method: 'POST',
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  leadId: leadModalState.lead.id,
+                  status,
+                  scheduledInspectionDate,
+                  inspector,
+                  internalNotes,
+                }),
+              });
+
+              if (!response.ok) {
+                throw new Error('Failed to save job');
+              }
+
+              await loadData();
+              setLeadModalState({ lead: null, isOpen: false });
+            } catch (error) {
+              console.error('Error saving job:', error);
+              throw error;
+            }
+          }}
         />
       )}
     </>

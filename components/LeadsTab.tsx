@@ -23,6 +23,7 @@ interface Lead {
   contactAttempt?: number; // 0 = new, 1 = first, 2 = second, 3 = third
   isColdLead?: boolean;
   tentativeDate?: string | null;
+  inspector?: string | null; // Can be assigned at any stage
 }
 
 interface Job {
@@ -239,6 +240,7 @@ export default function LeadsTab() {
         customerName: lead.name,
         phone: lead.phone,
         email: lead.email,
+        inspector: lead.inspector,
       });
     });
 
@@ -887,15 +889,8 @@ export default function LeadsTab() {
         </div>
       )}
 
-      {/* Scheduled Inspections Calendar - Now Full Width */}
+      {/* Calendar - Full Width */}
       <div>
-        <div className="mb-4 -ml-16 lg:-ml-24">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
-            Scheduled Inspections ({filteredJobs.scheduled.length + leads.filter(l => l.tentativeDate && !l.isColdLead).length})
-          </h2>
-        </div>
-
-        {/* Calendar - Full Width */}
         <div className="relative -mx-16 lg:-mx-24">
           {draggingItem?.type === 'lead' && !draggingItem?.id?.startsWith('lead-') && (
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 bg-cyan-500/10 border border-cyan-500/40 rounded-lg px-6 py-3 text-center text-sm text-cyan-300 pointer-events-none animate-pulse">
