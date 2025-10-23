@@ -1,10 +1,14 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 // @ts-ignore - react-big-calendar types are incomplete
-import { Calendar, dateFnsLocalizer, Event, Views } from 'react-big-calendar';
+import { Calendar, dateFnsLocalizer, Event } from 'react-big-calendar';
 // @ts-ignore
 import Month from 'react-big-calendar/lib/Month';
+// @ts-ignore
+import DateContentRow from 'react-big-calendar/lib/DateContentRow';
+// @ts-ignore
+import { sortWeekEvents, inRange } from 'react-big-calendar/lib/utils/eventLevels';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
 import { enUS } from 'date-fns/locale';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
@@ -21,23 +25,80 @@ const localizer = dateFnsLocalizer({
   locales,
 });
 
-// Custom Month component that forces maxRows=3 regardless of cell height
-// This bypasses react-big-calendar's height measurement system
-const CustomMonth = (props: any) => {
-  // Force maxRows=3 for all date content rows in month view
-  const enhancedProps = {
-    ...props,
-    // Inject maxRows into the month component which gets passed to DateContentRow
-    components: {
-      ...props.components,
-      dateCellWrapper: props.components?.dateCellWrapper,
-    },
-  };
-
-  return <Month {...enhancedProps} />;
+// Helper function from Month.js - filters events for a specific week
+const eventsForWeek = (evts: any[], start: Date, end: Date, accessors: any, localizer: any) => {
+  return evts.filter((e: any) => inRange(e, start, end, accessors, localizer));
 };
 
-// Copy required static methods from original Month component
+// Custom Month class that overrides renderWeek to inject maxRows=3
+// Copied from react-big-calendar/lib/Month.js with only maxRows changed
+class CustomMonthClass extends (Month as any) {
+  renderWeek(week: any, weekIdx: number) {
+    const {
+      events,
+      components,
+      selectable,
+      getNow,
+      selected,
+      date,
+      localizer,
+      longPressThreshold,
+      accessors,
+      getters,
+      showAllEvents,
+    } = this.props as any;
+
+    const { needLimitMeasure, rowLimit } = this.state;
+
+    // Filter events to just this week (critical!)
+    const weeksEvents = eventsForWeek(
+      [...events],
+      week[0],
+      week[week.length - 1],
+      accessors,
+      localizer
+    );
+
+    // Sort events into levels/extra (critical!)
+    const sorted = sortWeekEvents(weeksEvents, accessors, localizer);
+
+    return (
+      <DateContentRow
+        key={weekIdx}
+        ref={weekIdx === 0 ? this.slotRowRef : undefined}
+        container={this.getContainer}
+        className="rbc-month-row"
+        getNow={getNow}
+        date={date}
+        range={week}
+        events={sorted}
+        maxRows={3} // ← ONLY CHANGE: Force 3 instead of showAllEvents ? Infinity : rowLimit
+        selected={selected}
+        selectable={selectable}
+        components={components}
+        accessors={accessors}
+        getters={getters}
+        localizer={localizer}
+        renderHeader={this.readerDateHeading}
+        renderForMeasure={needLimitMeasure}
+        onShowMore={this.handleShowMore}
+        onSelect={this.handleSelectEvent}
+        onDoubleClick={this.handleDoubleClickEvent}
+        onKeyPress={this.handleKeyPressEvent}
+        onSelectSlot={this.handleSelectSlot}
+        longPressThreshold={longPressThreshold}
+        rtl={this.props.rtl}
+        resizable={this.props.resizable}
+        showAllEvents={showAllEvents}
+      />
+    );
+  }
+}
+
+// Export the custom class directly as CustomMonth
+const CustomMonth = CustomMonthClass as any;
+
+// Static methods are already inherited from Month
 CustomMonth.range = Month.range;
 CustomMonth.navigate = Month.navigate;
 CustomMonth.title = Month.title;
@@ -326,22 +387,34 @@ export default function CalendarView({
             // CRITICAL: Must set data for HTML5 drag-and-drop to work
             e.dataTransfer.setData('text/plain', event.id);
 
-            // Create custom drag image for visual feedback
-            const dragImage = e.currentTarget.cloneNode(true) as HTMLElement;
-            dragImage.style.opacity = '0.7';
-            dragImage.style.position = 'absolute';
-            dragImage.style.top = '-1000px';
-            dragImage.style.left = '-1000px';
-            dragImage.style.width = e.currentTarget.offsetWidth + 'px';
+            // Create custom drag image with explicit styling
+            const dragImage = document.createElement('div');
+            dragImage.style.position = 'fixed';
+            dragImage.style.top = '0';
+            dragImage.style.left = '-9999px';
+            dragImage.style.padding = '8px 12px';
+            dragImage.style.backgroundColor = event.type === 'tentative' ? '#06b6d4' : '#22c55e';
+            dragImage.style.color = '#000';
+            dragImage.style.borderRadius = '6px';
+            dragImage.style.fontWeight = '600';
+            dragImage.style.fontSize = '14px';
+            dragImage.style.opacity = '0.8';
+            dragImage.style.zIndex = '9999';
             dragImage.style.pointerEvents = 'none';
+            dragImage.textContent = event.customerName;
             document.body.appendChild(dragImage);
-            e.dataTransfer.setDragImage(dragImage, 0, 0);
-            // Clean up drag image after browser captures it
-            setTimeout(() => {
-              if (document.body.contains(dragImage)) {
-                document.body.removeChild(dragImage);
-              }
-            }, 100);
+
+            // Set the custom drag image
+            e.dataTransfer.setDragImage(dragImage, dragImage.offsetWidth / 2, dragImage.offsetHeight / 2);
+
+            // Clean up after drag completes
+            requestAnimationFrame(() => {
+              setTimeout(() => {
+                if (document.body.contains(dragImage)) {
+                  document.body.removeChild(dragImage);
+                }
+              }, 0);
+            });
 
             // Notify parent component about drag state
             console.log('[CalendarView] Starting drag for event:', event.id);
