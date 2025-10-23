@@ -4,9 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import LeadDetailsModal from './LeadDetailsModal';
 import JobModal, { type LeadJobStatus } from './JobModal';
-// TESTING: Temporarily using FullCalendarView
-import CalendarView, { type CalendarEvent } from './FullCalendarView';
-// import CalendarView, { type CalendarEvent } from './CalendarView';
+import CalendarView, { type CalendarEvent } from './CalendarView';
 
 type LegacyLeadStatus = 'new' | 'contacted' | 'scheduled' | 'completed';
 
@@ -423,15 +421,9 @@ export default function LeadsTab() {
     if (selectedCampaignId !== 'all') {
       leadsWithTentativeDate = leadsWithTentativeDate.filter(l => l.campaignId === selectedCampaignId);
     }
-    console.log('Leads with tentative dates:', leadsWithTentativeDate.length, leadsWithTentativeDate);
 
     leadsWithTentativeDate.forEach((lead) => {
       const date = parseLocalDate(lead.tentativeDate!);
-      console.log(`Creating event for lead ${lead.name}:`, {
-        tentativeDate: lead.tentativeDate,
-        parsedDate: date,
-        isValidDate: !isNaN(date.getTime())
-      });
 
       events.push({
         id: `lead-${lead.id}`,
@@ -447,7 +439,6 @@ export default function LeadsTab() {
       });
     });
 
-    console.log('Total calendar events:', events.length, events);
     return events;
   }, [filteredJobs.scheduled, leads, selectedCampaignId]);
 
@@ -783,18 +774,9 @@ export default function LeadsTab() {
       // Otherwise fall back to draggingItem state
       const itemToDrop = (slotInfo as any).droppedItem || draggingItem;
 
-      console.log('[LeadsTab] handleCalendarSlotSelect called:', {
-        date: slotInfo.start,
-        droppedItem: (slotInfo as any).droppedItem,
-        draggingItem,
-        itemToDrop,
-        usingDroppedItem: !!(slotInfo as any).droppedItem
-      });
-
       // If we're dragging a lead, set its tentative date to the selected slot
       if (itemToDrop && itemToDrop.type === 'lead') {
         const lead = leads.find((l) => l.id === itemToDrop.id);
-        console.log('[LeadsTab] Found lead:', lead?.name, 'ID:', lead?.id);
         if (!lead || !user) return;
 
         const leadId = lead.id; // Store ID to re-fetch after refresh
@@ -985,7 +967,6 @@ export default function LeadsTab() {
         key={lead.id}
         draggable
         onDragStart={(event) => {
-          console.log('[LeadCard] onDragStart - Setting draggingItem:', { type: 'lead', id: lead.id, name: lead.name });
           setDraggingItem({ type: 'lead', id: lead.id });
           event.dataTransfer.setData('application/halo-lead', lead.id);
           event.dataTransfer.effectAllowed = 'move';
@@ -1011,12 +992,8 @@ export default function LeadsTab() {
           });
         }}
         onDragEnd={() => {
-          console.log('[LeadCard] onDragEnd - Clearing draggingItem in 150ms');
           // Delay clearing draggingItem to allow drop handler to complete first
-          setTimeout(() => {
-            console.log('[LeadCard] onDragEnd - NOW clearing draggingItem');
-            setDraggingItem(null);
-          }, 150);
+          setTimeout(() => setDraggingItem(null), 150);
         }}
         className="rounded-lg border border-[#373e47] bg-[#1e2227] p-4 shadow-sm transition ring-cyan-500/40 hover:ring-2"
       >
@@ -1114,7 +1091,6 @@ export default function LeadsTab() {
         });
       }}
       onDragEnd={() => {
-        // Delay clearing draggingItem to allow drop handler to complete first
         setTimeout(() => setDraggingItem(null), 150);
       }}
       className="rounded-lg border border-[#373e47] bg-[#1e2227] p-4 shadow-sm transition ring-blue-500/40 hover:ring-2"

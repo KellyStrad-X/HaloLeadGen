@@ -1,25 +1,16 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
-// @ts-ignore - react-big-calendar types are incomplete
-import { Calendar, dateFnsLocalizer, Event } from 'react-big-calendar';
-import { format, parse, startOfWeek, getDay } from 'date-fns';
-import { enUS } from 'date-fns/locale';
-import 'react-big-calendar/lib/css/react-big-calendar.css';
+import React, { useRef, useState } from 'react';
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import interactionPlugin from '@fullcalendar/interaction';
+import type { EventContentArg, DateSelectArg, EventClickArg } from '@fullcalendar/core';
+import { format } from 'date-fns';
 
-const locales = {
-  'en-US': enUS,
-};
+// Note: FullCalendar v6+ bundles CSS in JS - no separate CSS imports needed
 
-const localizer = dateFnsLocalizer({
-  format,
-  parse,
-  startOfWeek,
-  getDay,
-  locales,
-});
-
-export interface CalendarEvent extends Event {
+// Copy CalendarEvent interface from CalendarView.tsx for compatibility
+export interface CalendarEvent {
   id: string;
   title: string;
   start: Date;
@@ -34,6 +25,7 @@ export interface CalendarEvent extends Event {
   inspector?: string | null;
 }
 
+// Copy CalendarViewProps from CalendarView.tsx for drop-in compatibility
 interface CalendarViewProps {
   events: CalendarEvent[];
   onEventClick: (event: CalendarEvent) => void;
@@ -45,75 +37,72 @@ interface CalendarViewProps {
   onViewChange?: (view: 'month' | 'week') => void;
 }
 
-export default function CalendarView({
+export default function FullCalendarView({
   events,
   onEventClick,
   onSelectSlot,
   onDragStateChange,
-  currentDate: externalDate,
-  currentView: externalView,
+  currentDate,
+  currentView = 'month',
   onDateChange,
   onViewChange,
 }: CalendarViewProps) {
+  const calendarRef = useRef<FullCalendar>(null);
   const [internalDate, setInternalDate] = useState(new Date());
   const [internalView, setInternalView] = useState<'month' | 'week'>('month');
   const [isDraggingExternal, setIsDraggingExternal] = useState(false);
 
   // Prefer external state when provided so parent can control navigation
-  const currentDate = externalDate || internalDate;
-  const currentView = externalView || internalView;
+  const activeDate = currentDate || internalDate;
+  const activeView = currentView || internalView;
 
-  // Custom date cell wrapper to accept drops from external sources
-  const DateCellWrapper = ({ value, children }: { value: Date; children: React.ReactNode }) => {
-    return (
-      <div
-        className="rbc-day-bg-wrapper"
-        onDragOver={(e) => {
-          // Accept any dragged items
-          e.preventDefault();
-          e.dataTransfer.dropEffect = 'move';
-          // Add highlight class
-          e.currentTarget.classList.add('rbc-drag-over');
-        }}
-        onDragLeave={(e) => {
-          // Remove highlight when drag leaves
-          e.currentTarget.classList.remove('rbc-drag-over');
-        }}
-        onDrop={(e) => {
-          e.preventDefault();
-          e.currentTarget.classList.remove('rbc-drag-over');
-
-          // Fire onSelectSlot with the date of this cell
-          // Create end date as same day for single-day selection
-          const start = new Date(value);
-          start.setHours(12, 0, 0, 0); // Set to noon to avoid timezone issues
-          const end = new Date(start);
-
-          onSelectSlot({ start, end });
-        }}
-        style={{ height: '100%', width: '100%' }}
-      >
-        {children}
-      </div>
-    );
-  };
-
-  // Custom toolbar with working navigation
-  const CustomToolbar = (toolbar: any) => {
-    const goToBack = () => {
-      toolbar.onNavigate('PREV');
+  // Custom toolbar with working navigation (matching old CalendarView style)
+  const CustomToolbar = () => {
+    const handlePrev = () => {
+      const calendarApi = calendarRef.current?.getApi();
+      calendarApi?.prev();
+      const newDate = calendarApi?.getDate();
+      if (newDate) {
+        if (onDateChange) {
+          onDateChange(newDate);
+        } else {
+          setInternalDate(newDate);
+        }
+      }
     };
 
-    const goToNext = () => {
-      toolbar.onNavigate('NEXT');
+    const handleNext = () => {
+      const calendarApi = calendarRef.current?.getApi();
+      calendarApi?.next();
+      const newDate = calendarApi?.getDate();
+      if (newDate) {
+        if (onDateChange) {
+          onDateChange(newDate);
+        } else {
+          setInternalDate(newDate);
+        }
+      }
     };
 
-    const goToToday = () => {
-      toolbar.onNavigate('TODAY');
+    const handleToday = () => {
+      const calendarApi = calendarRef.current?.getApi();
+      calendarApi?.today();
+      const today = new Date();
+      if (onDateChange) {
+        onDateChange(today);
+      } else {
+        setInternalDate(today);
+      }
     };
 
-    const label = () => {
-      return format(currentDate, 'MMMM yyyy');
+    const handleViewChange = (newView: 'month' | 'week') => {
+      const calendarApi = calendarRef.current?.getApi();
+      calendarApi?.changeView(newView === 'week' ? 'dayGridWeek' : 'dayGridMonth');
+      if (onViewChange) {
+        onViewChange(newView);
+      } else {
+        setInternalView(newView);
+      }
     };
 
     return (
@@ -130,22 +119,22 @@ export default function CalendarView({
         {/* Center - Month navigation */}
         <div className="flex items-center gap-3">
           <button
-            onClick={goToBack}
+            onClick={handlePrev}
             className="px-3 py-2 rounded-lg text-sm font-medium bg-[#2d333b] text-white hover:bg-[#373e47] border border-[#373e47] transition-all"
           >
             ←
           </button>
           <button
-            onClick={goToToday}
+            onClick={handleToday}
             className="px-4 py-2 rounded-lg text-sm font-medium bg-[#2d333b] text-white hover:bg-[#373e47] border border-[#373e47] transition-all"
           >
             Today
           </button>
           <span className="text-lg font-semibold text-white min-w-[180px] text-center">
-            {label()}
+            {format(activeDate, 'MMMM yyyy')}
           </span>
           <button
-            onClick={goToNext}
+            onClick={handleNext}
             className="px-3 py-2 rounded-lg text-sm font-medium bg-[#2d333b] text-white hover:bg-[#373e47] border border-[#373e47] transition-all"
           >
             →
@@ -155,17 +144,9 @@ export default function CalendarView({
         {/* Right side - View toggle (Month/Week only) */}
         <div className="flex gap-2">
           <button
-            onClick={() => {
-              const newView: 'month' | 'week' = 'month';
-              if (onViewChange) {
-                onViewChange(newView);
-              } else {
-                setInternalView(newView);
-              }
-              toolbar.onView(newView);
-            }}
+            onClick={() => handleViewChange('month')}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              currentView === 'month'
+              activeView === 'month'
                 ? 'bg-cyan-500 text-black'
                 : 'bg-[#2d333b] text-white hover:bg-[#373e47] border border-[#373e47]'
             }`}
@@ -173,17 +154,9 @@ export default function CalendarView({
             Month
           </button>
           <button
-            onClick={() => {
-              const newView: 'month' | 'week' = 'week';
-              if (onViewChange) {
-                onViewChange(newView);
-              } else {
-                setInternalView(newView);
-              }
-              toolbar.onView(newView);
-            }}
+            onClick={() => handleViewChange('week')}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              currentView === 'week'
+              activeView === 'week'
                 ? 'bg-cyan-500 text-black'
                 : 'bg-[#2d333b] text-white hover:bg-[#373e47] border border-[#373e47]'
             }`}
@@ -195,110 +168,25 @@ export default function CalendarView({
     );
   };
 
-  // Custom event styling based on type and contact attempt
-  const eventStyleGetter = (event: CalendarEvent) => {
-    let backgroundColor = '#22c55e'; // Default green for confirmed
-    let borderColor = '#16a34a';
-    let color = '#000';
-
-    if (event.type === 'tentative') {
-      // Color code based on contact attempt
-      switch (event.contactAttempt) {
-        case 1:
-          backgroundColor = '#eab308'; // Yellow
-          borderColor = '#ca8a04';
-          break;
-        case 2:
-          backgroundColor = '#f97316'; // Orange
-          borderColor = '#ea580c';
-          break;
-        case 3:
-          backgroundColor = '#ef4444'; // Red
-          borderColor = '#dc2626';
-          break;
-        default:
-          backgroundColor = '#06b6d4'; // Cyan for new
-          borderColor = '#0891b2';
-          break;
-      }
-    } else {
-      // Confirmed job - green/blue
-      backgroundColor = '#22c55e';
-      borderColor = '#16a34a';
-    }
-
-    return {
-      style: {
-        backgroundColor,
-        borderColor,
-        borderWidth: '2px',
-        borderStyle: 'solid',
-        color,
-        borderRadius: '6px',
-        padding: '4px 8px',
-        fontSize: '0.875rem',
-        fontWeight: '600',
-      },
-    };
-  };
-
-  // Custom Popup component - only shows overflow events (not already visible ones)
-  const CustomPopup = ({ events, onSelectEvent }: { events: CalendarEvent[]; onSelectEvent: (event: CalendarEvent) => void }) => {
-    // react-big-calendar passes all events for the day
-    // We want to show only the overflow events (skip the first 3 that are already visible)
-    const visibleEventCount = 3; // We show 3 events in the calendar cell
-    const overflowEvents = events.slice(visibleEventCount); // Shows events starting from the 4th
+  // Custom event rendering with badges and inspector info
+  const renderEventContent = (arg: EventContentArg) => {
+    const event = arg.event.extendedProps as CalendarEvent;
 
     return (
-      <div className="overflow-auto max-h-[300px]">
-        {overflowEvents.map((event) => (
-          <div
-            key={event.id}
-            onClick={() => onSelectEvent(event)}
-            className="cursor-pointer hover:bg-[#373e47] p-2 rounded transition-colors border-b border-[#373e47] last:border-b-0"
-          >
-            <div className="flex items-center justify-between gap-2">
-              <span className="font-semibold text-sm text-white">{event.customerName}</span>
-              {event.type === 'tentative' && (
-                <span className="text-xs font-bold text-white">
-                  {event.contactAttempt === 1 && '1ST'}
-                  {event.contactAttempt === 2 && '2ND'}
-                  {event.contactAttempt === 3 && '3RD'}
-                  {!event.contactAttempt && 'NEW'}
-                </span>
-              )}
-            </div>
-            {event.inspector && (
-              <span className="text-xs text-gray-400">
-                Inspector: {event.inspector}
-              </span>
-            )}
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  // Custom event component
-  const EventComponent = ({ event }: { event: CalendarEvent }) => {
-    const badge = event.type === 'tentative' ? (
-      <span className="text-xs font-bold">
-        {event.contactAttempt === 1 && '1ST'}
-        {event.contactAttempt === 2 && '2ND'}
-        {event.contactAttempt === 3 && '3RD'}
-        {!event.contactAttempt && 'NEW'}
-      </span>
-    ) : null;
-
-    // For all events (tentative and confirmed), just make them clickable
-    return (
-      <div className="flex flex-col gap-1 overflow-hidden">
+      <div className="flex flex-col gap-1 overflow-hidden p-1">
         <div className="flex items-center justify-between gap-2">
           <span className="truncate font-semibold text-xs">{event.customerName}</span>
-          {badge}
+          {event.type === 'tentative' && (
+            <span className="text-[10px] font-bold">
+              {event.contactAttempt === 1 && '1ST'}
+              {event.contactAttempt === 2 && '2ND'}
+              {event.contactAttempt === 3 && '3RD'}
+              {!event.contactAttempt && 'NEW'}
+            </span>
+          )}
         </div>
         {event.inspector && (
-          <span className="text-xs truncate opacity-90">
+          <span className="text-[10px] truncate opacity-90">
             Inspector: {event.inspector}
           </span>
         )}
@@ -306,240 +194,341 @@ export default function CalendarView({
     );
   };
 
+  // Event styling based on type and contact attempt
+  const getEventClassNames = (arg: EventContentArg) => {
+    const event = arg.event.extendedProps as CalendarEvent;
+    const classes = ['custom-fc-event'];
+
+    if (event.type === 'tentative') {
+      switch (event.contactAttempt) {
+        case 1:
+          classes.push('event-tentative-1st');
+          break;
+        case 2:
+          classes.push('event-tentative-2nd');
+          break;
+        case 3:
+          classes.push('event-tentative-3rd');
+          break;
+        default:
+          classes.push('event-tentative-new');
+          break;
+      }
+    } else {
+      classes.push('event-confirmed');
+    }
+
+    return classes;
+  };
+
+  // Handle external drag enter/leave for visual feedback
+  const handleDragEnter = (e: React.DragEvent) => {
+    // Check if it's an external drag (not from calendar events)
+    const hasLeadData = e.dataTransfer.types.includes('application/halo-lead');
+    const hasJobData = e.dataTransfer.types.includes('application/halo-job');
+
+    if ((hasLeadData || hasJobData) && (e.currentTarget === e.target || !e.dataTransfer.types.includes('text/plain'))) {
+      setIsDraggingExternal(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    if (e.currentTarget === e.target || !e.currentTarget.contains(e.relatedTarget as Node)) {
+      setIsDraggingExternal(false);
+    }
+  };
+
   return (
     <div
       className={`h-full rounded-lg border border-[#373e47] bg-[#1e2227] p-4 ${isDraggingExternal ? 'dragging-external-lead' : ''}`}
-      onDragEnter={(e) => {
-        // Only set dragging state if it's an external drag (from lead list)
-        // Calendar event drags will have originated from within the calendar
-        const draggedFromCalendar = e.dataTransfer.types.includes('text/plain');
-        if (!draggedFromCalendar || e.currentTarget === e.target) {
-          setIsDraggingExternal(true);
-        }
-      }}
-      onDragLeave={(e) => {
-        // Only clear if leaving the calendar container itself
-        if (e.currentTarget === e.target || !e.currentTarget.contains(e.relatedTarget as Node)) {
-          setIsDraggingExternal(false);
-        }
-      }}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
       onDragOver={(e) => {
-        e.preventDefault(); // Allow drop
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
       }}
-      onDrop={() => {
+      onDrop={(e) => {
         setIsDraggingExternal(false);
       }}
     >
       <style jsx global>{`
-        .rbc-calendar {
+        /* FullCalendar dark theme customization */
+        .fc {
+          --fc-border-color: #373e47;
+          --fc-bg-event-opacity: 1;
+          --fc-today-bg-color: rgba(6, 182, 212, 0.1);
           font-family: inherit;
-          background: transparent;
         }
 
-        .rbc-header {
-          padding: 12px 6px;
-          font-weight: 600;
-          color: #e5e7eb;
+        .fc-theme-standard .fc-scrollgrid {
+          border-color: #373e47;
+        }
+
+        .fc-col-header-cell {
           background: #2d333b;
           border-color: #373e47 !important;
         }
 
-        .rbc-today {
-          background-color: #1e3a4f;
+        .fc-col-header-cell-cushion {
+          padding: 12px 6px;
+          font-weight: 600;
+          color: #e5e7eb;
         }
 
-        .rbc-off-range-bg {
+        .fc-daygrid-day {
+          background: #1e2227;
+          border-color: #373e47 !important;
+          transition: all 0.2s ease;
+        }
+
+        .fc-daygrid-day:hover {
+          background: #2d333b;
+        }
+
+        .fc-daygrid-day.fc-day-today {
+          background-color: #1e3a4f !important;
+        }
+
+        .fc-daygrid-day.fc-day-other {
           background-color: #0d1117;
         }
 
-        .rbc-date-cell {
+        .fc-daygrid-day-number {
           color: #9ca3af;
           padding: 8px;
         }
 
-        .rbc-day-bg {
-          background: #1e2227;
-          border-color: #373e47 !important;
-          transition: all 0.2s ease;
-          position: relative;
-        }
-
-        .rbc-day-bg:hover {
-          background: #2d333b;
-        }
-
-        /* Custom wrapper for date cells to accept drops */
-        .rbc-day-bg-wrapper {
-          display: block;
-          height: 100%;
-          width: 100%;
-        }
-
-        /* Highlight date cell when dragging lead over it */
-        .rbc-day-bg-wrapper.rbc-drag-over {
-          background: linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(6, 182, 212, 0.05) 100%) !important;
-          border: 2px solid #06b6d4 !important;
-          box-shadow: inset 0 0 20px rgba(6, 182, 212, 0.2);
-          border-radius: 4px;
-        }
-
-        .rbc-month-view {
-          border-color: #373e47;
-          background: transparent;
-        }
-
-        .rbc-month-row {
-          border-color: #373e47 !important;
-          flex: 1 1 0;
-          min-height: 0;
-          /* Flexible height - rows share space equally */
-        }
-
-        .rbc-row-content {
-          position: relative;
-        }
-
-        /* When dragging external lead, make row content transparent to allow drops */
-        .dragging-external-lead .rbc-row-content {
-          pointer-events: none;
-        }
-
-        /* But keep show-more button interactive even when dragging */
-        .dragging-external-lead .rbc-show-more {
-          pointer-events: auto;
-        }
-
-        .rbc-event-content {
-          overflow: hidden;
-          text-overflow: ellipsis;
-        }
-
-        .rbc-time-view {
-          border-color: #373e47;
-        }
-
-        .rbc-time-header {
-          border-color: #373e47 !important;
-        }
-
-        .rbc-time-content {
-          border-color: #373e47 !important;
-        }
-
-        .rbc-current-time-indicator {
-          background-color: #06b6d4;
-        }
-
-        .rbc-toolbar {
-          display: none; /* Hide default toolbar, using custom */
-        }
-
-        .rbc-event {
+        /* Event styling */
+        .custom-fc-event {
           cursor: pointer;
-          user-select: none;
-          -webkit-user-select: none;
-          position: relative;
-          /* Ensure events can be dragged */
-          pointer-events: all;
+          border: 2px solid;
+          border-radius: 6px;
+          padding: 4px 8px;
+          font-weight: 600;
+          margin-bottom: 2px;
         }
 
-        /* Disable pointer events on calendar events when dragging external lead */
-        .dragging-external-lead .rbc-event {
-          pointer-events: none;
-        }
-
-        .rbc-event:hover {
+        .custom-fc-event:hover {
           opacity: 0.9;
         }
 
-        .rbc-event:active {
-          cursor: grabbing;
+        /* Tentative events - color coded by contact attempt */
+        .event-tentative-new {
+          background-color: #06b6d4 !important;
+          border-color: #0891b2 !important;
+          color: #000 !important;
         }
 
-        /* Make event wrapper fill the space for proper dragging */
-        .rbc-event-content {
-          height: 100%;
-          width: 100%;
+        .event-tentative-1st {
+          background-color: #eab308 !important;
+          border-color: #ca8a04 !important;
+          color: #000 !important;
         }
 
-        .rbc-show-more {
+        .event-tentative-2nd {
+          background-color: #f97316 !important;
+          border-color: #ea580c !important;
+          color: #000 !important;
+        }
+
+        .event-tentative-3rd {
+          background-color: #ef4444 !important;
+          border-color: #dc2626 !important;
+          color: #000 !important;
+        }
+
+        /* Confirmed events - green */
+        .event-confirmed {
+          background-color: #22c55e !important;
+          border-color: #16a34a !important;
+          color: #000 !important;
+        }
+
+        /* "+X more" link styling */
+        .fc-daygrid-more-link {
+          color: #06b6d4 !important;
+          font-weight: 600;
+          text-decoration: none;
           background-color: #2d333b;
-          color: #06b6d4;
           padding: 6px 12px;
           border-radius: 6px;
           font-size: 0.75rem;
-          font-weight: 600;
-          cursor: pointer;
           transition: all 0.2s;
-          pointer-events: auto;
+          display: inline-block;
+          margin-top: 2px;
         }
 
-        .rbc-show-more:hover {
+        .fc-daygrid-more-link:hover {
           background-color: #373e47;
-          color: #22d3ee;
+          color: #22d3ee !important;
         }
 
-        /* Enhanced overlay popup */
-        .rbc-overlay {
-          background: #1e2227;
-          border: 2px solid #06b6d4;
+        /* Popup styling for overflow events */
+        .fc-popover {
+          background: #1e2227 !important;
+          border: 2px solid #06b6d4 !important;
           border-radius: 12px;
-          padding: 16px;
           box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
           z-index: 1000;
-          max-height: 400px;
-          overflow-y: auto;
-          min-width: 300px;
         }
 
-        .rbc-overlay-header {
+        .fc-popover-header {
+          background: #2d333b !important;
           color: #06b6d4;
           font-weight: 600;
-          margin-bottom: 12px;
+          padding: 12px 16px;
           font-size: 0.875rem;
+          border-bottom: 1px solid #373e47;
+        }
+
+        .fc-popover-body {
+          padding: 8px;
+          max-height: 400px;
+          overflow-y: auto;
+        }
+
+        /* Drag highlight for external leads */
+        .dragging-external-lead .fc-daygrid-day {
+          cursor: copy;
+        }
+
+        .fc-highlight {
+          background: linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(6, 182, 212, 0.05) 100%) !important;
+          border: 2px solid #06b6d4 !important;
+          box-shadow: inset 0 0 20px rgba(6, 182, 212, 0.2);
+        }
+
+        /* Keep events clickable */
+        .fc-event {
+          pointer-events: auto !important;
+          position: relative;
+          z-index: 10;
+        }
+
+        /* Disable pointer events on calendar events when dragging external lead */
+        .dragging-external-lead .fc-event {
+          pointer-events: none;
+        }
+
+        /* Highlight date cells when dragging over them */
+        .fc-day-highlight {
+          background: linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(6, 182, 212, 0.05) 100%) !important;
+          box-shadow: inset 0 0 20px rgba(6, 182, 212, 0.3);
+          border: 2px solid #06b6d4 !important;
         }
       `}</style>
 
-      <Calendar
-        localizer={localizer}
-        events={events}
-        startAccessor="start"
-        endAccessor="end"
-        style={{ height: '1200px' }}
-        date={currentDate}
-        view={currentView}
-        onNavigate={(date: Date) => {
-          if (onDateChange) {
-            onDateChange(date);
-          } else {
-            setInternalDate(date);
-          }
-        }}
-        onView={(view: string) => {
-          const nextView = view as 'month' | 'week';
-          if (onViewChange) {
-            onViewChange(nextView);
-          } else {
-            setInternalView(nextView);
-          }
-        }}
-        onSelectEvent={onEventClick}
-        onSelectSlot={onSelectSlot}
-        selectable
-        eventPropGetter={eventStyleGetter}
-        components={{
-          event: EventComponent,
-          toolbar: CustomToolbar,
-          dateCellWrapper: DateCellWrapper,
-          popup: CustomPopup,
-        }}
-        views={{
-          month: true,  // Using patched Month from calendar-custom-month
-          week: true,
-        }}
-        popup
-        showMultiDayTimes
-      />
+      <CustomToolbar />
+
+      <div className="h-[1200px]">
+        <FullCalendar
+          ref={calendarRef}
+          plugins={[dayGridPlugin, interactionPlugin]}
+          initialView={activeView === 'week' ? 'dayGridWeek' : 'dayGridMonth'}
+          initialDate={activeDate}
+
+          // Shows 3 events inline, then "+X more" link for overflow
+          // The row count includes the event rows, so 4 = 3 events + more link
+          dayMaxEventRows={4}
+          views={{
+            dayGridMonth: {
+              dayMaxEventRows: 4
+            }
+          }}
+
+          // Convert events to FullCalendar format
+          events={events.map(e => ({
+            id: e.id,
+            title: e.customerName,
+            start: e.start,
+            end: e.end,
+            extendedProps: e, // Store full event for access later
+          }))}
+
+          height="100%"
+          headerToolbar={false} // Using custom toolbar above
+
+          // Event interactions
+          eventClick={(info: EventClickArg) => {
+            const event = info.event.extendedProps as CalendarEvent;
+            onEventClick(event);
+          }}
+
+          // Date selection for slot clicks
+          selectable={true}
+          select={(selectInfo: DateSelectArg) => {
+            const start = selectInfo.start;
+            start.setHours(12, 0, 0, 0);
+            const end = new Date(start);
+            onSelectSlot({ start, end });
+          }}
+
+          // Drag & drop for external leads
+          // Note: FullCalendar's droppable doesn't work well with external HTML5 draggables
+          // We handle drops via the date cell's native drop event instead
+          editable={false}
+          droppable={false}
+
+          // Custom date cell handling for drop support
+          dayCellDidMount={(arg) => {
+            const cell = arg.el;
+
+            // Add drop handlers to each date cell
+            cell.addEventListener('dragover', (e) => {
+              e.preventDefault();
+              // Don't stop propagation - let events handle their own interactions
+              cell.classList.add('fc-day-highlight');
+            });
+
+            cell.addEventListener('dragleave', (e) => {
+              cell.classList.remove('fc-day-highlight');
+            });
+
+            cell.addEventListener('drop', (e: any) => {
+              e.preventDefault();
+              cell.classList.remove('fc-day-highlight');
+
+              const leadId = e.dataTransfer.getData('application/halo-lead');
+              const jobId = e.dataTransfer.getData('application/halo-job');
+
+              // Call onSelectSlot with this cell's date AND the item being dragged
+              const start = new Date(arg.date);
+              start.setHours(12, 0, 0, 0);
+              const end = new Date(start);
+
+              // Pass the dropped item info directly to avoid React state timing issues
+              onSelectSlot({
+                start,
+                end,
+                // @ts-ignore - Adding droppedItem to bypass state timing
+                droppedItem: leadId ? { type: 'lead', id: leadId } : jobId ? { type: 'job', id: jobId } : null
+              });
+            });
+          }}
+
+          // Custom event rendering
+          eventContent={renderEventContent}
+          eventClassNames={getEventClassNames}
+
+          // View management
+          datesSet={(dateInfo) => {
+            // Called when view changes or navigation occurs
+            // Use currentStart to get the actual month (not the first visible cell)
+            const newDate = dateInfo.view.currentStart;
+            if (onDateChange && newDate.getTime() !== activeDate.getTime()) {
+              onDateChange(newDate);
+            }
+          }}
+
+          // Accessibility
+          dayMaxEvents={true}
+          moreLinkClick="popover"
+
+          // Week settings
+          weekends={true}
+          firstDay={0} // Sunday
+        />
+      </div>
     </div>
   );
 }
