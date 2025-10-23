@@ -3,12 +3,6 @@
 import React, { useMemo, useState } from 'react';
 // @ts-ignore - react-big-calendar types are incomplete
 import { Calendar, dateFnsLocalizer, Event } from 'react-big-calendar';
-// @ts-ignore
-import Month from 'react-big-calendar/lib/Month';
-// @ts-ignore
-import DateContentRow from 'react-big-calendar/lib/DateContentRow';
-// @ts-ignore
-import { sortWeekEvents, inRange } from 'react-big-calendar/lib/utils/eventLevels';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
 import { enUS } from 'date-fns/locale';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
@@ -24,84 +18,6 @@ const localizer = dateFnsLocalizer({
   getDay,
   locales,
 });
-
-// Helper function from Month.js - filters events for a specific week
-const eventsForWeek = (evts: any[], start: Date, end: Date, accessors: any, localizer: any) => {
-  return evts.filter((e: any) => inRange(e, start, end, accessors, localizer));
-};
-
-// Custom Month class that overrides renderWeek to inject maxRows=3
-// Copied from react-big-calendar/lib/Month.js with only maxRows changed
-class CustomMonthClass extends (Month as any) {
-  renderWeek(week: any, weekIdx: number) {
-    const {
-      events,
-      components,
-      selectable,
-      getNow,
-      selected,
-      date,
-      localizer,
-      longPressThreshold,
-      accessors,
-      getters,
-      showAllEvents,
-    } = this.props as any;
-
-    const { needLimitMeasure, rowLimit } = this.state;
-
-    // Filter events to just this week (critical!)
-    const weeksEvents = eventsForWeek(
-      [...events],
-      week[0],
-      week[week.length - 1],
-      accessors,
-      localizer
-    );
-
-    // Sort events into levels/extra (critical!)
-    const sorted = sortWeekEvents(weeksEvents, accessors, localizer);
-
-    return (
-      <DateContentRow
-        key={weekIdx}
-        ref={weekIdx === 0 ? this.slotRowRef : undefined}
-        container={this.getContainer}
-        className="rbc-month-row"
-        getNow={getNow}
-        date={date}
-        range={week}
-        events={sorted}
-        maxRows={3} // ← ONLY CHANGE: Force 3 instead of showAllEvents ? Infinity : rowLimit
-        selected={selected}
-        selectable={selectable}
-        components={components}
-        accessors={accessors}
-        getters={getters}
-        localizer={localizer}
-        renderHeader={this.readerDateHeading}
-        renderForMeasure={needLimitMeasure}
-        onShowMore={this.handleShowMore}
-        onSelect={this.handleSelectEvent}
-        onDoubleClick={this.handleDoubleClickEvent}
-        onKeyPress={this.handleKeyPressEvent}
-        onSelectSlot={this.handleSelectSlot}
-        longPressThreshold={longPressThreshold}
-        rtl={this.props.rtl}
-        resizable={this.props.resizable}
-        showAllEvents={showAllEvents}
-      />
-    );
-  }
-}
-
-// Export the custom class directly as CustomMonth
-const CustomMonth = CustomMonthClass as any;
-
-// Static methods are already inherited from Month
-CustomMonth.range = Month.range;
-CustomMonth.navigate = Month.navigate;
-CustomMonth.title = Month.title;
 
 export interface CalendarEvent extends Event {
   id: string;
@@ -549,12 +465,11 @@ export default function CalendarView({
           border-color: #373e47 !important;
           flex: 1 1 0;
           min-height: 0;
-          /* Flexible height - CustomMonth component controls event limit, not CSS */
+          /* Flexible height - rows share space equally */
         }
 
         .rbc-row-content {
           position: relative;
-          /* Height constraint is on .rbc-month-row above - that's what react-big-calendar measures */
         }
 
         /* When dragging external lead, make row content transparent to allow drops */
@@ -692,7 +607,7 @@ export default function CalendarView({
           popup: CustomPopup,
         }}
         views={{
-          month: CustomMonth,
+          month: true,
           week: true,
         }}
         popup
