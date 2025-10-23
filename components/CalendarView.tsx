@@ -52,19 +52,6 @@ export default function FullCalendarView({
   const [internalView, setInternalView] = useState<'month' | 'week'>('month');
   const [isDraggingExternal, setIsDraggingExternal] = useState(false);
 
-  // State for custom overflow popover (shows only hidden events, not all)
-  const [overflowPopover, setOverflowPopover] = useState<{
-    isOpen: boolean;
-    events: CalendarEvent[];
-    date: Date;
-    position: { x: number; y: number };
-  }>({
-    isOpen: false,
-    events: [],
-    date: new Date(),
-    position: { x: 0, y: 0 },
-  });
-
   // Prefer external state when provided so parent can control navigation
   const activeDate = currentDate || internalDate;
   const activeView = currentView || internalView;
@@ -362,30 +349,6 @@ export default function FullCalendarView({
           color: #000 !important;
         }
 
-        /* "+X more" link styling */
-        .fc-daygrid-more-link {
-          color: #06b6d4 !important;
-          font-weight: 600;
-          text-decoration: none;
-          background-color: #2d333b;
-          padding: 6px 12px;
-          border-radius: 6px;
-          font-size: 0.75rem;
-          transition: all 0.2s;
-          display: inline-block;
-          margin-top: 2px;
-        }
-
-        .fc-daygrid-more-link:hover {
-          background-color: #373e47;
-          color: #22d3ee !important;
-        }
-
-        /* Hide default FullCalendar popover - we use custom popover instead */
-        .fc-popover {
-          display: none !important;
-        }
-
         /* Drag highlight for external leads */
         .dragging-external-lead .fc-daygrid-day {
           cursor: copy;
@@ -426,14 +389,8 @@ export default function FullCalendarView({
           initialView={activeView === 'week' ? 'dayGridWeek' : 'dayGridMonth'}
           initialDate={activeDate}
 
-          // Shows exactly 3 events, then "+X more" link for 4th+ events
-          // The number includes the "+more" link row, so 4 = 3 events + 1 more link
-          dayMaxEventRows={4}
-          views={{
-            dayGridMonth: {
-              dayMaxEventRows: 4
-            }
-          }}
+          // Show ALL events inline - no "+X more" limit
+          dayMaxEventRows={false}
 
           // Convert events to FullCalendar format
           events={events.map(e => ({
@@ -519,135 +476,11 @@ export default function FullCalendarView({
             }
           }}
 
-          // Custom "+X more" handler - shows ONLY overflow events (not all events)
-          moreLinkClick={(info) => {
-            // Prevent default FullCalendar popover
-            info.jsEvent.preventDefault();
-            info.jsEvent.stopPropagation();
-
-            // info.hiddenSegs contains segments not shown inline (events 4+)
-            // Extract only the overflow events from hiddenSegs
-            const overflowEvents = info.hiddenSegs
-              .map(seg => seg.event.extendedProps as CalendarEvent)
-              .filter(Boolean);
-
-            // Get click position for popover placement
-            const rect = (info.jsEvent.target as HTMLElement).getBoundingClientRect();
-
-            // Fix date - FullCalendar uses UTC midnight, convert to local date
-            const localDate = new Date(info.date.getFullYear(), info.date.getMonth(), info.date.getDate());
-
-            setOverflowPopover({
-              isOpen: true,
-              events: overflowEvents,
-              date: localDate,
-              position: { x: rect.left, y: rect.bottom + 5 },
-            });
-
-            // Return void to prevent FullCalendar's default popover
-            return;
-          }}
-
           // Week settings
           weekends={true}
           firstDay={0} // Sunday
         />
       </div>
-
-      {/* Custom Overflow Popover - Shows ONLY hidden events (not all) */}
-      {overflowPopover.isOpen && (
-        <>
-          {/* Backdrop to close popover on click */}
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setOverflowPopover(prev => ({ ...prev, isOpen: false }))}
-          />
-
-          {/* Popover content */}
-          <div
-            className="fixed z-50 rounded-lg border-2 border-cyan-500 bg-[#1e2227] shadow-2xl"
-            style={{
-              left: `${overflowPopover.position.x}px`,
-              top: `${overflowPopover.position.y}px`,
-              maxWidth: '300px',
-              maxHeight: '400px',
-            }}
-          >
-            {/* Header */}
-            <div className="border-b border-[#373e47] bg-[#2d333b] px-4 py-3">
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-cyan-500">
-                  {format(overflowPopover.date, 'MMM d, yyyy')} ({overflowPopover.events.length} more)
-                </span>
-                <button
-                  onClick={() => setOverflowPopover(prev => ({ ...prev, isOpen: false }))}
-                  className="text-gray-400 hover:text-white transition"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-
-            {/* Overflow events list */}
-            <div className="max-h-[350px] overflow-y-auto p-2">
-              {overflowPopover.events.map((event) => {
-                // Determine event color based on type and contact attempt
-                let bgColor = '#06b6d4'; // cyan (tentative new)
-                let borderColor = '#0891b2';
-
-                if (event.type === 'tentative') {
-                  if (event.contactAttempt === 1) {
-                    bgColor = '#eab308'; // yellow
-                    borderColor = '#ca8a04';
-                  } else if (event.contactAttempt === 2) {
-                    bgColor = '#f97316'; // orange
-                    borderColor = '#ea580c';
-                  } else if (event.contactAttempt === 3) {
-                    bgColor = '#ef4444'; // red
-                    borderColor = '#dc2626';
-                  }
-                } else {
-                  bgColor = '#22c55e'; // green (confirmed)
-                  borderColor = '#16a34a';
-                }
-
-                return (
-                  <div
-                    key={event.id}
-                    onClick={() => {
-                      onEventClick(event);
-                      setOverflowPopover(prev => ({ ...prev, isOpen: false }));
-                    }}
-                    className="mb-2 cursor-pointer rounded-lg border-2 p-3 transition hover:opacity-80"
-                    style={{
-                      backgroundColor: bgColor,
-                      borderColor: borderColor,
-                      color: '#000',
-                    }}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-sm">{event.customerName}</span>
-                      {event.type === 'tentative' && (
-                        <span className="text-xs font-bold">
-                          {event.contactAttempt === 1 && '1ST'}
-                          {event.contactAttempt === 2 && '2ND'}
-                          {event.contactAttempt === 3 && '3RD'}
-                          {!event.contactAttempt && 'NEW'}
-                        </span>
-                      )}
-                    </div>
-                    {event.inspector && (
-                      <div className="mt-1 text-xs opacity-90">
-                        Inspector: {event.inspector}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </>
-      )}
     </div>
   );
 }
