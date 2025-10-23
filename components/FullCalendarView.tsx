@@ -260,15 +260,9 @@ export default function FullCalendarView({
         e.dataTransfer.dropEffect = 'move';
       }}
       onDrop={(e) => {
-        const leadId = e.dataTransfer.getData('application/halo-lead');
-        const jobId = e.dataTransfer.getData('application/halo-job');
-        console.log('[Container] Drop event - Lead:', leadId, 'Job:', jobId);
+        // Let FullCalendar handle the drop - just clear visual state
+        console.log('[Container] Drop detected - letting FullCalendar handle it');
         setIsDraggingExternal(false);
-
-        // Clear drag state after drop
-        if (onDragStateChange) {
-          setTimeout(() => onDragStateChange(null), 100);
-        }
       }}
     >
       <style jsx global>{`
@@ -422,6 +416,13 @@ export default function FullCalendarView({
         .dragging-external-lead .fc-event {
           pointer-events: none;
         }
+
+        /* Highlight date cells when dragging over them */
+        .fc-day-highlight {
+          background: linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(6, 182, 212, 0.05) 100%) !important;
+          box-shadow: inset 0 0 20px rgba(6, 182, 212, 0.3);
+          border: 2px solid #06b6d4 !important;
+        }
       `}</style>
 
       <CustomToolbar />
@@ -465,27 +466,40 @@ export default function FullCalendarView({
           }}
 
           // Drag & drop for external leads
-          droppable={true}
-          drop={(info) => {
-            // Extract the dragged lead/job ID from the native drag event
-            const dragEvent = info.draggedEl;
-            const jsEvent = info.jsEvent as DragEvent;
+          // Note: FullCalendar's droppable doesn't work well with external HTML5 draggables
+          // We handle drops via the date cell's native drop event instead
+          editable={false}
+          droppable={false}
 
-            console.log('[FullCalendar] Drop event:', {
-              date: info.date,
-              draggedEl: dragEvent,
-              dataTransfer: jsEvent?.dataTransfer
+          // Custom date cell handling for drop support
+          dayCellDidMount={(arg) => {
+            const cell = arg.el;
+
+            // Add drop handlers to each date cell
+            cell.addEventListener('dragover', (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              cell.classList.add('fc-day-highlight');
             });
 
-            const start = info.date;
-            start.setHours(12, 0, 0, 0);
-            const end = new Date(start);
-            onSelectSlot({ start, end });
-          }}
+            cell.addEventListener('dragleave', (e) => {
+              cell.classList.remove('fc-day-highlight');
+            });
 
-          // Enable receiving external drags
-          eventReceive={(info) => {
-            console.log('[FullCalendar] Event received:', info);
+            cell.addEventListener('drop', (e: any) => {
+              e.preventDefault();
+              e.stopPropagation();
+              cell.classList.remove('fc-day-highlight');
+
+              const leadId = e.dataTransfer.getData('application/halo-lead');
+              console.log('[DateCell] Drop on date:', arg.date, 'Lead:', leadId);
+
+              // Call onSelectSlot with this cell's date
+              const start = new Date(arg.date);
+              start.setHours(12, 0, 0, 0);
+              const end = new Date(start);
+              onSelectSlot({ start, end });
+            });
           }}
 
           // Custom event rendering
