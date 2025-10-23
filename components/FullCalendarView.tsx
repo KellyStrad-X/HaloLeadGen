@@ -233,8 +233,13 @@ export default function FullCalendarView({
 
   // Handle external drag enter/leave for visual feedback
   const handleDragEnter = (e: React.DragEvent) => {
-    const draggedFromCalendar = e.dataTransfer.types.includes('text/plain');
-    if (!draggedFromCalendar || e.currentTarget === e.target) {
+    // Check if it's an external drag (not from calendar events)
+    const hasLeadData = e.dataTransfer.types.includes('application/halo-lead');
+    const hasJobData = e.dataTransfer.types.includes('application/halo-job');
+
+    console.log('[FullCalendar] Drag enter - types:', e.dataTransfer.types);
+
+    if ((hasLeadData || hasJobData) && (e.currentTarget === e.target || !e.dataTransfer.types.includes('text/plain'))) {
       setIsDraggingExternal(true);
     }
   };
@@ -255,8 +260,15 @@ export default function FullCalendarView({
         e.dataTransfer.dropEffect = 'move';
       }}
       onDrop={(e) => {
-        console.log('[Container] Drop event:', e.dataTransfer.getData('application/halo-lead'));
+        const leadId = e.dataTransfer.getData('application/halo-lead');
+        const jobId = e.dataTransfer.getData('application/halo-job');
+        console.log('[Container] Drop event - Lead:', leadId, 'Job:', jobId);
         setIsDraggingExternal(false);
+
+        // Clear drag state after drop
+        if (onDragStateChange) {
+          setTimeout(() => onDragStateChange(null), 100);
+        }
       }}
     >
       <style jsx global>{`
