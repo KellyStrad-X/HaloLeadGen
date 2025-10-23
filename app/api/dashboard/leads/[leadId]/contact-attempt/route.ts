@@ -26,7 +26,7 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { contactAttempt, isColdLead } = body;
+    const { contactAttempt, isColdLead, inspector, internalNotes } = body;
 
     if (typeof contactAttempt !== 'number') {
       return NextResponse.json(
@@ -71,12 +71,22 @@ export async function PATCH(
       );
     }
 
-    // Update the lead with contact attempt and cold status
-    await leadRef.update({
+    // Update the lead with contact attempt, cold status, and optional inspector/notes
+    const updateData: any = {
       contactAttempt,
       isColdLead,
       updatedAt: new Date(),
-    });
+    };
+
+    // Add optional fields if provided
+    if (inspector !== undefined) {
+      updateData.inspector = inspector;
+    }
+    if (internalNotes !== undefined) {
+      updateData.internalNotes = internalNotes;
+    }
+
+    await leadRef.update(updateData);
 
     return NextResponse.json({ success: true });
   } catch (error) {

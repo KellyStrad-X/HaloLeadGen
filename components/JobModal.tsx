@@ -174,21 +174,16 @@ export default function JobModal(props: JobModalProps) {
     try {
       // Handle contact attempts (uncontacted/1st/2nd/3rd) for promote mode
       if (props.mode === 'promote' && contactAction !== 'scheduled') {
-        // Update contact attempt status
+        // Update contact attempt status AND inspector/notes in one call
         if (props.onContactAttempt) {
           const attemptMap: Record<string, number> = { 'uncontacted': 0, '1st': 1, '2nd': 2, '3rd': 3, 'cold': 0 };
           const attempt = attemptMap[contactAction] || 0;
           const isCold = contactAction === 'cold';
-          await props.onContactAttempt(props.lead.id, attempt, isCold);
-        }
+          const inspectorValue = inspector.trim() ? inspector.trim() : null;
+          const notesValue = internalNotes.trim() ? internalNotes.trim() : null;
 
-        // ALSO save inspector/notes via onSubmit (without scheduling)
-        await onSubmit({
-          status,
-          scheduledInspectionDate: null,
-          inspector: inspector.trim() ? inspector.trim() : null,
-          internalNotes: internalNotes.trim() ? internalNotes.trim() : null,
-        });
+          await props.onContactAttempt(props.lead.id, attempt, isCold, inspectorValue, notesValue);
+        }
 
         onClose();
         return;

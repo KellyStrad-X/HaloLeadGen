@@ -710,36 +710,30 @@ export default function GlobalSidebar() {
           onClose={() => setLeadModalState({ lead: null, isOpen: false })}
           lead={leadModalState.lead}
           defaultStatus="scheduled"
-          onContactAttempt={async (leadId: string, attempt: number, isCold?: boolean) => {
+          onContactAttempt={async (leadId: string, attempt: number, isCold?: boolean, inspector?: string | null, internalNotes?: string | null) => {
             // Update contact attempt via API
             if (!user) return;
             try {
               const token = await user.getIdToken();
 
-              // If marking as cold, use different endpoint
-              if (isCold) {
-                await fetch(`/api/dashboard/leads/${leadId}`, {
-                  method: 'PATCH',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                  },
-                  body: JSON.stringify({ isColdLead: true }),
-                });
-              } else {
-                await fetch(`/api/dashboard/leads/${leadId}`, {
-                  method: 'PATCH',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
-                  },
-                  body: JSON.stringify({ contactAttempt: attempt }),
-                });
-              }
+              await fetch(`/api/dashboard/leads/${leadId}/contact-attempt`, {
+                method: 'PATCH',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                  contactAttempt: attempt,
+                  isColdLead: isCold || false,
+                  inspector,
+                  internalNotes
+                }),
+              });
 
               await loadData();
             } catch (error) {
               console.error('Error updating contact attempt:', error);
+              throw error;
             }
           }}
           onRemoveFromCalendar={async (leadId: string) => {
@@ -761,43 +755,25 @@ export default function GlobalSidebar() {
             try {
               const token = await user.getIdToken();
 
-              // If date is selected, promote to job (scheduled workflow)
-              if (scheduledInspectionDate) {
-                const response = await fetch('/api/dashboard/jobs', {
-                  method: 'POST',
-                  headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                    leadId: leadModalState.lead.id,
-                    status,
-                    scheduledInspectionDate,
-                    inspector,
-                    internalNotes,
-                  }),
-                });
+              // This is only called when scheduling (contactAction === 'scheduled')
+              // Create a job with the scheduled date
+              const response = await fetch('/api/dashboard/jobs', {
+                method: 'POST',
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  leadId: leadModalState.lead.id,
+                  status,
+                  scheduledInspectionDate,
+                  inspector,
+                  internalNotes,
+                }),
+              });
 
-                if (!response.ok) {
-                  throw new Error('Failed to schedule job');
-                }
-              } else {
-                // No date selected - just update lead fields (inspector, notes)
-                const response = await fetch(`/api/dashboard/leads/${leadModalState.lead.id}`, {
-                  method: 'PATCH',
-                  headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                    inspector: inspector || null,
-                    internalNotes: internalNotes || null,
-                  }),
-                });
-
-                if (!response.ok) {
-                  throw new Error('Failed to update lead');
-                }
+              if (!response.ok) {
+                throw new Error('Failed to schedule job');
               }
 
               await loadData();
