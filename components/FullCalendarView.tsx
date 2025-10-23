@@ -412,6 +412,13 @@ export default function FullCalendarView({
           box-shadow: inset 0 0 20px rgba(6, 182, 212, 0.2);
         }
 
+        /* Keep events clickable */
+        .fc-event {
+          pointer-events: auto !important;
+          position: relative;
+          z-index: 10;
+        }
+
         /* Disable pointer events on calendar events when dragging external lead */
         .dragging-external-lead .fc-event {
           pointer-events: none;
@@ -478,7 +485,7 @@ export default function FullCalendarView({
             // Add drop handlers to each date cell
             cell.addEventListener('dragover', (e) => {
               e.preventDefault();
-              e.stopPropagation();
+              // Don't stop propagation - let events handle their own interactions
               cell.classList.add('fc-day-highlight');
             });
 
@@ -488,17 +495,20 @@ export default function FullCalendarView({
 
             cell.addEventListener('drop', (e: any) => {
               e.preventDefault();
-              e.stopPropagation();
+              // Don't stop propagation - allow other handlers to work
               cell.classList.remove('fc-day-highlight');
 
               const leadId = e.dataTransfer.getData('application/halo-lead');
               console.log('[DateCell] Drop on date:', arg.date, 'Lead:', leadId);
+              console.log('[DateCell] Calling onSelectSlot...');
 
               // Call onSelectSlot with this cell's date
               const start = new Date(arg.date);
               start.setHours(12, 0, 0, 0);
               const end = new Date(start);
               onSelectSlot({ start, end });
+
+              console.log('[DateCell] onSelectSlot called');
             });
           }}
 

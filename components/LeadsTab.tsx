@@ -779,9 +779,17 @@ export default function LeadsTab() {
 
   const handleCalendarSlotSelect = useCallback(
     async (slotInfo: { start: Date; end: Date }) => {
+      console.log('[LeadsTab] handleCalendarSlotSelect called:', {
+        date: slotInfo.start,
+        draggingItem,
+        hasDraggingItem: !!draggingItem,
+        draggingItemType: draggingItem?.type
+      });
+
       // If we're dragging a lead, set its tentative date to the selected slot
       if (draggingItem && draggingItem.type === 'lead') {
         const lead = leads.find((l) => l.id === draggingItem.id);
+        console.log('[LeadsTab] Found lead:', lead?.name, 'ID:', lead?.id);
         if (!lead || !user) return;
 
         const leadId = lead.id; // Store ID to re-fetch after refresh
