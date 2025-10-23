@@ -710,19 +710,33 @@ export default function GlobalSidebar() {
           onClose={() => setLeadModalState({ lead: null, isOpen: false })}
           lead={leadModalState.lead}
           defaultStatus="scheduled"
-          onContactAttempt={async (leadId: string, attempt: number) => {
+          onContactAttempt={async (leadId: string, attempt: number, isCold?: boolean) => {
             // Update contact attempt via API
             if (!user) return;
             try {
               const token = await user.getIdToken();
-              await fetch(`/api/dashboard/leads/${leadId}/contact-attempt`, {
-                method: 'PATCH',
-                headers: {
-                  'Content-Type': 'application/json',
-                  Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({ contactAttempt: attempt }),
-              });
+
+              // If marking as cold, use different endpoint
+              if (isCold) {
+                await fetch(`/api/dashboard/leads/${leadId}`, {
+                  method: 'PATCH',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                  },
+                  body: JSON.stringify({ isColdLead: true }),
+                });
+              } else {
+                await fetch(`/api/dashboard/leads/${leadId}`, {
+                  method: 'PATCH',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                  },
+                  body: JSON.stringify({ contactAttempt: attempt }),
+                });
+              }
+
               await loadData();
             } catch (error) {
               console.error('Error updating contact attempt:', error);

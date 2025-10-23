@@ -174,12 +174,22 @@ export default function JobModal(props: JobModalProps) {
     try {
       // Handle contact attempts (uncontacted/1st/2nd/3rd) for promote mode
       if (props.mode === 'promote' && contactAction !== 'scheduled') {
+        // Update contact attempt status
         if (props.onContactAttempt) {
           const attemptMap: Record<string, number> = { 'uncontacted': 0, '1st': 1, '2nd': 2, '3rd': 3, 'cold': 0 };
           const attempt = attemptMap[contactAction] || 0;
           const isCold = contactAction === 'cold';
           await props.onContactAttempt(props.lead.id, attempt, isCold);
         }
+
+        // ALSO save inspector/notes via onSubmit (without scheduling)
+        await onSubmit({
+          status,
+          scheduledInspectionDate: null,
+          inspector: inspector.trim() ? inspector.trim() : null,
+          internalNotes: internalNotes.trim() ? internalNotes.trim() : null,
+        });
+
         onClose();
         return;
       }
@@ -269,54 +279,45 @@ export default function JobModal(props: JobModalProps) {
           </div>
 
           <div className="space-y-5">
-            {props.mode === 'promote' && (
-              <div>
-                <label className="text-sm font-medium text-gray-300" htmlFor="contact-action">
-                  Contact Outcome
-                </label>
+            <div>
+              <label className="text-sm font-medium text-gray-300" htmlFor="contact-status">
+                Contact Status
+              </label>
+              {props.mode === 'promote' ? (
+                <>
+                  <select
+                    id="contact-status"
+                    className="mt-2 w-full rounded-lg border border-[#373e47] bg-[#0d1117] px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                    value={contactAction === 'cold' ? 'uncontacted' : contactAction}
+                    onChange={(event) => setContactAction(event.target.value as typeof contactAction)}
+                    disabled={isSubmitting}
+                  >
+                    <option value="uncontacted">Uncontacted</option>
+                    <option value="1st">First Contact Attempt</option>
+                    <option value="2nd">Second Contact Attempt</option>
+                    <option value="3rd">Third Contact Attempt</option>
+                    <option value="scheduled">Scheduled</option>
+                  </select>
+                  <p className="mt-1 text-xs text-gray-500">
+                    {contactAction === 'uncontacted'
+                      ? 'Lead is on calendar but not yet contacted'
+                      : contactAction === 'scheduled'
+                      ? 'Confirm inspection date and schedule job'
+                      : 'Track contact attempt and keep lead active'}
+                  </p>
+                </>
+              ) : (
                 <select
-                  id="contact-action"
-                  className="mt-2 w-full rounded-lg border border-[#373e47] bg-[#0d1117] px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                  value={contactAction === 'cold' ? 'uncontacted' : contactAction}
-                  onChange={(event) => setContactAction(event.target.value as typeof contactAction)}
-                  disabled={isSubmitting}
-                >
-                  <option value="uncontacted">Uncontacted</option>
-                  <option value="1st">First Contact Attempt</option>
-                  <option value="2nd">Second Contact Attempt</option>
-                  <option value="3rd">Third Contact Attempt</option>
-                  <option value="scheduled">Scheduled</option>
-                </select>
-                <p className="mt-1 text-xs text-gray-500">
-                  {contactAction === 'uncontacted'
-                    ? 'Lead is on calendar but not yet contacted'
-                    : contactAction === 'scheduled'
-                    ? 'Confirm inspection date and schedule job'
-                    : 'Track contact attempt and keep lead active'}
-                </p>
-              </div>
-            )}
-
-            {props.mode === 'edit' && (
-              <div>
-                <label className="text-sm font-medium text-gray-300" htmlFor="job-status">
-                  Job Status
-                </label>
-                <select
-                  id="job-status"
+                  id="contact-status"
                   className="mt-2 w-full rounded-lg border border-[#373e47] bg-[#0d1117] px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
                   value={status}
                   onChange={(event) => setStatus(event.target.value as LeadJobStatus)}
                   disabled={isSubmitting}
                 >
-                  {STATUS_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
+                  <option value="scheduled">Scheduled</option>
                 </select>
-              </div>
-            )}
+              )}
+            </div>
 
             <div>
               <label className="text-sm font-medium text-gray-300" htmlFor="job-date">
@@ -543,14 +544,14 @@ export default function JobModal(props: JobModalProps) {
               onClick={handleSubmit}
               disabled={isSubmitting}
               className={`rounded-lg px-6 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
-                scheduledInspectionDate
+                props.mode === 'promote' && scheduledInspectionDate
                   ? 'bg-green-500 text-black hover:bg-green-400'
                   : 'bg-cyan-500 text-black hover:bg-cyan-400'
               }`}
             >
               {isSubmitting
                 ? 'Saving...'
-                : scheduledInspectionDate
+                : props.mode === 'promote' && scheduledInspectionDate
                 ? 'Schedule'
                 : props.mode === 'promote'
                 ? contactAction === 'cold'
