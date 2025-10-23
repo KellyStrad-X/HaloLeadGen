@@ -28,6 +28,15 @@ export async function PATCH(
     const body = await request.json();
     const { contactAttempt, isColdLead, inspector, internalNotes } = body;
 
+    // Debug logging
+    console.log('[Contact Attempt API] Received request body:', {
+      contactAttempt,
+      isColdLead,
+      inspector,
+      internalNotes,
+      leadId
+    });
+
     if (typeof contactAttempt !== 'number') {
       return NextResponse.json(
         { error: 'contactAttempt must be a number' },
@@ -38,6 +47,21 @@ export async function PATCH(
     if (typeof isColdLead !== 'boolean') {
       return NextResponse.json(
         { error: 'isColdLead must be a boolean' },
+        { status: 400 }
+      );
+    }
+
+    // Validate optional fields if provided
+    if (inspector !== undefined && typeof inspector !== 'string' && inspector !== null) {
+      return NextResponse.json(
+        { error: 'inspector must be a string or null' },
+        { status: 400 }
+      );
+    }
+
+    if (internalNotes !== undefined && typeof internalNotes !== 'string' && internalNotes !== null) {
+      return NextResponse.json(
+        { error: 'internalNotes must be a string or null' },
         { status: 400 }
       );
     }
@@ -86,7 +110,21 @@ export async function PATCH(
       updateData.internalNotes = internalNotes;
     }
 
+    console.log('[Contact Attempt API] Updating lead with data:', updateData);
+
     await leadRef.update(updateData);
+
+    console.log('[Contact Attempt API] Lead updated successfully');
+
+    // Verify the update by reading back
+    const updatedLeadDoc = await leadRef.get();
+    const updatedData = updatedLeadDoc.data();
+    console.log('[Contact Attempt API] Verification - Updated lead data:', {
+      inspector: updatedData?.inspector,
+      internalNotes: updatedData?.internalNotes,
+      contactAttempt: updatedData?.contactAttempt,
+      isColdLead: updatedData?.isColdLead
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

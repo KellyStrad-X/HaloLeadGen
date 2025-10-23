@@ -32,7 +32,7 @@ interface PromoteModeProps extends BaseJobModalProps {
     tentativeDate?: string | null;
     contactAttempt?: number;
   };
-  onContactAttempt?: (leadId: string, attempt: number, isCold: boolean) => Promise<void>;
+  onContactAttempt?: (leadId: string, attempt: number, isCold: boolean, inspector?: string | null, internalNotes?: string | null) => Promise<void>;
   onRemoveFromCalendar?: (leadId: string) => Promise<void>;
   job?: undefined;
 }
@@ -170,6 +170,12 @@ export default function JobModal(props: JobModalProps) {
     props.mode === 'promote' ? props.lead.campaignName : null;
 
   const handleSubmit = async () => {
+    // Validation: If scheduled is selected, date is required
+    if (props.mode === 'promote' && contactAction === 'scheduled' && !scheduledInspectionDate) {
+      alert('Please select an inspection date when scheduling a job.');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       // Handle contact attempts (uncontacted/1st/2nd/3rd) for promote mode
@@ -321,7 +327,16 @@ export default function JobModal(props: JobModalProps) {
               <DatePicker
                 id="job-date"
                 selected={scheduledInspectionDate}
-                onChange={(date) => setScheduledInspectionDate(date)}
+                onChange={(date) => {
+                  setScheduledInspectionDate(date);
+                  // Automatically set to scheduled when a date is picked
+                  if (date && props.mode === 'promote') {
+                    setContactAction('scheduled');
+                  } else if (!date && props.mode === 'promote' && contactAction === 'scheduled') {
+                    // If date is cleared and we were in scheduled mode, reset to uncontacted
+                    setContactAction('uncontacted');
+                  }
+                }}
                 dateFormat="yyyy-MM-dd"
                 placeholderText="Select a date"
                 disabled={isSubmitting}
