@@ -1004,7 +1004,10 @@ export default function LeadsTab() {
             }, 50);
           });
         }}
-        onDragEnd={() => setDraggingItem(null)}
+        onDragEnd={() => {
+          // Delay clearing draggingItem to allow drop handler to complete first
+          setTimeout(() => setDraggingItem(null), 150);
+        }}
         className="rounded-lg border border-[#373e47] bg-[#1e2227] p-4 shadow-sm transition ring-cyan-500/40 hover:ring-2"
       >
         <div className="flex flex-wrap items-start justify-between gap-3">
@@ -1100,7 +1103,10 @@ export default function LeadsTab() {
           }, 50);
         });
       }}
-      onDragEnd={() => setDraggingItem(null)}
+      onDragEnd={() => {
+        // Delay clearing draggingItem to allow drop handler to complete first
+        setTimeout(() => setDraggingItem(null), 150);
+      }}
       className="rounded-lg border border-[#373e47] bg-[#1e2227] p-4 shadow-sm transition ring-blue-500/40 hover:ring-2"
     >
       <div className="flex items-start justify-between gap-3">
