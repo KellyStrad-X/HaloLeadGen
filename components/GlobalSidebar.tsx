@@ -28,7 +28,16 @@ interface Job {
   campaignId: string;
   campaignName: string;
   customerName: string;
+  email: string;
+  phone: string;
+  address: string | null;
+  notes: string | null;
   status: string;
+  scheduledInspectionDate: string | null;
+  inspector: string | null;
+  internalNotes: string | null;
+  promotedAt: string;
+  completedAt: string | null;
 }
 
 interface DashboardCampaign {
@@ -365,45 +374,110 @@ export default function GlobalSidebar() {
     );
   };
 
-  if (isSidebarCollapsed) {
-    return (
-      <div className="flex-shrink-0 border-r border-[#373e47] bg-[#1e2227]">
-        <button
-          onClick={toggleSidebar}
-          className="h-full w-12 flex items-center justify-center text-gray-400 hover:text-cyan-400 hover:bg-[#2d333b] transition-colors"
-          title="Expand sidebar"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
+  const renderJobCard = (job: Job) => (
+    <div
+      key={job.id}
+      className="rounded-lg border border-[#373e47] bg-[#1e2227] p-3 shadow-sm transition ring-blue-500/40 hover:ring-2 cursor-pointer"
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-white truncate">{job.customerName}</p>
+          <p className="text-xs text-gray-400 truncate">{job.campaignName}</p>
+        </div>
+        <span className="rounded-full bg-green-900/50 text-green-300 px-2 py-1 text-[10px] font-semibold uppercase flex-shrink-0">
+          {job.status.replace('_', ' ')}
+        </span>
       </div>
-    );
-  }
+      <div className="mt-2 space-y-1 text-xs text-gray-400">
+        {job.scheduledInspectionDate && (
+          <div className="flex items-center gap-2 truncate">
+            <svg className="h-3 w-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+            <span className="truncate">
+              {new Date(job.scheduledInspectionDate).toLocaleDateString()}
+            </span>
+          </div>
+        )}
+        {job.inspector && (
+          <div className="flex items-center gap-2 truncate">
+            <svg className="h-3 w-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 20H7a2 2 0 01-2-2 4 4 0 014-4h6a4 4 0 014 4 2 2 0 01-2 2z"
+              />
+            </svg>
+            <span className="truncate">{job.inspector}</span>
+          </div>
+        )}
+        <div className="flex items-center gap-2 truncate">
+          <svg className="h-3 w-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+          <span className="truncate">{job.email}</span>
+        </div>
+        <div className="flex items-center gap-2 truncate">
+          <svg className="h-3 w-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+          </svg>
+          <span className="truncate">{job.phone}</span>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <>
       <div
-        className="flex-shrink-0 w-[400px] border-r border-[#373e47] bg-[#1e2227] flex flex-col h-[calc(100vh-64px)] overflow-hidden transition-all duration-300"
+        className={`flex-shrink-0 border-r border-[#373e47] bg-[#1e2227] flex flex-col h-[calc(100vh-64px)] overflow-hidden transition-all duration-300 ease-in-out ${
+          isSidebarCollapsed ? 'w-12' : 'w-[400px]'
+        }`}
         style={{ maxHeight: 'calc(100vh - 64px)' }}
       >
-        {/* Collapse Button */}
-        <div className="flex items-center justify-between border-b border-[#373e47] px-4 py-3">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
-            Campaigns & Leads
-          </h2>
+        {isSidebarCollapsed ? (
+          /* Collapsed state - show expand button */
           <button
             onClick={toggleSidebar}
-            className="text-gray-400 hover:text-cyan-400 transition-colors p-1 rounded hover:bg-[#2d333b]"
-            title="Collapse sidebar"
+            className="h-full w-full flex items-center justify-center text-gray-400 hover:text-cyan-400 hover:bg-[#2d333b] transition-colors"
+            title="Expand sidebar"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </button>
-        </div>
+        ) : (
+          /* Expanded state - show all content */
+          <>
+            {/* Collapse Button */}
+            <div className="flex items-center justify-between border-b border-[#373e47] px-4 py-3 flex-shrink-0">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400 whitespace-nowrap">
+                Campaigns & Leads
+              </h2>
+              <button
+                onClick={toggleSidebar}
+                className="text-gray-400 hover:text-cyan-400 transition-colors p-1 rounded hover:bg-[#2d333b]"
+                title="Collapse sidebar"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+            </div>
 
-        {loading ? (
+            {loading ? (
           <div className="flex items-center justify-center h-64">
             <div className="text-cyan-400 text-sm">Loading...</div>
           </div>
@@ -581,12 +655,20 @@ export default function GlobalSidebar() {
                 )}
 
                 {activeBucket === 'completed' && (
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <p className="text-gray-400 text-sm">View completed jobs in the calendar below</p>
-                    <p className="mt-2 text-xs text-gray-500">
-                      Completed jobs ({filteredJobs.completed.length})
-                    </p>
-                  </div>
+                  <>
+                    {filteredJobs.completed.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-12 text-center">
+                        <p className="text-gray-400 text-sm">No completed jobs yet</p>
+                        <p className="mt-2 text-xs text-gray-500">
+                          Completed inspections will appear here
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {filteredJobs.completed.map(renderJobCard)}
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
 
@@ -615,6 +697,8 @@ export default function GlobalSidebar() {
                 </div>
               )}
             </div>
+          </>
+            )}
           </>
         )}
       </div>

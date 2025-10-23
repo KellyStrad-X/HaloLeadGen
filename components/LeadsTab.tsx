@@ -889,7 +889,7 @@ export default function LeadsTab() {
 
       {/* Scheduled Inspections Calendar - Now Full Width */}
       <div>
-        <div className="mb-4">
+        <div className="mb-4 -ml-16 lg:-ml-24">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
             Scheduled Inspections ({filteredJobs.scheduled.length + leads.filter(l => l.tentativeDate && !l.isColdLead).length})
           </h2>

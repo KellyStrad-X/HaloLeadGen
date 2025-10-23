@@ -173,7 +173,7 @@ export default function FullCalendarView({
     const event = arg.event.extendedProps as CalendarEvent;
 
     return (
-      <div className="flex flex-col gap-1 overflow-hidden p-1">
+      <div className="flex flex-col gap-0.5 overflow-hidden">
         <div className="flex items-center justify-between gap-2">
           <span className="truncate font-semibold text-xs">{event.customerName}</span>
           {event.type === 'tentative' && (
@@ -308,7 +308,7 @@ export default function FullCalendarView({
           cursor: pointer;
           border: 2px solid;
           border-radius: 6px;
-          padding: 4px 8px;
+          padding: 2px 6px;
           font-weight: 600;
           margin-bottom: 2px;
         }
