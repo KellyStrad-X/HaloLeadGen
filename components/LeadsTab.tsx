@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
+import { useDashboardSidebar } from '@/lib/dashboard-sidebar-context';
 import LeadDetailsModal from './LeadDetailsModal';
 import JobModal, { type LeadJobStatus } from './JobModal';
 import CalendarView, { type CalendarEvent } from './CalendarView';
@@ -51,21 +52,6 @@ interface JobsResponse {
 
 type JobBuckets = Record<LeadJobStatus, Job[]>;
 
-interface CampaignSummary {
-  id: string;
-  name: string;
-  newLeadCount: number;
-  jobCount: number;
-  campaignStatus?: 'Active' | 'Inactive';
-}
-
-interface DashboardCampaign {
-  id: string;
-  campaignName: string;
-  campaignStatus: 'Active' | 'Inactive';
-  leadCount: number;
-}
-
 interface PromoteModalState {
   mode: 'promote';
   lead: Lead;
@@ -84,44 +70,6 @@ const leadStatusChip: Record<LegacyLeadStatus, string> = {
   contacted: 'bg-blue-900/40 text-blue-200',
   scheduled: 'bg-orange-900/40 text-orange-200',
   completed: 'bg-green-900/50 text-green-300',
-};
-
-const getLeadBadge = (lead: Lead): { label: string; className: string } => {
-  if (lead.isColdLead) {
-    return {
-      label: '❄️',
-      className: 'bg-gray-500/20 text-gray-400 ring-1 ring-gray-500/40',
-    };
-  }
-
-  const attempt = lead.contactAttempt ?? 0;
-  switch (attempt) {
-    case 0:
-      return {
-        label: 'NEW',
-        className: 'bg-cyan-500/20 text-cyan-300 ring-1 ring-cyan-500/40',
-      };
-    case 1:
-      return {
-        label: '1ST ATTEMPT',
-        className: 'bg-yellow-500/20 text-yellow-300 ring-1 ring-yellow-500/40',
-      };
-    case 2:
-      return {
-        label: '2ND ATTEMPT',
-        className: 'bg-orange-500/20 text-orange-300 ring-1 ring-orange-500/40',
-      };
-    case 3:
-      return {
-        label: '3RD ATTEMPT',
-        className: 'bg-red-500/20 text-red-300 ring-1 ring-red-500/40',
-      };
-    default:
-      return {
-        label: 'NEW',
-        className: 'bg-cyan-500/20 text-cyan-300 ring-1 ring-cyan-500/40',
-      };
-  }
 };
 
 const JOB_COLUMNS: Array<{
@@ -169,6 +117,7 @@ function parseLocalDate(dateStr: string): Date {
 
 export default function LeadsTab() {
   const { user } = useAuth();
+  const { selectedCampaignId, draggingItem, setDraggingItem, refreshSidebar } = useDashboardSidebar();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [jobs, setJobs] = useState<JobBuckets>({
     scheduled: [],
@@ -177,7 +126,6 @@ export default function LeadsTab() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeMobileView, setActiveMobileView] = useState<'leads' | 'jobs'>('leads');
-  const [selectedCampaignId, setSelectedCampaignId] = useState<string>('all');
   const [leadModalState, setLeadModalState] = useState<{
     leadId: string;
     campaignId: string;
@@ -185,18 +133,6 @@ export default function LeadsTab() {
   }>({ leadId: '', campaignId: '', isOpen: false });
   const [jobModalState, setJobModalState] = useState<ModalState>(null);
   const [isMutating, setIsMutating] = useState(false);
-  const [draggingItem, setDraggingItem] = useState<{ type: 'lead' | 'job'; id: string } | null>(null);
-  const [leadSortOrder, setLeadSortOrder] = useState<'newest' | 'oldest'>('newest');
-  const [leadsPage, setLeadsPage] = useState(0);
-  const [activeBucket, setActiveBucket] = useState<'leads' | 'cold' | 'completed'>('leads');
-  const [showAllLeadsModal, setShowAllLeadsModal] = useState(false);
-  const [showColdBucketModal, setShowColdBucketModal] = useState(false);
-  const [showCompletedJobsModal, setShowCompletedJobsModal] = useState(false);
-  const [expandedJobSections, setExpandedJobSections] = useState<Record<LeadJobStatus, boolean>>({
-    scheduled: true,
-    completed: true,
-  });
-  const [allCampaigns, setAllCampaigns] = useState<DashboardCampaign[]>([]);
   const [calendarDate, setCalendarDate] = useState(new Date());
   const [calendarView, setCalendarView] = useState<'month' | 'week'>('month');
 
@@ -246,137 +182,7 @@ export default function LeadsTab() {
     };
   }, [draggingItem]);
 
-  const campaignSummaries = useMemo<CampaignSummary[]>(() => {
-    const map = new Map<string, CampaignSummary>();
-
-    // First, add ALL campaigns from the fetched list
-    allCampaigns.forEach((campaign) => {
-      map.set(campaign.id, {
-        id: campaign.id,
-        name: campaign.campaignName,
-        newLeadCount: 0,
-        jobCount: 0,
-        campaignStatus: campaign.campaignStatus,
-      });
-    });
-
-    // Then update counts from leads (excluding promoted leads)
-    leads.forEach((lead) => {
-      if (!map.has(lead.campaignId)) {
-        // Campaign exists in leads but not in allCampaigns (shouldn't happen, but defensive)
-        map.set(lead.campaignId, {
-          id: lead.campaignId,
-          name: lead.campaignName,
-          newLeadCount: 0,
-          jobCount: 0,
-        });
-      }
-      const entry = map.get(lead.campaignId)!;
-      entry.newLeadCount += 1;
-    });
-
-    // Update job counts
-    Object.values(jobs).forEach((list) => {
-      list.forEach((job) => {
-        if (!map.has(job.campaignId)) {
-          // Campaign exists in jobs but not in allCampaigns (shouldn't happen, but defensive)
-          map.set(job.campaignId, {
-            id: job.campaignId,
-            name: job.campaignName,
-            newLeadCount: 0,
-            jobCount: 0,
-          });
-        }
-        const entry = map.get(job.campaignId)!;
-        entry.jobCount += 1;
-      });
-    });
-
-    const result = Array.from(map.values());
-    result.sort((a, b) => {
-      // Sort active campaigns before inactive
-      if (a.campaignStatus !== b.campaignStatus) {
-        if (a.campaignStatus === 'Active') return -1;
-        if (b.campaignStatus === 'Active') return 1;
-      }
-      // Within same status, sort by lead count, then job count, then name
-      if (a.newLeadCount !== b.newLeadCount) {
-        return b.newLeadCount - a.newLeadCount;
-      }
-      if (a.jobCount !== b.jobCount) {
-        return b.jobCount - a.jobCount;
-      }
-      return a.name.localeCompare(b.name);
-    });
-
-    return result;
-  }, [leads, jobs, allCampaigns]);
-
-  const campaignOptions = useMemo(() => {
-    const totalJobs = jobs.scheduled.length + jobs.completed.length;
-
-    return [
-      {
-        id: 'all',
-        name: 'All Campaigns',
-        newLeadCount: leads.length,
-        jobCount: totalJobs,
-      },
-      ...campaignSummaries,
-    ];
-  }, [campaignSummaries, leads.length, jobs]);
-
-  const selectedCampaignName = useMemo(() => {
-    if (selectedCampaignId === 'all') {
-      return 'All Campaigns';
-    }
-    const match = campaignSummaries.find((campaign) => campaign.id === selectedCampaignId);
-    return match?.name ?? 'All Campaigns';
-  }, [selectedCampaignId, campaignSummaries]);
-
-  const filteredLeads = useMemo(() => {
-    // Filter out cold leads AND leads with tentative dates (those are on calendar)
-    const activeLeads = leads.filter((lead) => !lead.isColdLead && !lead.tentativeDate);
-    if (selectedCampaignId === 'all') return activeLeads;
-    return activeLeads.filter((lead) => lead.campaignId === selectedCampaignId);
-  }, [leads, selectedCampaignId]);
-
-  const coldLeads = useMemo(() => {
-    const cold = leads.filter((lead) => lead.isColdLead);
-    if (selectedCampaignId === 'all') return cold;
-    return cold.filter((lead) => lead.campaignId === selectedCampaignId);
-  }, [leads, selectedCampaignId]);
-
-  const sortedLeads = useMemo(() => {
-    const sorted = [...filteredLeads];
-    sorted.sort((a, b) => {
-      const dateA = new Date(a.submittedAt).getTime();
-      const dateB = new Date(b.submittedAt).getTime();
-      return leadSortOrder === 'newest' ? dateB - dateA : dateA - dateB;
-    });
-    return sorted;
-  }, [filteredLeads, leadSortOrder]);
-
-  const LEADS_PER_PAGE = 8;
-  const totalLeadPages = Math.ceil(sortedLeads.length / LEADS_PER_PAGE);
-  const paginatedLeads = useMemo(() => {
-    const start = leadsPage * LEADS_PER_PAGE;
-    return sortedLeads.slice(start, start + LEADS_PER_PAGE);
-  }, [sortedLeads, leadsPage]);
-
-  // Reset to page 0 when filters change
-  useEffect(() => {
-    setLeadsPage(0);
-  }, [selectedCampaignId, leadSortOrder]);
-
-  // Clamp page when total pages changes (e.g., leads promoted, data changes)
-  useEffect(() => {
-    if (totalLeadPages === 0) {
-      setLeadsPage(0);
-    } else if (leadsPage >= totalLeadPages) {
-      setLeadsPage(Math.max(0, totalLeadPages - 1));
-    }
-  }, [totalLeadPages, leadsPage]);
+  // Filter jobs by selected campaign
 
   const filteredJobs = useMemo<JobBuckets>(() => {
     if (selectedCampaignId === 'all') return jobs;
@@ -387,9 +193,6 @@ export default function LeadsTab() {
   }, [jobs, selectedCampaignId]);
 
   const jobIndex = useMemo(() => groupJobsById(filteredJobs), [filteredJobs]);
-  const leadsCountForSelected = filteredLeads.length;
-  const jobsCountForSelected =
-    filteredJobs.scheduled.length + filteredJobs.completed.length;
 
   // Convert jobs and tentative leads to calendar events
   const calendarEvents = useMemo<CalendarEvent[]>(() => {
@@ -442,16 +245,6 @@ export default function LeadsTab() {
     return events;
   }, [filteredJobs.scheduled, leads, selectedCampaignId]);
 
-  useEffect(() => {
-    if (selectedCampaignId === 'all') {
-      return;
-    }
-    const exists = campaignSummaries.some((campaign) => campaign.id === selectedCampaignId);
-    if (!exists) {
-      setSelectedCampaignId('all');
-    }
-  }, [campaignSummaries, selectedCampaignId]);
-
   const loadData = useCallback(async () => {
     if (!user) {
       setLeads([]);
@@ -465,14 +258,11 @@ export default function LeadsTab() {
 
     try {
       const token = await user.getIdToken();
-      const [leadsResponse, jobsResponse, campaignsResponse] = await Promise.all([
+      const [leadsResponse, jobsResponse] = await Promise.all([
         fetch('/api/dashboard/leads', {
           headers: { Authorization: `Bearer ${token}` },
         }),
         fetch('/api/dashboard/jobs', {
-          headers: { Authorization: `Bearer ${token}` },
-        }),
-        fetch('/api/dashboard/campaigns', {
           headers: { Authorization: `Bearer ${token}` },
         }),
       ]);
@@ -487,21 +277,14 @@ export default function LeadsTab() {
         throw new Error(payload.error || 'Failed to load jobs');
       }
 
-      if (!campaignsResponse.ok) {
-        const payload = await campaignsResponse.json().catch(() => ({}));
-        throw new Error(payload.error || 'Failed to load campaigns');
-      }
-
       const leadsData = await leadsResponse.json();
       const jobsData: JobsResponse = await jobsResponse.json();
-      const campaignsData = await campaignsResponse.json();
 
       setLeads(leadsData.leads ?? []);
       setJobs({
         scheduled: jobsData.jobs?.scheduled ?? [],
         completed: jobsData.jobs?.completed ?? [],
       });
-      setAllCampaigns(campaignsData.campaigns ?? []);
     } catch (err) {
       console.error('Error loading leads/jobs', err);
       setError(err instanceof Error ? err.message : 'Failed to load leads and jobs');
@@ -517,7 +300,8 @@ export default function LeadsTab() {
   const refreshData = useCallback(async () => {
     if (isMutating) return;
     await loadData();
-  }, [isMutating, loadData]);
+    refreshSidebar();
+  }, [isMutating, loadData, refreshSidebar]);
 
   const openLeadModal = (lead: Lead) => {
     setLeadModalState({ leadId: lead.id, campaignId: lead.campaignId, isOpen: true });
@@ -575,6 +359,7 @@ export default function LeadsTab() {
         }
 
         await loadData();
+        refreshSidebar();
       } catch (err) {
         console.error('Promote lead error', err);
         setError(err instanceof Error ? err.message : 'Failed to promote lead');
@@ -582,7 +367,7 @@ export default function LeadsTab() {
         setIsMutating(false);
       }
     },
-    [user, loadData]
+    [user, loadData, refreshSidebar]
   );
 
   const updateJob = useCallback(
@@ -615,6 +400,7 @@ export default function LeadsTab() {
         }
 
         await loadData();
+        refreshSidebar();
       } catch (err) {
         console.error('Update job error', err);
         setError(err instanceof Error ? err.message : 'Failed to update job');
@@ -622,7 +408,7 @@ export default function LeadsTab() {
         setIsMutating(false);
       }
     },
-    [user, loadData]
+    [user, loadData, refreshSidebar]
   );
 
   const updateLeadContactAttempt = useCallback(
@@ -657,6 +443,7 @@ export default function LeadsTab() {
         }
 
         await loadData();
+        refreshSidebar();
       } catch (err) {
         console.error('Update contact attempt error', err);
         setError(err instanceof Error ? err.message : 'Failed to update contact attempt');
@@ -664,7 +451,7 @@ export default function LeadsTab() {
         setIsMutating(false);
       }
     },
-    [user, loadData]
+    [user, loadData, refreshSidebar]
   );
 
   const restoreColdLead = useCallback(
@@ -688,6 +475,7 @@ export default function LeadsTab() {
         }
 
         await loadData();
+        refreshSidebar();
       } catch (err) {
         console.error('Restore cold lead error', err);
         setError(err instanceof Error ? err.message : 'Failed to restore cold lead');
@@ -695,7 +483,7 @@ export default function LeadsTab() {
         setIsMutating(false);
       }
     },
-    [user, loadData]
+    [user, loadData, refreshSidebar]
   );
 
   // Calendar event handlers
@@ -757,6 +545,7 @@ export default function LeadsTab() {
           }
 
           await loadData();
+          refreshSidebar();
         } catch (err) {
           console.error('Error updating tentative date:', err);
           setError(err instanceof Error ? err.message : 'Failed to update tentative date');
@@ -765,7 +554,7 @@ export default function LeadsTab() {
         }
       }
     },
-    [updateJob, user, loadData]
+    [updateJob, user, loadData, refreshSidebar]
   );
 
   const handleCalendarSlotSelect = useCallback(
@@ -811,6 +600,7 @@ export default function LeadsTab() {
 
           // Refresh data to get updated lead with tentativeDate
           await loadData();
+          refreshSidebar();
 
           // Modal removed for faster workflow - contractors can drag multiple leads
           // and click them later to contact
@@ -828,7 +618,7 @@ export default function LeadsTab() {
         }
       }
     },
-    [draggingItem, leads, user, loadData, openPromoteModal]
+    [draggingItem, leads, user, loadData, refreshSidebar]
   );
 
   const handleRemoveFromCalendar = useCallback(
@@ -864,6 +654,7 @@ export default function LeadsTab() {
 
         // Refresh data to get authoritative state from server
         await loadData();
+        refreshSidebar();
       } catch (err) {
         console.error('Error removing from calendar:', err);
         setError(err instanceof Error ? err.message : 'Failed to remove from calendar');
@@ -874,7 +665,7 @@ export default function LeadsTab() {
         setIsMutating(false);
       }
     },
-    [user, loadData, leads]
+    [user, loadData, leads, refreshSidebar]
   );
 
   const handleLeadDrop = (event: React.DragEvent<HTMLDivElement>, targetStatus: LeadJobStatus) => {
@@ -959,107 +750,6 @@ export default function LeadsTab() {
       </div>
     );
   }
-
-  const renderLeadCard = (lead: Lead) => {
-    const badge = getLeadBadge(lead);
-    return (
-      <div
-        key={lead.id}
-        draggable
-        onDragStart={(event) => {
-          setDraggingItem({ type: 'lead', id: lead.id });
-          event.dataTransfer.setData('application/halo-lead', lead.id);
-          event.dataTransfer.effectAllowed = 'move';
-
-          // Set drag image to show the card being dragged
-          const target = event.currentTarget as HTMLElement;
-          const clone = target.cloneNode(true) as HTMLElement;
-          clone.style.position = 'absolute';
-          clone.style.top = '-9999px';
-          clone.style.left = '-9999px';
-          clone.style.opacity = '0.8';
-          clone.style.width = target.offsetWidth + 'px';
-          clone.style.pointerEvents = 'none';
-          document.body.appendChild(clone);
-          event.dataTransfer.setDragImage(clone, 0, 0);
-          // Remove clone after drag starts (longer delay for browser to capture)
-          requestAnimationFrame(() => {
-            setTimeout(() => {
-              if (clone.parentNode) {
-                document.body.removeChild(clone);
-              }
-            }, 50);
-          });
-        }}
-        onDragEnd={() => {
-          // Delay clearing draggingItem to allow drop handler to complete first
-          setTimeout(() => setDraggingItem(null), 150);
-        }}
-        className="rounded-lg border border-[#373e47] bg-[#1e2227] p-4 shadow-sm transition ring-cyan-500/40 hover:ring-2"
-      >
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <p className="text-sm font-semibold text-white">{lead.name}</p>
-            <p className="text-xs text-gray-400">{lead.campaignName}</p>
-          </div>
-          <span className={`rounded-full px-2 py-1 text-xs font-semibold ${badge.className}`}>
-            {badge.label}
-          </span>
-        </div>
-      <div className="mt-3 space-y-2 text-xs text-gray-400">
-        <div className="flex items-center gap-2">
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12A4 4 0 118 12a4 4 0 018 0z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14v7m0 0h-3m3 0h3" />
-          </svg>
-          <a className="hover:text-cyan-300" href={`mailto:${lead.email}`}>
-            {lead.email}
-          </a>
-        </div>
-        <div className="flex items-center gap-2">
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h2l3 7-1.34 2.68a1 1 0 00.9 1.45H16" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 13h10l4-8H5.4" />
-          </svg>
-          <a className="hover:text-cyan-300" href={`tel:${lead.phone}`}>
-            {lead.phone}
-          </a>
-        </div>
-        <div className="flex items-center gap-2">
-          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M3 10l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"
-            />
-          </svg>
-          <span className="line-clamp-1">{lead.address ?? 'Address not provided'}</span>
-        </div>
-      </div>
-      <div className="mt-4 flex justify-center gap-2">
-        {lead.isColdLead ? (
-          <button
-            type="button"
-            onClick={() => restoreColdLead(lead.id)}
-            disabled={isMutating}
-            className="rounded-md bg-cyan-500 px-6 py-2 text-xs font-semibold text-black transition hover:bg-cyan-400 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            🔄 RESTORE
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={() => openPromoteModal(lead, 'scheduled')}
-            className="rounded-md bg-emerald-500 px-6 py-2 text-xs font-semibold text-black transition hover:bg-emerald-400"
-          >
-            CONTACT!
-          </button>
-        )}
-      </div>
-    </div>
-  );
-};
 
   const renderJobCard = (job: Job) => (
     <div
@@ -1189,19 +879,6 @@ export default function LeadsTab() {
     </div>
   );
 
-  const emptyLeadState = (
-    <div className="rounded-lg border border-dashed border-[#373e47] bg-[#0d1117] p-6 text-center">
-      <p className="text-sm text-gray-300">
-        {selectedCampaignId === 'all'
-          ? 'No new leads in your queue right now.'
-          : `No new leads for ${selectedCampaignName}.`}
-      </p>
-      <p className="mt-2 text-xs text-gray-500">
-        Campaign submissions will appear here ready to drag into the job pipeline.
-      </p>
-    </div>
-  );
-
   return (
     <div className="space-y-6">
       {error && (
@@ -1210,366 +887,8 @@ export default function LeadsTab() {
         </div>
       )}
 
-      <div className="flex items-center justify-end gap-3">
-        <div className="md:hidden">
-          <div className="flex rounded-lg border border-[#373e47] bg-[#0d1117] p-1 text-xs font-medium text-gray-400">
-            <button
-              type="button"
-              className={`flex-1 rounded-md px-3 py-1 transition ${
-                activeMobileView === 'leads'
-                  ? 'bg-cyan-500 text-black'
-                  : 'hover:bg-[#1e2227]'
-              }`}
-              onClick={() => setActiveMobileView('leads')}
-            >
-              Leads
-            </button>
-            <button
-              type="button"
-              className={`flex-1 rounded-md px-3 py-1 transition ${
-                activeMobileView === 'jobs'
-                  ? 'bg-cyan-500 text-black'
-                  : 'hover:bg-[#1e2227]'
-              }`}
-              onClick={() => setActiveMobileView('jobs')}
-            >
-              Jobs
-            </button>
-          </div>
-      </div>
-    </div>
-
-      <div className="flex flex-wrap items-center gap-3 text-xs text-gray-400 md:hidden">
-        <span className="text-sm font-semibold text-gray-200">{selectedCampaignName}</span>
-        <span>Leads: {leadsCountForSelected}</span>
-        <span>Jobs: {jobsCountForSelected}</span>
-      </div>
-
-      <div className="md:hidden">
-        <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-gray-400">
-          Campaign
-        </label>
-        <select
-          value={selectedCampaignId}
-          onChange={(event) => setSelectedCampaignId(event.target.value)}
-          className="w-full rounded-lg border border-[#373e47] bg-[#0d1117] px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
-        >
-          {campaignOptions.map((option) => (
-            <option key={option.id} value={option.id}>
-              {option.name} — {option.newLeadCount} leads / {option.jobCount} jobs
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Main Content Area */}
-      <div className="flex flex-col gap-6 md:flex-row">
-        {/* Left: Campaigns Column */}
-        <div className="hidden md:block md:w-64 md:flex-shrink-0">
-          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-400">
-            Campaigns
-          </h2>
-          <div className="max-h-[400px] space-y-2 overflow-y-auto pr-2 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-700 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-600">
-            {campaignOptions.map((option) => {
-              const isSelected = option.id === selectedCampaignId;
-              const hasNoActivity = option.newLeadCount === 0 && option.jobCount === 0;
-              // Status badges for bottom right
-              const statusBadges: React.ReactNode[] = [];
-              if (option.id !== 'all') {
-                if (option.campaignStatus === 'Inactive') {
-                  statusBadges.push(
-                    <span key="inactive" className="inline-flex items-center rounded-full bg-gray-500/20 px-2 py-0.5 text-[10px] font-semibold text-gray-400">
-                      Inactive
-                    </span>
-                  );
-                } else {
-                  // Active campaign - show Active badge
-                  statusBadges.push(
-                    <span key="active" className="inline-flex items-center rounded-full bg-blue-500/20 px-2 py-0.5 text-[10px] font-semibold text-blue-400">
-                      Active
-                    </span>
-                  );
-                  // If no leads, also show No Leads badge
-                  if (hasNoActivity) {
-                    statusBadges.push(
-                      <span key="no-leads" className="inline-flex items-center rounded-full bg-yellow-500/20 px-2 py-0.5 text-[10px] font-semibold text-yellow-400">
-                        No Leads
-                      </span>
-                    );
-                  }
-                }
-              }
-
-              return (
-                <button
-                  key={option.id}
-                  type="button"
-                  onClick={() => setSelectedCampaignId(option.id)}
-                  className={`w-full rounded-lg border px-3 py-3 text-left transition ${
-                    isSelected
-                      ? 'border-cyan-500/60 bg-[#11161d] shadow-cyan-500/10'
-                      : 'border-[#373e47] hover:border-cyan-500/40 hover:bg-[#161c22]'
-                  }`}
-                >
-                  {/* Top row: Campaign name and new lead count */}
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="truncate text-sm font-medium text-white">{option.name}</span>
-                    {option.newLeadCount > 0 && (
-                      <span className="flex-shrink-0 rounded-full bg-cyan-500/20 px-2 py-0.5 text-[11px] font-semibold text-cyan-300">
-                        +{option.newLeadCount}
-                      </span>
-                    )}
-                  </div>
-                  {/* Bottom row: Job count (left) and status badges (right) */}
-                  <div className="mt-1 flex items-center justify-between gap-2">
-                    <p className="text-xs text-gray-500">
-                      {option.jobCount} {option.jobCount === 1 ? 'job' : 'jobs'}
-                    </p>
-                    {statusBadges.length > 0 && (
-                      <div className="flex gap-1">
-                        {statusBadges}
-                      </div>
-                    )}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Right: Leads Section */}
-        <div
-          className={`flex-1 ${activeMobileView === 'jobs' ? 'hidden md:block' : ''}`}
-        >
-          {/* Mobile: Bucket Tabs */}
-          <div className="mb-4 flex flex-col gap-3 md:hidden">
-            {/* Tab Buttons - Mobile Only */}
-            <div className="flex gap-1.5">
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveBucket('leads');
-                  setLeadsPage(0);
-                }}
-                className={`flex-1 rounded border px-2 py-1.5 text-[10px] font-medium transition ${
-                  activeBucket === 'leads'
-                    ? 'border-cyan-500/60 bg-cyan-500/20 text-cyan-300'
-                    : 'border-gray-500/40 bg-gray-500/10 text-gray-300 hover:bg-gray-500/20'
-                }`}
-              >
-                Leads ({sortedLeads.length})
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveBucket('cold');
-                  setLeadsPage(0);
-                }}
-                className={`flex-1 rounded border px-1.5 py-1.5 text-[10px] font-medium transition flex items-center justify-center gap-0.5 ${
-                  activeBucket === 'cold'
-                    ? 'border-cyan-500/60 bg-cyan-500/20 text-cyan-300'
-                    : 'border-gray-500/40 bg-gray-500/10 text-gray-300 hover:bg-gray-500/20'
-                }`}
-              >
-                <span className="text-xs">❄️</span>
-                <span>Cold ({coldLeads.length})</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveBucket('completed');
-                  setLeadsPage(0);
-                }}
-                className={`flex-1 rounded border px-1.5 py-1.5 text-[10px] font-medium transition flex items-center justify-center gap-0.5 ${
-                  activeBucket === 'completed'
-                    ? 'border-cyan-500/60 bg-cyan-500/20 text-cyan-300'
-                    : 'border-gray-500/40 bg-gray-500/10 text-gray-300 hover:bg-gray-500/20'
-                }`}
-              >
-                <span className="text-xs">✓</span>
-                <span>Completed ({filteredJobs.completed.length})</span>
-              </button>
-            </div>
-
-            {/* Sort Dropdown - Only for Lead Bucket */}
-            {activeBucket === 'leads' && (
-              <div className="flex items-center gap-2">
-                <label className="text-xs text-gray-400">Sort:</label>
-                <select
-                  value={leadSortOrder}
-                  onChange={(e) => setLeadSortOrder(e.target.value as 'newest' | 'oldest')}
-                  className="rounded-md border border-[#373e47] bg-[#0d1117] px-3 py-1.5 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                >
-                  <option value="newest">Newest First</option>
-                  <option value="oldest">Oldest First</option>
-                </select>
-              </div>
-            )}
-          </div>
-
-          {/* Desktop: Header with buttons */}
-          <div className="mb-4 hidden md:flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-6">
-              {/* Campaign Stats */}
-              <div className="flex items-center gap-3 text-xs text-gray-400">
-                <span className="text-sm font-semibold text-gray-200">{selectedCampaignName}</span>
-                <span>Leads: {leadsCountForSelected}</span>
-                <span>Jobs: {jobsCountForSelected}</span>
-              </div>
-
-              {/* Sort Dropdown Only */}
-              <select
-                value={leadSortOrder}
-                onChange={(e) => setLeadSortOrder(e.target.value as 'newest' | 'oldest')}
-                className="rounded-md border border-[#373e47] bg-[#0d1117] px-3 py-1.5 text-xs text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
-              >
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
-              </select>
-            </div>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setShowAllLeadsModal(true)}
-                className="rounded-md border border-gray-500/40 bg-gray-500/10 px-3 py-1.5 text-xs font-medium text-gray-300 transition hover:bg-gray-500/20"
-              >
-                Lead Bucket
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowColdBucketModal(true)}
-                className="rounded-md border border-gray-500/40 bg-gray-500/10 px-3 py-1.5 text-xs font-medium text-gray-300 transition hover:bg-gray-500/20 flex items-center gap-1.5"
-              >
-                <span>❄️</span>
-                <span>Cold Bucket</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowCompletedJobsModal(true)}
-                className="rounded-md border border-gray-500/40 bg-gray-500/10 px-3 py-1.5 text-xs font-medium text-gray-300 transition hover:bg-gray-500/20 flex items-center gap-1.5"
-              >
-                <span>✓</span>
-                <span>Completed Bucket</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Desktop: Always show leads */}
-          <div className="hidden md:block">
-            {sortedLeads.length === 0 ? (
-              emptyLeadState
-            ) : (
-              <>
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {paginatedLeads.map(renderLeadCard)}
-                </div>
-
-                {totalLeadPages > 1 && (
-                  <div className="mt-4 flex items-center justify-between">
-                    <button
-                      type="button"
-                      onClick={() => setLeadsPage((p) => Math.max(0, p - 1))}
-                      disabled={leadsPage === 0}
-                      className="rounded-md border border-[#373e47] bg-[#0d1117] px-3 py-1.5 text-xs font-medium text-white transition hover:bg-[#1e2227] disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                      ← Previous
-                    </button>
-                    <span className="text-xs text-gray-400">
-                      Page {leadsPage + 1} of {totalLeadPages}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setLeadsPage((p) => Math.min(totalLeadPages - 1, p + 1))}
-                      disabled={leadsPage >= totalLeadPages - 1}
-                      className="rounded-md border border-[#373e47] bg-[#0d1117] px-3 py-1.5 text-xs font-medium text-white transition hover:bg-[#1e2227] disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                      Next →
-                    </button>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-
-          {/* Mobile: Display cards based on active bucket */}
-          <div className="md:hidden">
-            {activeBucket === 'leads' && (
-              <>
-                {sortedLeads.length === 0 ? (
-                  emptyLeadState
-                ) : (
-                  <>
-                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                      {paginatedLeads.map(renderLeadCard)}
-                    </div>
-
-                    {totalLeadPages > 1 && (
-                      <div className="mt-4 flex items-center justify-between">
-                        <button
-                          type="button"
-                          onClick={() => setLeadsPage((p) => Math.max(0, p - 1))}
-                          disabled={leadsPage === 0}
-                          className="rounded-md border border-[#373e47] bg-[#0d1117] px-3 py-1.5 text-xs font-medium text-white transition hover:bg-[#1e2227] disabled:cursor-not-allowed disabled:opacity-40"
-                        >
-                          ← Previous
-                        </button>
-                        <span className="text-xs text-gray-400">
-                          Page {leadsPage + 1} of {totalLeadPages}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => setLeadsPage((p) => Math.min(totalLeadPages - 1, p + 1))}
-                          disabled={leadsPage >= totalLeadPages - 1}
-                          className="rounded-md border border-[#373e47] bg-[#0d1117] px-3 py-1.5 text-xs font-medium text-white transition hover:bg-[#1e2227] disabled:cursor-not-allowed disabled:opacity-40"
-                        >
-                          Next →
-                        </button>
-                      </div>
-                    )}
-                  </>
-                )}
-              </>
-            )}
-
-            {activeBucket === 'cold' && (
-            <>
-              {coldLeads.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <p className="text-gray-400">No cold leads yet</p>
-                  <p className="mt-2 text-sm text-gray-500">
-                    Leads marked as unresponsive or not interested will appear here
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {coldLeads.map(renderLeadCard)}
-                </div>
-              )}
-            </>
-          )}
-
-            {activeBucket === 'completed' && (
-              <>
-                {filteredJobs.completed.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <p className="text-gray-400">No completed jobs yet</p>
-                    <p className="mt-2 text-sm text-gray-500">
-                      Jobs marked as completed will appear here
-                    </p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                    {filteredJobs.completed.map(renderJobCard)}
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Scheduled Inspections Calendar - Full Width Below with More Spacing */}
-      <div className={`mt-8 ${activeMobileView === 'leads' ? 'hidden md:block' : ''}`}>
+      {/* Scheduled Inspections Calendar - Now Full Width */}
+      <div>
         <div className="mb-4">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
             Scheduled Inspections ({filteredJobs.scheduled.length + leads.filter(l => l.tentativeDate && !l.isColdLead).length})
@@ -1598,132 +917,6 @@ export default function LeadsTab() {
           />
         </div>
       </div>
-
-      {/* View All Leads Modal */}
-      {showAllLeadsModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="fixed inset-0 bg-black/75"
-            onClick={() => setShowAllLeadsModal(false)}
-          />
-          <div className="relative z-10 w-full max-w-6xl max-h-[90vh] overflow-hidden rounded-lg border border-[#373e47] bg-[#1e2227] shadow-xl">
-            <div className="flex items-center justify-between border-b border-[#373e47] p-4">
-              <div>
-                <h2 className="text-lg font-semibold text-white">
-                  Lead Bucket ({sortedLeads.length})
-                </h2>
-                <p className="text-sm text-gray-400">
-                  {selectedCampaignId === 'all' ? 'All campaigns' : selectedCampaignName}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowAllLeadsModal(false)}
-                className="rounded-md p-2 text-gray-400 transition hover:bg-[#2d333b] hover:text-white"
-              >
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="overflow-y-auto p-4" style={{ maxHeight: 'calc(90vh - 80px)' }}>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {sortedLeads.map(renderLeadCard)}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Cold Bucket Modal */}
-      {showColdBucketModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="fixed inset-0 bg-black/75"
-            onClick={() => setShowColdBucketModal(false)}
-          />
-          <div className="relative z-10 w-full max-w-6xl max-h-[90vh] overflow-hidden rounded-lg border border-[#373e47] bg-[#1e2227] shadow-xl">
-            <div className="flex items-center justify-between border-b border-[#373e47] p-4 bg-[#2d333b]">
-              <div>
-                <h2 className="text-lg font-semibold text-white">
-                  Cold Bucket ({coldLeads.length})
-                </h2>
-                <p className="text-sm text-gray-400">
-                  Unresponsive or not interested leads
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowColdBucketModal(false)}
-                className="rounded-md p-2 text-gray-400 transition hover:bg-[#2d333b] hover:text-white"
-              >
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="overflow-y-auto p-4" style={{ maxHeight: 'calc(90vh - 80px)' }}>
-              {coldLeads.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <p className="text-gray-400">No cold leads yet</p>
-                  <p className="mt-2 text-sm text-gray-500">
-                    Leads marked as unresponsive or not interested will appear here
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {coldLeads.map(renderLeadCard)}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Completed Jobs Modal */}
-      {showCompletedJobsModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="fixed inset-0 bg-black/75"
-            onClick={() => setShowCompletedJobsModal(false)}
-          />
-          <div className="relative z-10 w-full max-w-6xl max-h-[90vh] overflow-hidden rounded-lg border border-[#373e47] bg-[#1e2227] shadow-xl">
-            <div className="flex items-center justify-between border-b border-[#373e47] p-4 bg-[#2d333b]">
-              <div>
-                <h2 className="text-lg font-semibold text-white">
-                  Completed Bucket ({filteredJobs.completed.length})
-                </h2>
-                <p className="text-sm text-gray-400">
-                  Finished inspections (visible on Halo Map for billing)
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowCompletedJobsModal(false)}
-                className="rounded-md p-2 text-gray-400 transition hover:bg-[#2d333b] hover:text-white"
-              >
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-            <div className="overflow-y-auto p-4" style={{ maxHeight: 'calc(90vh - 80px)' }}>
-              {filteredJobs.completed.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <p className="text-gray-400">No completed jobs yet</p>
-                  <p className="mt-2 text-sm text-gray-500">
-                    Jobs marked as completed will appear here
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                  {filteredJobs.completed.map(renderJobCard)}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Lead Modal */}
       {leadModalState.isOpen && (
@@ -1795,6 +988,7 @@ export default function LeadsTab() {
 
               // Refresh data to show lead back in leads list
               await loadData();
+              refreshSidebar();
             } catch (err) {
               console.error('Unschedule job error:', err);
               setError(err instanceof Error ? err.message : 'Failed to unschedule job');
@@ -1823,6 +1017,7 @@ export default function LeadsTab() {
 
               // Refresh data to show lead in cold bucket
               await loadData();
+              refreshSidebar();
             } catch (err) {
               console.error('Mark job as cold error:', err);
               setError(err instanceof Error ? err.message : 'Failed to mark job as cold');

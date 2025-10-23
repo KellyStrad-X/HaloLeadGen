@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, createContext, useContext } from 'react';
 import SettingsModal from '@/components/SettingsModal';
+import { DashboardSidebarProvider } from '@/lib/dashboard-sidebar-context';
+import GlobalSidebar from '@/components/GlobalSidebar';
 
 type DashboardTab = 'overview' | 'analytics' | 'campaigns' | 'leads';
 
@@ -58,10 +60,11 @@ export default function DashboardLayout({
   const showTabs = pathname === '/dashboard';
 
   return (
-    <DashboardContext.Provider value={{ activeTab, setActiveTab }}>
-      <div className="min-h-screen bg-[#24292e]">
-        {/* Header */}
-        <header className="bg-[#1e2227] border-b border-[#373e47]">
+    <DashboardSidebarProvider>
+      <DashboardContext.Provider value={{ activeTab, setActiveTab }}>
+        <div className="min-h-screen bg-[#24292e] flex flex-col">
+          {/* Header */}
+          <header className="bg-[#1e2227] border-b border-[#373e47] flex-shrink-0">
           <div className="px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               {/* Logo & Navigation */}
@@ -218,12 +221,18 @@ export default function DashboardLayout({
         )}
       </header>
 
-      {/* Main Content */}
-      <main className="px-4 sm:px-6 lg:px-8 py-8">
-        <div className="max-w-screen-2xl mx-auto">
-          {children}
-        </div>
-      </main>
+      {/* Main Content Area with Sidebar */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Global Sidebar - Only show on dashboard page */}
+        {showTabs && <GlobalSidebar />}
+
+        {/* Main Content */}
+        <main className="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="max-w-screen-2xl mx-auto">
+            {children}
+          </div>
+        </main>
+      </div>
 
       {/* Footer */}
       <footer className="bg-[#1e2227] text-white py-12 px-4 sm:px-6 lg:px-8 border-t border-[#373e47] mt-16">
@@ -281,7 +290,8 @@ export default function DashboardLayout({
         isOpen={showSettingsModal}
         onClose={() => setShowSettingsModal(false)}
       />
-    </div>
-    </DashboardContext.Provider>
+        </div>
+      </DashboardContext.Provider>
+    </DashboardSidebarProvider>
   );
 }
