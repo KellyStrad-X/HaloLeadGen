@@ -980,6 +980,7 @@ export default function LeadsTab() {
         key={lead.id}
         draggable
         onDragStart={(event) => {
+          console.log('[LeadCard] onDragStart - Setting draggingItem:', { type: 'lead', id: lead.id, name: lead.name });
           setDraggingItem({ type: 'lead', id: lead.id });
           event.dataTransfer.setData('application/halo-lead', lead.id);
           event.dataTransfer.effectAllowed = 'move';
@@ -1005,8 +1006,12 @@ export default function LeadsTab() {
           });
         }}
         onDragEnd={() => {
+          console.log('[LeadCard] onDragEnd - Clearing draggingItem in 150ms');
           // Delay clearing draggingItem to allow drop handler to complete first
-          setTimeout(() => setDraggingItem(null), 150);
+          setTimeout(() => {
+            console.log('[LeadCard] onDragEnd - NOW clearing draggingItem');
+            setDraggingItem(null);
+          }, 150);
         }}
         className="rounded-lg border border-[#373e47] bg-[#1e2227] p-4 shadow-sm transition ring-cyan-500/40 hover:ring-2"
       >
