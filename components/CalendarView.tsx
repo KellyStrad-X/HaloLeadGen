@@ -381,28 +381,9 @@ export default function FullCalendarView({
           color: #22d3ee !important;
         }
 
-        /* Popup styling for overflow events */
+        /* Hide default FullCalendar popover - we use custom popover instead */
         .fc-popover {
-          background: #1e2227 !important;
-          border: 2px solid #06b6d4 !important;
-          border-radius: 12px;
-          box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
-          z-index: 1000;
-        }
-
-        .fc-popover-header {
-          background: #2d333b !important;
-          color: #06b6d4;
-          font-weight: 600;
-          padding: 12px 16px;
-          font-size: 0.875rem;
-          border-bottom: 1px solid #373e47;
-        }
-
-        .fc-popover-body {
-          padding: 8px;
-          max-height: 400px;
-          overflow-y: auto;
+          display: none !important;
         }
 
         /* Drag highlight for external leads */
@@ -446,11 +427,11 @@ export default function FullCalendarView({
           initialDate={activeDate}
 
           // Shows exactly 3 events, then "+X more" link for 4th+ events
-          // Count-based (not height-based) - always shows 3 events regardless of their height
-          dayMaxEventRows={3}
+          // The number includes the "+more" link row, so 4 = 3 events + 1 more link
+          dayMaxEventRows={4}
           views={{
             dayGridMonth: {
-              dayMaxEventRows: 3
+              dayMaxEventRows: 4
             }
           }}
 
@@ -540,6 +521,10 @@ export default function FullCalendarView({
 
           // Custom "+X more" handler - shows ONLY overflow events (not all events)
           moreLinkClick={(info) => {
+            // Prevent default FullCalendar popover
+            info.jsEvent.preventDefault();
+            info.jsEvent.stopPropagation();
+
             // info.hiddenSegs contains segments not shown inline (events 4+)
             // Extract only the overflow events from hiddenSegs
             const overflowEvents = info.hiddenSegs
@@ -549,15 +534,18 @@ export default function FullCalendarView({
             // Get click position for popover placement
             const rect = (info.jsEvent.target as HTMLElement).getBoundingClientRect();
 
+            // Fix date - FullCalendar uses UTC midnight, convert to local date
+            const localDate = new Date(info.date.getFullYear(), info.date.getMonth(), info.date.getDate());
+
             setOverflowPopover({
               isOpen: true,
               events: overflowEvents,
-              date: info.date,
+              date: localDate,
               position: { x: rect.left, y: rect.bottom + 5 },
             });
 
-            // Prevent default behavior
-            info.jsEvent.preventDefault();
+            // Return void to prevent FullCalendar's default popover
+            return;
           }}
 
           // Week settings
