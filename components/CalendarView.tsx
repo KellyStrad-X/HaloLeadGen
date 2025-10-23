@@ -6,15 +6,6 @@ import { Calendar, dateFnsLocalizer, Event } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
 import { enUS } from 'date-fns/locale';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
-import { CustomMonth } from '@/lib/calendar-custom-month';
-
-// DEBUG: Verify CustomMonth imported in browser
-console.log('[CalendarView] CustomMonth imported:', {
-  CustomMonth,
-  type: typeof CustomMonth,
-  hasRange: !!(CustomMonth as any)?.range,
-  hasNavigate: !!(CustomMonth as any)?.navigate
-});
 
 const locales = {
   'en-US': enUS,
@@ -67,16 +58,6 @@ export default function CalendarView({
   const [internalDate, setInternalDate] = useState(new Date());
   const [internalView, setInternalView] = useState<'month' | 'week'>('month');
   const [isDraggingExternal, setIsDraggingExternal] = useState(false);
-
-  // DEBUG: Log views config on mount
-  React.useEffect(() => {
-    console.log('[CalendarView] Component mounted, views config:', {
-      CustomMonth,
-      viewsObject: { month: CustomMonth, week: true },
-      CustomMonthType: typeof CustomMonth,
-      isFunction: typeof CustomMonth === 'function'
-    });
-  }, []);
 
   // Prefer external state when provided so parent can control navigation
   const currentDate = externalDate || internalDate;

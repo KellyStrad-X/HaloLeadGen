@@ -4,7 +4,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import LeadDetailsModal from './LeadDetailsModal';
 import JobModal, { type LeadJobStatus } from './JobModal';
-import CalendarView, { type CalendarEvent } from './CalendarView';
+// TESTING: Temporarily using FullCalendarView
+import CalendarView, { type CalendarEvent } from './FullCalendarView';
+// import CalendarView, { type CalendarEvent } from './CalendarView';
 
 type LegacyLeadStatus = 'new' | 'contacted' | 'scheduled' | 'completed';
 

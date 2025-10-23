@@ -13,6 +13,10 @@
     "db:reset": "rm -f database/halo.db && npm run db:seed"
   },
   "dependencies": {
+    "@fullcalendar/core": "^6.1.19",
+    "@fullcalendar/daygrid": "^6.1.19",
+    "@fullcalendar/interaction": "^6.1.19",
+    "@fullcalendar/react": "^6.1.19",
     "@sendgrid/mail": "^8.1.6",
     "@vis.gl/react-google-maps": "^1.5.5",
     "better-sqlite3": "^11.0.0",
