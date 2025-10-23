@@ -2,7 +2,9 @@
 
 import { useMemo, useState } from 'react';
 // @ts-ignore - react-big-calendar types are incomplete
-import { Calendar, dateFnsLocalizer, Event } from 'react-big-calendar';
+import { Calendar, dateFnsLocalizer, Event, Views } from 'react-big-calendar';
+// @ts-ignore
+import Month from 'react-big-calendar/lib/Month';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
 import { enUS } from 'date-fns/locale';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
@@ -18,6 +20,27 @@ const localizer = dateFnsLocalizer({
   getDay,
   locales,
 });
+
+// Custom Month component that forces maxRows=3 regardless of cell height
+// This bypasses react-big-calendar's height measurement system
+const CustomMonth = (props: any) => {
+  // Force maxRows=3 for all date content rows in month view
+  const enhancedProps = {
+    ...props,
+    // Inject maxRows into the month component which gets passed to DateContentRow
+    components: {
+      ...props.components,
+      dateCellWrapper: props.components?.dateCellWrapper,
+    },
+  };
+
+  return <Month {...enhancedProps} />;
+};
+
+// Copy required static methods from original Month component
+CustomMonth.range = Month.range;
+CustomMonth.navigate = Month.navigate;
+CustomMonth.title = Month.title;
 
 export interface CalendarEvent extends Event {
   id: string;
@@ -313,8 +336,12 @@ export default function CalendarView({
             dragImage.style.pointerEvents = 'none';
             document.body.appendChild(dragImage);
             e.dataTransfer.setDragImage(dragImage, 0, 0);
-            // Clean up drag image after drag starts
-            setTimeout(() => document.body.removeChild(dragImage), 0);
+            // Clean up drag image after browser captures it
+            setTimeout(() => {
+              if (document.body.contains(dragImage)) {
+                document.body.removeChild(dragImage);
+              }
+            }, 100);
 
             // Notify parent component about drag state
             console.log('[CalendarView] Starting drag for event:', event.id);
@@ -447,9 +474,9 @@ export default function CalendarView({
 
         .rbc-month-row {
           border-color: #373e47 !important;
-          height: 150px;
-          /* Fixed height: ~30px heading + 3 events × ~35px = 135px, rounded to 150px */
-          /* This constrains eventSpace so react-big-calendar calculates rowLimit = 3 */
+          flex: 1 1 0;
+          min-height: 0;
+          /* Flexible height - CustomMonth component controls event limit, not CSS */
         }
 
         .rbc-row-content {
@@ -592,7 +619,7 @@ export default function CalendarView({
           popup: CustomPopup,
         }}
         views={{
-          month: true,
+          month: CustomMonth,
           week: true,
         }}
         popup
