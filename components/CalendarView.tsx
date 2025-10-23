@@ -6,6 +6,7 @@ import { Calendar, dateFnsLocalizer, Event } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
 import { enUS } from 'date-fns/locale';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+import { CustomMonth } from '@/lib/calendar-custom-month';
 
 const locales = {
   'en-US': enUS,
@@ -290,80 +291,7 @@ export default function CalendarView({
       </span>
     ) : null;
 
-    // For tentative events, wrap in a draggable container
-    if (event.type === 'tentative' && event.leadId) {
-      return (
-        <div
-          className="flex flex-col gap-1 overflow-hidden relative h-full w-full"
-          draggable={true}
-          style={{ cursor: 'grab', userSelect: 'none', WebkitUserSelect: 'none' }}
-          onDragStart={(e) => {
-            e.stopPropagation(); // Prevent calendar from handling
-            e.dataTransfer.effectAllowed = 'move';
-            // CRITICAL: Must set data for HTML5 drag-and-drop to work
-            e.dataTransfer.setData('text/plain', event.id);
-
-            // Create custom drag image with explicit styling
-            const dragImage = document.createElement('div');
-            dragImage.style.position = 'fixed';
-            dragImage.style.top = '0';
-            dragImage.style.left = '-9999px';
-            dragImage.style.padding = '8px 12px';
-            dragImage.style.backgroundColor = event.type === 'tentative' ? '#06b6d4' : '#22c55e';
-            dragImage.style.color = '#000';
-            dragImage.style.borderRadius = '6px';
-            dragImage.style.fontWeight = '600';
-            dragImage.style.fontSize = '14px';
-            dragImage.style.opacity = '0.8';
-            dragImage.style.zIndex = '9999';
-            dragImage.style.pointerEvents = 'none';
-            dragImage.textContent = event.customerName;
-            document.body.appendChild(dragImage);
-
-            // Set the custom drag image
-            e.dataTransfer.setDragImage(dragImage, dragImage.offsetWidth / 2, dragImage.offsetHeight / 2);
-
-            // Clean up after drag completes
-            requestAnimationFrame(() => {
-              setTimeout(() => {
-                if (document.body.contains(dragImage)) {
-                  document.body.removeChild(dragImage);
-                }
-              }, 0);
-            });
-
-            // Notify parent component about drag state
-            console.log('[CalendarView] Starting drag for event:', event.id);
-            onDragStateChange?.({ type: 'lead', id: event.id });
-            // Change cursor during drag
-            (e.currentTarget as HTMLElement).style.cursor = 'grabbing';
-          }}
-          onDragEnd={(e) => {
-            e.stopPropagation(); // Prevent calendar from handling
-            onDragStateChange?.(null);
-            // Reset cursor
-            (e.currentTarget as HTMLElement).style.cursor = 'grab';
-          }}
-          onClick={(e) => {
-            // Allow clicks to open modal while still being draggable
-            e.stopPropagation();
-            onEventClick(event);
-          }}
-        >
-          <div className="flex items-center justify-between gap-2">
-            <span className="truncate font-semibold text-xs">{event.customerName}</span>
-            {badge}
-          </div>
-          {event.inspector && (
-            <span className="text-xs truncate opacity-90">
-              Inspector: {event.inspector}
-            </span>
-          )}
-        </div>
-      );
-    }
-
-    // For confirmed events, no drag
+    // For all events (tentative and confirmed), just make them clickable
     return (
       <div className="flex flex-col gap-1 overflow-hidden">
         <div className="flex items-center justify-between gap-2">
@@ -607,7 +535,7 @@ export default function CalendarView({
           popup: CustomPopup,
         }}
         views={{
-          month: true,
+          month: CustomMonth,
           week: true,
         }}
         popup

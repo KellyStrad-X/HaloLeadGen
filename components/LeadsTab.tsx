@@ -1335,49 +1335,10 @@ export default function LeadsTab() {
           </div>
         </div>
 
-        {/* Right: Leads Section - Drop Zone for Calendar Events */}
+        {/* Right: Leads Section */}
         <div
-          className={`flex-1 ${activeMobileView === 'jobs' ? 'hidden md:block' : ''} ${
-            draggingItem?.id?.startsWith('lead-')
-              ? 'ring-2 ring-orange-500/50 bg-orange-500/5 rounded-lg p-4'
-              : ''
-          }`}
-          onDragOver={(e) => {
-            // Accept calendar events (tentative leads) being dragged back
-            console.log('[LeadsTab] onDragOver - draggingItem:', draggingItem);
-            if (draggingItem?.id?.startsWith('lead-')) {
-              console.log('[LeadsTab] Accepting drag from calendar');
-              e.preventDefault();
-              e.dataTransfer.dropEffect = 'move';
-            }
-          }}
-          onDrop={async (e) => {
-            e.preventDefault();
-            console.log('[LeadsTab] onDrop - draggingItem:', draggingItem);
-            if (draggingItem?.id?.startsWith('lead-')) {
-              const leadId = draggingItem.id.replace('lead-', '');
-              console.log('[LeadsTab] Removing lead from calendar:', leadId);
-              try {
-                // Remove from calendar by clearing tentativeDate
-                await handleRemoveFromCalendar(leadId);
-                // Only clear drag state if API call succeeds
-                setDraggingItem(null);
-              } catch (err) {
-                console.error('Error removing from calendar:', err);
-                // Keep drag state and show error to user
-                setError(err instanceof Error ? err.message : 'Failed to remove from calendar');
-              }
-            } else {
-              // No lead being dragged, safe to clear
-              setDraggingItem(null);
-            }
-          }}
+          className={`flex-1 ${activeMobileView === 'jobs' ? 'hidden md:block' : ''}`}
         >
-          {draggingItem?.id?.startsWith('lead-') && (
-            <div className="mb-4 text-center text-sm text-orange-300 font-medium animate-pulse">
-              ↓ Drop here to remove from calendar ↓
-            </div>
-          )}
           {/* Mobile: Bucket Tabs */}
           <div className="mb-4 flex flex-col gap-3 md:hidden">
             {/* Tab Buttons - Mobile Only */}
@@ -1615,7 +1576,7 @@ export default function LeadsTab() {
 
         {/* Calendar - Full Width */}
         <div className="relative -mx-16 lg:-mx-24">
-          {draggingItem?.type === 'lead' && (
+          {draggingItem?.type === 'lead' && !draggingItem?.id?.startsWith('lead-') && (
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 bg-cyan-500/10 border border-cyan-500/40 rounded-lg px-6 py-3 text-center text-sm text-cyan-300 pointer-events-none animate-pulse">
               <svg className="inline-block w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
