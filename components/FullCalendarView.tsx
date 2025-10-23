@@ -499,14 +499,23 @@ export default function FullCalendarView({
               cell.classList.remove('fc-day-highlight');
 
               const leadId = e.dataTransfer.getData('application/halo-lead');
-              console.log('[DateCell] Drop on date:', arg.date, 'Lead:', leadId);
+              const jobId = e.dataTransfer.getData('application/halo-job');
+
+              console.log('[DateCell] Drop on date:', arg.date, 'Lead:', leadId, 'Job:', jobId);
               console.log('[DateCell] Calling onSelectSlot...');
 
-              // Call onSelectSlot with this cell's date
+              // Call onSelectSlot with this cell's date AND the item being dragged
               const start = new Date(arg.date);
               start.setHours(12, 0, 0, 0);
               const end = new Date(start);
-              onSelectSlot({ start, end });
+
+              // Pass the dropped item info directly to avoid React state timing issues
+              onSelectSlot({
+                start,
+                end,
+                // @ts-ignore - Adding droppedItem to bypass state timing
+                droppedItem: leadId ? { type: 'lead', id: leadId } : jobId ? { type: 'job', id: jobId } : null
+              });
 
               console.log('[DateCell] onSelectSlot called');
             });

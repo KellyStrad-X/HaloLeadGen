@@ -778,17 +778,22 @@ export default function LeadsTab() {
   );
 
   const handleCalendarSlotSelect = useCallback(
-    async (slotInfo: { start: Date; end: Date }) => {
+    async (slotInfo: { start: Date; end: Date; droppedItem?: { type: 'lead' | 'job'; id: string } | null }) => {
+      // Use droppedItem from the drop event if available (avoids React state timing issues)
+      // Otherwise fall back to draggingItem state
+      const itemToDrop = (slotInfo as any).droppedItem || draggingItem;
+
       console.log('[LeadsTab] handleCalendarSlotSelect called:', {
         date: slotInfo.start,
+        droppedItem: (slotInfo as any).droppedItem,
         draggingItem,
-        hasDraggingItem: !!draggingItem,
-        draggingItemType: draggingItem?.type
+        itemToDrop,
+        usingDroppedItem: !!(slotInfo as any).droppedItem
       });
 
       // If we're dragging a lead, set its tentative date to the selected slot
-      if (draggingItem && draggingItem.type === 'lead') {
-        const lead = leads.find((l) => l.id === draggingItem.id);
+      if (itemToDrop && itemToDrop.type === 'lead') {
+        const lead = leads.find((l) => l.id === itemToDrop.id);
         console.log('[LeadsTab] Found lead:', lead?.name, 'ID:', lead?.id);
         if (!lead || !user) return;
 
