@@ -542,14 +542,18 @@ export default function JobModal(props: JobModalProps) {
             <button
               onClick={handleSubmit}
               disabled={isSubmitting}
-              className="rounded-lg bg-cyan-500 px-6 py-2 text-sm font-semibold text-black transition-colors hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
+              className={`rounded-lg px-6 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${
+                scheduledInspectionDate
+                  ? 'bg-green-500 text-black hover:bg-green-400'
+                  : 'bg-cyan-500 text-black hover:bg-cyan-400'
+              }`}
             >
               {isSubmitting
                 ? 'Saving...'
+                : scheduledInspectionDate
+                ? 'Schedule'
                 : props.mode === 'promote'
-                ? contactAction === 'scheduled'
-                  ? 'Schedule Job'
-                  : contactAction === 'cold'
+                ? contactAction === 'cold'
                   ? 'Move to Cold Bucket'
                   : 'Save'
                 : 'Save Changes'}

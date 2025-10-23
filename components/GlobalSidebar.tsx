@@ -743,33 +743,53 @@ export default function GlobalSidebar() {
             }
           }}
           onSubmit={async ({ status, scheduledInspectionDate, inspector, internalNotes }) => {
-            // Promote lead to job
             if (!user || !leadModalState.lead) return;
             try {
               const token = await user.getIdToken();
-              const response = await fetch('/api/dashboard/jobs', {
-                method: 'POST',
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  leadId: leadModalState.lead.id,
-                  status,
-                  scheduledInspectionDate,
-                  inspector,
-                  internalNotes,
-                }),
-              });
 
-              if (!response.ok) {
-                throw new Error('Failed to save job');
+              // If date is selected, promote to job (scheduled workflow)
+              if (scheduledInspectionDate) {
+                const response = await fetch('/api/dashboard/jobs', {
+                  method: 'POST',
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    leadId: leadModalState.lead.id,
+                    status,
+                    scheduledInspectionDate,
+                    inspector,
+                    internalNotes,
+                  }),
+                });
+
+                if (!response.ok) {
+                  throw new Error('Failed to schedule job');
+                }
+              } else {
+                // No date selected - just update lead fields (inspector, notes)
+                const response = await fetch(`/api/dashboard/leads/${leadModalState.lead.id}`, {
+                  method: 'PATCH',
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    inspector: inspector || null,
+                    internalNotes: internalNotes || null,
+                  }),
+                });
+
+                if (!response.ok) {
+                  throw new Error('Failed to update lead');
+                }
               }
 
               await loadData();
               setLeadModalState({ lead: null, isOpen: false });
             } catch (error) {
-              console.error('Error saving job:', error);
+              console.error('Error saving:', error);
               throw error;
             }
           }}
