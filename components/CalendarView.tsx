@@ -553,7 +553,7 @@ export default function CalendarView({
           popup: CustomPopup,
         }}
         views={{
-          month: CustomMonth,
+          month: true,  // Using patched Month from calendar-custom-month
           week: true,
         }}
         popup

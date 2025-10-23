@@ -27,6 +27,74 @@ import Month from 'react-big-calendar/lib/Month';
 
 // DEBUG: Verify module is loading
 console.log('[calendar-custom-month.tsx] Module loaded', { Month });
+
+// CRITICAL: Monkey-patch Month's renderWeek directly instead of extending
+// Save the original renderWeek
+const originalRenderWeek = Month.prototype.renderWeek;
+
+// Override with our version
+Month.prototype.renderWeek = function(week: any, weekIdx: number) {
+  console.log('[MonthPatch] renderWeek called - forcing maxRows=3');
+
+  const {
+    events,
+    components,
+    selectable,
+    getNow,
+    selected,
+    date,
+    localizer,
+    longPressThreshold,
+    accessors,
+    getters,
+    showAllEvents,
+  } = this.props as any;
+
+  const { needLimitMeasure, rowLimit } = this.state;
+
+  // Filter events to just this week
+  const weeksEvents = eventsForWeek(
+    [...events],
+    week[0],
+    week[week.length - 1],
+    accessors,
+    localizer
+  );
+
+  // Sort events into levels/extra
+  const sorted = sortWeekEvents(weeksEvents, accessors, localizer);
+
+  return React.createElement(DateContentRow, {
+    key: weekIdx,
+    ref: weekIdx === 0 ? this.slotRowRef : undefined,
+    container: this.getContainer,
+    className: "rbc-month-row",
+    getNow: getNow,
+    date: date,
+    range: week,
+    events: sorted,
+    maxRows: 3, // ⭐ FORCE 3 instead of dynamic calculation
+    selected: selected,
+    selectable: selectable,
+    components: components,
+    accessors: accessors,
+    getters: getters,
+    localizer: localizer,
+    renderHeader: this.readerDateHeading,
+    renderForMeasure: needLimitMeasure,
+    onShowMore: this.handleShowMore,
+    onSelect: this.handleSelectEvent,
+    onDoubleClick: this.handleDoubleClickEvent,
+    onKeyPress: this.handleKeyPressEvent,
+    onSelectSlot: this.handleSelectSlot,
+    longPressThreshold: longPressThreshold,
+    rtl: this.props.rtl,
+    resizable: this.props.resizable,
+    showAllEvents: showAllEvents
+  });
+};
+
+console.log('[calendar-custom-month.tsx] Month.prototype.renderWeek PATCHED');
 // @ts-ignore
 import DateContentRow from 'react-big-calendar/lib/DateContentRow';
 // @ts-ignore
