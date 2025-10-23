@@ -221,6 +221,16 @@ export default function FullCalendarView({
     return classes;
   };
 
+  // Debug: Log events being passed to calendar
+  React.useEffect(() => {
+    console.log('[FullCalendarView] Events updated:', {
+      totalEvents: events.length,
+      tentative: events.filter(e => e.type === 'tentative').length,
+      confirmed: events.filter(e => e.type === 'confirmed').length,
+      events: events
+    });
+  }, [events]);
+
   // Handle external drag enter/leave for visual feedback
   const handleDragEnter = (e: React.DragEvent) => {
     const draggedFromCalendar = e.dataTransfer.types.includes('text/plain');
@@ -240,8 +250,14 @@ export default function FullCalendarView({
       className={`h-full rounded-lg border border-[#373e47] bg-[#1e2227] p-4 ${isDraggingExternal ? 'dragging-external-lead' : ''}`}
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
-      onDragOver={(e) => e.preventDefault()}
-      onDrop={() => setIsDraggingExternal(false)}
+      onDragOver={(e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+      }}
+      onDrop={(e) => {
+        console.log('[Container] Drop event:', e.dataTransfer.getData('application/halo-lead'));
+        setIsDraggingExternal(false);
+      }}
     >
       <style jsx global>{`
         /* FullCalendar dark theme customization */
@@ -406,7 +422,8 @@ export default function FullCalendarView({
           initialDate={activeDate}
 
           // ⭐ THE FEATURE THAT WORKS - Shows 3 events + "+X more" link
-          dayMaxEventRows={3}
+          // Set to 4 so it shows 3 events inline, then "+X more" for the 4th+
+          dayMaxEventRows={4}
 
           // Convert events to FullCalendar format
           events={events.map(e => ({
@@ -438,10 +455,25 @@ export default function FullCalendarView({
           // Drag & drop for external leads
           droppable={true}
           drop={(info) => {
+            // Extract the dragged lead/job ID from the native drag event
+            const dragEvent = info.draggedEl;
+            const jsEvent = info.jsEvent as DragEvent;
+
+            console.log('[FullCalendar] Drop event:', {
+              date: info.date,
+              draggedEl: dragEvent,
+              dataTransfer: jsEvent?.dataTransfer
+            });
+
             const start = info.date;
             start.setHours(12, 0, 0, 0);
             const end = new Date(start);
             onSelectSlot({ start, end });
+          }}
+
+          // Enable receiving external drags
+          eventReceive={(info) => {
+            console.log('[FullCalendar] Event received:', info);
           }}
 
           // Custom event rendering
