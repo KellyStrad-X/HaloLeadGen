@@ -24,6 +24,9 @@
 import React from 'react';
 // @ts-ignore
 import Month from 'react-big-calendar/lib/Month';
+
+// DEBUG: Verify module is loading
+console.log('[calendar-custom-month.tsx] Module loaded', { Month });
 // @ts-ignore
 import DateContentRow from 'react-big-calendar/lib/DateContentRow';
 // @ts-ignore
@@ -73,6 +76,17 @@ class CustomMonthClass extends (Month as any) {
 
     const { needLimitMeasure, rowLimit } = this.state;
 
+    // DEBUG: Log to verify CustomMonth is being used
+    if (weekIdx === 0) {
+      console.log('[CustomMonth] renderWeek called', {
+        maxRows: 3,
+        showAllEvents,
+        rowLimit,
+        needLimitMeasure,
+        eventsCount: events.length
+      });
+    }
+
     // Filter events to just this week
     const weeksEvents = eventsForWeek(
       [...events],
@@ -84,6 +98,16 @@ class CustomMonthClass extends (Month as any) {
 
     // Sort events into levels/extra for proper rendering
     const sorted = sortWeekEvents(weeksEvents, accessors, localizer);
+
+    // DEBUG: Log sorted events for first week
+    if (weekIdx === 0) {
+      console.log('[CustomMonth] Week events:', {
+        weekIdx,
+        weeksEvents: weeksEvents.length,
+        sorted: sorted.length,
+        sortedSample: sorted.slice(0, 5).map((e: any) => e.title || e.customerName)
+      });
+    }
 
     return (
       <DateContentRow
@@ -121,10 +145,21 @@ class CustomMonthClass extends (Month as any) {
 }
 
 /**
- * Export custom Month component
- * Must include static methods for navigation to work
+ * Export custom Month component directly
+ * The 'as any' cast is necessary because we're extending an internal class
  */
-export const CustomMonth = CustomMonthClass as any;
+export const CustomMonth: any = CustomMonthClass;
+
+// CRITICAL: Copy static methods for navigation to work
 CustomMonth.range = Month.range;
 CustomMonth.navigate = Month.navigate;
 CustomMonth.title = Month.title;
+
+// DEBUG: Verify CustomMonth is created
+console.log('[calendar-custom-month.tsx] CustomMonth created', {
+  CustomMonth,
+  hasRange: !!CustomMonth.range,
+  hasNavigate: !!CustomMonth.navigate,
+  hasTitle: !!CustomMonth.title,
+  hasRenderWeek: typeof CustomMonthClass.prototype.renderWeek === 'function'
+});
