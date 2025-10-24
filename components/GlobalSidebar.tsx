@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useDashboardSidebar } from '@/lib/dashboard-sidebar-context';
 import JobModal, { type LeadJobStatus } from './JobModal';
+import RestoreModal from './RestoreModal';
 
 type LegacyLeadStatus = 'new' | 'contacted' | 'scheduled' | 'completed';
 
@@ -69,7 +70,7 @@ const getLeadBadge = (lead: Lead): { label: string; className: string } => {
   switch (attempt) {
     case 0:
       return {
-        label: 'NEW',
+        label: 'UNSCHEDULED',
         className: 'bg-cyan-500/20 text-cyan-300 ring-1 ring-cyan-500/40',
       };
     case 1:
@@ -89,7 +90,7 @@ const getLeadBadge = (lead: Lead): { label: string; className: string } => {
       };
     default:
       return {
-        label: 'NEW',
+        label: 'UNSCHEDULED',
         className: 'bg-cyan-500/20 text-cyan-300 ring-1 ring-cyan-500/40',
       };
   }
@@ -122,6 +123,14 @@ export default function GlobalSidebar() {
     lead: Lead | null;
     isOpen: boolean;
   }>({ lead: null, isOpen: false });
+  const [restoreModalState, setRestoreModalState] = useState<{
+    lead: Lead | null;
+    isOpen: boolean;
+  }>({ lead: null, isOpen: false });
+  const [restoreJobModalState, setRestoreJobModalState] = useState<{
+    job: Job | null;
+    isOpen: boolean;
+  }>({ job: null, isOpen: false });
 
   // Data fetching
   const loadData = useCallback(async () => {
@@ -341,10 +350,17 @@ export default function GlobalSidebar() {
           setTimeout(() => setDraggingItem(null), 150);
         }}
         onClick={() => {
-          setLeadModalState({
-            lead: lead,
-            isOpen: true,
-          });
+          if (lead.isColdLead) {
+            setRestoreModalState({
+              lead: lead,
+              isOpen: true,
+            });
+          } else {
+            setLeadModalState({
+              lead: lead,
+              isOpen: true,
+            });
+          }
         }}
         className="rounded-lg border border-[#373e47] bg-[#1e2227] p-3 shadow-sm transition ring-cyan-500/40 hover:ring-2 cursor-pointer"
       >
@@ -385,9 +401,17 @@ export default function GlobalSidebar() {
     );
   };
 
-  const renderJobCard = (job: Job) => (
+  const renderJobCard = (job: Job, isCompleted = false) => (
     <div
       key={job.id}
+      onClick={() => {
+        if (isCompleted) {
+          setRestoreJobModalState({
+            job: job,
+            isOpen: true,
+          });
+        }
+      }}
       className="rounded-lg border border-[#373e47] bg-[#1e2227] p-3 shadow-sm transition ring-blue-500/40 hover:ring-2 cursor-pointer"
     >
       <div className="flex items-start justify-between gap-2">
@@ -676,7 +700,7 @@ export default function GlobalSidebar() {
                       </div>
                     ) : (
                       <div className="space-y-2">
-                        {filteredJobs.completed.map(renderJobCard)}
+                        {filteredJobs.completed.map((job) => renderJobCard(job, true))}
                       </div>
                     )}
                   </>
@@ -796,6 +820,77 @@ export default function GlobalSidebar() {
               throw error;
             }
           }}
+        />
+      )}
+
+      {/* Restore Modal for Cold Leads */}
+      {restoreModalState.isOpen && restoreModalState.lead && (
+        <RestoreModal
+          isOpen={restoreModalState.isOpen}
+          onClose={() => setRestoreModalState({ lead: null, isOpen: false })}
+          onRestore={async () => {
+            if (!user || !restoreModalState.lead) return;
+            try {
+              const token = await user.getIdToken();
+              const response = await fetch(`/api/dashboard/leads/${restoreModalState.lead.id}/restore`, {
+                method: 'PATCH',
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              });
+
+              if (!response.ok) {
+                throw new Error('Failed to restore lead');
+              }
+
+              await loadData();
+              refreshSidebar();
+            } catch (error) {
+              console.error('Error restoring lead:', error);
+              throw error;
+            }
+          }}
+          title="Restore Cold Lead"
+          name={restoreModalState.lead.name}
+          type="cold"
+        />
+      )}
+
+      {/* Restore Modal for Completed Jobs */}
+      {restoreJobModalState.isOpen && restoreJobModalState.job && (
+        <RestoreModal
+          isOpen={restoreJobModalState.isOpen}
+          onClose={() => setRestoreJobModalState({ job: null, isOpen: false })}
+          onRestore={async () => {
+            if (!user || !restoreJobModalState.job) return;
+            try {
+              const token = await user.getIdToken();
+              const response = await fetch(`/api/dashboard/jobs/${restoreJobModalState.job.id}`, {
+                method: 'PATCH',
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  status: 'scheduled',
+                }),
+              });
+
+              if (!response.ok) {
+                throw new Error('Failed to restore job');
+              }
+
+              await loadData();
+              refreshSidebar();
+              setRestoreJobModalState({ job: null, isOpen: false });
+            } catch (error) {
+              console.error('Error restoring job:', error);
+              throw error;
+            }
+          }}
+          title="Restore Completed Job"
+          name={restoreJobModalState.job.customerName}
+          type="completed"
         />
       )}
     </>

@@ -157,6 +157,9 @@ export default function JobModal(props: JobModalProps) {
       // Show custom input if inspector is not in the list
       setShowCustomInspector(Boolean(jobInspector && !inspectorsList.includes(jobInspector)));
       setInternalNotes(props.job.internalNotes ?? '');
+
+      // Initialize contactAction for edit mode (jobs are always at least scheduled)
+      setContactAction('scheduled');
     }
   }, [isOpen, props, defaultStatus, inspectorsList]);
 
@@ -302,7 +305,7 @@ export default function JobModal(props: JobModalProps) {
                     onChange={(event) => setContactAction(event.target.value as typeof contactAction)}
                     disabled={isSubmitting}
                   >
-                    <option value="uncontacted">Uncontacted</option>
+                    <option value="uncontacted">Unscheduled</option>
                     <option value="1st">First Contact Attempt</option>
                     <option value="2nd">Second Contact Attempt</option>
                     <option value="3rd">Third Contact Attempt</option>
@@ -310,7 +313,7 @@ export default function JobModal(props: JobModalProps) {
                   </select>
                   <p className="mt-1 text-xs text-gray-500">
                     {contactAction === 'uncontacted'
-                      ? 'Lead is on calendar but not yet contacted'
+                      ? 'Lead not yet contacted'
                       : contactAction === 'scheduled'
                       ? 'Confirm inspection date and schedule job'
                       : 'Track contact attempt and keep lead active'}
@@ -321,15 +324,18 @@ export default function JobModal(props: JobModalProps) {
                   <select
                     id="contact-status"
                     className="mt-2 w-full rounded-lg border border-[#373e47] bg-[#0d1117] px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                    value={status}
-                    onChange={(event) => setStatus(event.target.value as LeadJobStatus)}
+                    value={contactAction}
+                    onChange={(event) => setContactAction(event.target.value as typeof contactAction)}
                     disabled={isSubmitting}
                   >
+                    <option value="uncontacted">Unscheduled</option>
+                    <option value="1st">First Contact Attempt</option>
+                    <option value="2nd">Second Contact Attempt</option>
+                    <option value="3rd">Third Contact Attempt</option>
                     <option value="scheduled">Scheduled</option>
-                    <option value="completed">Completed</option>
                   </select>
                   <p className="mt-1 text-xs text-gray-500">
-                    Change job status as needed
+                    Change contact status as needed
                   </p>
                 </>
               )}
