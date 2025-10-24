@@ -22,6 +22,7 @@ interface Lead {
   isColdLead?: boolean;
   tentativeDate?: string | null;
   inspector?: string | null; // Can be assigned at any stage
+  internalNotes?: string | null;
 }
 
 interface Job {
@@ -369,6 +370,16 @@ export default function GlobalSidebar() {
             <span className="truncate">{lead.phone}</span>
           </div>
         </div>
+        {lead.inspector && (
+          <div className="mt-2 flex justify-end">
+            <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/20 px-2 py-0.5 text-[10px] font-medium text-blue-300">
+              <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+              {lead.inspector}
+            </span>
+          </div>
+        )}
       </div>
     );
   };

@@ -31,6 +31,8 @@ interface PromoteModeProps extends BaseJobModalProps {
     campaignName: string;
     tentativeDate?: string | null;
     contactAttempt?: number;
+    inspector?: string | null;
+    internalNotes?: string | null;
   };
   onContactAttempt?: (leadId: string, attempt: number, isCold: boolean, inspector?: string | null, internalNotes?: string | null) => Promise<void>;
   onRemoveFromCalendar?: (leadId: string) => Promise<void>;
@@ -130,9 +132,14 @@ export default function JobModal(props: JobModalProps) {
       // Seed with tentativeDate if available (e.g., when lead was just dragged to calendar)
       const tentativeDateStr = props.lead.tentativeDate;
       setScheduledInspectionDate(tentativeDateStr ? parseLocalDate(tentativeDateStr) : null);
-      setInspector('');
-      setInternalNotes('');
-      setShowCustomInspector(false);
+
+      // Load existing inspector and notes if available
+      const leadInspector = props.lead.inspector ?? '';
+      setInspector(leadInspector);
+      setInternalNotes(props.lead.internalNotes ?? '');
+
+      // Show custom input if inspector is not in the list
+      setShowCustomInspector(Boolean(leadInspector && !inspectorsList.includes(leadInspector)));
 
       // Initialize contactAction based on existing contactAttempt
       const attempt = props.lead.contactAttempt || 0;

@@ -1487,6 +1487,8 @@ export interface DashboardLead {
   contactAttempt?: number;
   isColdLead?: boolean;
   tentativeDate?: string | null;
+  inspector?: string | null;
+  internalNotes?: string | null;
 }
 
 export interface DashboardJob {
@@ -1644,6 +1646,8 @@ export async function getAllLeadsAdmin(
         contactAttempt: (data.contactAttempt as number | undefined) ?? undefined,
         isColdLead: (data.isColdLead as boolean | undefined) ?? undefined,
         tentativeDate: (data.tentativeDate as string | null | undefined) ?? undefined,
+        inspector: (data.inspector as string | null | undefined) ?? undefined,
+        internalNotes: (data.internalNotes as string | null | undefined) ?? undefined,
       });
     });
   }

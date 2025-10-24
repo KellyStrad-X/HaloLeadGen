@@ -24,6 +24,7 @@ interface Lead {
   isColdLead?: boolean;
   tentativeDate?: string | null;
   inspector?: string | null; // Can be assigned at any stage
+  internalNotes?: string | null;
 }
 
 interface Job {
