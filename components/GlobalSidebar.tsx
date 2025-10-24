@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/auth-context';
 import { useDashboardSidebar } from '@/lib/dashboard-sidebar-context';
 import JobModal, { type LeadJobStatus } from './JobModal';
 import RestoreModal from './RestoreModal';
+import CampaignDetailsModal from './CampaignDetailsModal';
 
 type LegacyLeadStatus = 'new' | 'contacted' | 'scheduled' | 'completed';
 
@@ -131,6 +132,10 @@ export default function GlobalSidebar() {
     job: Job | null;
     isOpen: boolean;
   }>({ job: null, isOpen: false });
+  const [campaignDetailsModalState, setCampaignDetailsModalState] = useState<{
+    campaignId: string | null;
+    isOpen: boolean;
+  }>({ campaignId: null, isOpen: false });
 
   // Data fetching
   const loadData = useCallback(async () => {
@@ -543,15 +548,34 @@ export default function GlobalSidebar() {
                     >
                       {option.id === 'all' ? (
                         // "All Campaigns" special format
-                        <div className="flex items-center justify-between gap-3 text-sm font-medium text-white">
-                          <span>Active Campaigns: {option.activeCampaignCount ?? 0}</span>
-                          <span>Leads: {option.leadCount}</span>
-                        </div>
+                        <>
+                          <div className="text-sm font-medium text-white mb-2">
+                            {option.name}
+                          </div>
+                          <div className="flex items-center justify-between gap-3 text-xs text-gray-400">
+                            <span>Active Campaigns: {option.activeCampaignCount ?? 0}</span>
+                            <span>Leads: {option.leadCount}</span>
+                          </div>
+                        </>
                       ) : (
                         // Individual campaign format
                         <>
-                          <div className="truncate text-sm font-medium text-white mb-1">
-                            {option.name}
+                          <div className="flex items-center justify-between gap-2 mb-1">
+                            <span className="truncate text-sm font-medium text-white">
+                              {option.name}
+                            </span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setCampaignDetailsModalState({
+                                  campaignId: option.id,
+                                  isOpen: true,
+                                });
+                              }}
+                              className="flex-shrink-0 text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
+                            >
+                              Details
+                            </button>
                           </div>
                           <div className="text-xs text-gray-400">
                             Leads: {option.leadCount}
@@ -868,6 +892,19 @@ export default function GlobalSidebar() {
           title="Restore Completed Job"
           name={restoreJobModalState.job.customerName}
           type="completed"
+        />
+      )}
+
+      {/* Campaign Details Modal */}
+      {campaignDetailsModalState.isOpen && campaignDetailsModalState.campaignId && (
+        <CampaignDetailsModal
+          isOpen={campaignDetailsModalState.isOpen}
+          onClose={() => setCampaignDetailsModalState({ campaignId: null, isOpen: false })}
+          campaignId={campaignDetailsModalState.campaignId}
+          onCampaignUpdated={() => {
+            loadData();
+            refreshSidebar();
+          }}
         />
       )}
     </>
