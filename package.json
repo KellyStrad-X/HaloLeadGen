@@ -6,11 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
-    "seed:firestore": "tsx database/seeds/firestore-seed.ts",
-    "db:init": "tsx database/init.ts",
-    "db:seed": "tsx database/init.ts --seed",
-    "db:reset": "rm -f database/halo.db && npm run db:seed"
+    "lint": "next lint"
   },
   "dependencies": {
     "@fullcalendar/core": "^6.1.19",
@@ -19,7 +15,6 @@
     "@fullcalendar/react": "^6.1.19",
     "@sendgrid/mail": "^8.1.6",
     "@vis.gl/react-google-maps": "^1.5.5",
-    "better-sqlite3": "^11.0.0",
     "date-fns": "^4.1.0",
     "firebase": "^12.4.0",
     "firebase-admin": "^12.5.0",
@@ -33,7 +28,6 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20",
     "@types/nodemailer": "^6.4.14",
     "@types/qrcode": "^1.5.5",

@@ -149,7 +149,6 @@ Leads can be promoted to "Jobs" for tracking through the inspection/completion l
 - **Configuration:** `lib/mailer.ts`
 - Triggered on lead submission
 - Sends to contractor email from campaign
-- Test route available: `/api/test-email`
 
 ### QR Code Generation
 
@@ -254,7 +253,6 @@ All development work happens in a secure VM with limited production access. See 
 - Use Firebase Emulator Suite for local development (not currently configured)
 - Check browser console for client-side Firebase errors
 - Check server logs for Admin SDK errors
-- Test email delivery via `/api/test-email` route
 - Use Firebase Console to inspect Firestore data and Storage files
 - Monitor Firebase Auth users in Firebase Console
 
