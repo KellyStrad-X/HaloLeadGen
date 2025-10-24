@@ -36,7 +36,7 @@ export function DashboardSidebarProvider({ children }: DashboardSidebarProviderP
   const [selectedCampaignId, setSelectedCampaignId] = useState<string>('all');
   const [isInitialized, setIsInitialized] = useState(false);
   const [draggingItem, setDraggingItem] = useState<{ type: 'lead' | 'job'; id: string } | null>(null);
-  const [sidebarRefreshCallback, setSidebarRefreshCallback] = useState<(() => void) | null>(null);
+  const [sidebarRefreshCallbacks, setSidebarRefreshCallbacks] = useState<Set<() => void>>(new Set());
 
   // Load collapsed state from localStorage on mount
   useEffect(() => {
@@ -63,15 +63,19 @@ export function DashboardSidebarProvider({ children }: DashboardSidebarProviderP
   };
 
   const registerSidebarRefresh = useCallback((callback: () => void) => {
-    setSidebarRefreshCallback(() => callback);
-    return () => setSidebarRefreshCallback(null);
+    setSidebarRefreshCallbacks(prev => new Set(prev).add(callback));
+    return () => {
+      setSidebarRefreshCallbacks(prev => {
+        const next = new Set(prev);
+        next.delete(callback);
+        return next;
+      });
+    };
   }, []);
 
-  const refreshSidebar = () => {
-    if (sidebarRefreshCallback) {
-      sidebarRefreshCallback();
-    }
-  };
+  const refreshSidebar = useCallback(() => {
+    sidebarRefreshCallbacks.forEach(callback => callback());
+  }, [sidebarRefreshCallbacks]);
 
   return (
     <DashboardSidebarContext.Provider

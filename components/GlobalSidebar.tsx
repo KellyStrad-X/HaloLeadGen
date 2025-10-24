@@ -103,6 +103,7 @@ export default function GlobalSidebar() {
     isSidebarCollapsed,
     toggleSidebar,
     registerSidebarRefresh,
+    refreshSidebar,
     setDraggingItem,
   } = useDashboardSidebar();
 
@@ -788,6 +789,7 @@ export default function GlobalSidebar() {
               }
 
               await loadData();
+              refreshSidebar(); // Notify other components (like calendar) to refresh
               setLeadModalState({ lead: null, isOpen: false });
             } catch (error) {
               console.error('Error saving:', error);

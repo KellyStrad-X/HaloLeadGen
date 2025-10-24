@@ -135,6 +135,7 @@ export default function JobModal(props: JobModalProps) {
 
       // Load existing inspector and notes if available
       const leadInspector = props.lead.inspector ?? '';
+      console.log('[JobModal] Loading lead inspector:', props.lead.inspector, '→ setting to:', leadInspector);
       setInspector(leadInspector);
       setInternalNotes(props.lead.internalNotes ?? '');
 
@@ -195,6 +196,9 @@ export default function JobModal(props: JobModalProps) {
           const inspectorValue = inspector.trim() ? inspector.trim() : null;
           const notesValue = internalNotes.trim() ? internalNotes.trim() : null;
 
+          console.log('[JobModal] Submitting contact attempt - inspector state:', inspector, '→ sending:', inspectorValue);
+          console.log('[JobModal] Submitting contact attempt - internalNotes state:', internalNotes, '→ sending:', notesValue);
+
           await props.onContactAttempt(props.lead.id, attempt, isCold, inspectorValue, notesValue);
         }
 
@@ -251,37 +255,35 @@ export default function JobModal(props: JobModalProps) {
         </div>
 
         <div className="grid gap-6 px-6 py-6 md:grid-cols-2">
-          <div className="space-y-4">
+          <div className="space-y-5">
             <div>
-              <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wide">
+              <h3 className="text-base font-semibold text-gray-300 uppercase tracking-wide">
                 Customer & Contact Info
               </h3>
-              <p className="mt-2 text-lg font-semibold text-white">{customerName}</p>
+              <p className="mt-3 text-xl font-bold text-white">{customerName}</p>
               {customerAddress && (
-                <p className="text-sm text-gray-400">{customerAddress}</p>
+                <p className="mt-1 text-base text-gray-400">{customerAddress}</p>
               )}
-              <div className="mt-4 space-y-2 text-sm text-gray-400">
-                <div className="flex items-center gap-2">
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12A4 4 0 118 12a4 4 0 018 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14v7m0 0h-3m3 0h3" />
+              <div className="mt-5 space-y-3 text-base">
+                <div className="flex items-center gap-3">
+                  <svg className="h-5 w-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
-                  <a href={`mailto:${customerEmail}`} className="hover:text-cyan-300">{customerEmail}</a>
+                  <a href={`mailto:${customerEmail}`} className="text-gray-300 hover:text-cyan-300 transition-colors">{customerEmail}</a>
                 </div>
-                <div className="flex items-center gap-2">
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h2l3 7-1.34 2.68a1 1 0 00.9 1.45H16" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 13h10l4-8H5.4" />
+                <div className="flex items-center gap-3">
+                  <svg className="h-5 w-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                   </svg>
-                  <a href={`tel:${customerPhone}`} className="hover:text-cyan-300">{customerPhone}</a>
+                  <a href={`tel:${customerPhone}`} className="text-gray-300 hover:text-cyan-300 transition-colors">{customerPhone}</a>
                 </div>
               </div>
             </div>
 
             {customerNotes && (
-              <div className="rounded-lg border border-[#373e47] bg-[#24292e] p-4">
-                <p className="text-sm font-semibold text-gray-200 uppercase tracking-wide">Lead Notes</p>
-                <p className="mt-3 whitespace-pre-wrap text-sm text-gray-300 leading-relaxed">{customerNotes}</p>
+              <div className="rounded-lg border border-[#373e47] bg-[#24292e] p-5">
+                <p className="text-base font-semibold text-gray-200 uppercase tracking-wide">Lead Notes</p>
+                <p className="mt-3 whitespace-pre-wrap text-base text-gray-300 leading-relaxed max-h-48 overflow-y-auto">{customerNotes}</p>
               </div>
             )}
           </div>
@@ -315,15 +317,21 @@ export default function JobModal(props: JobModalProps) {
                   </p>
                 </>
               ) : (
-                <select
-                  id="contact-status"
-                  className="mt-2 w-full rounded-lg border border-[#373e47] bg-[#0d1117] px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                  value={status}
-                  onChange={(event) => setStatus(event.target.value as LeadJobStatus)}
-                  disabled={isSubmitting}
-                >
-                  <option value="scheduled">Scheduled</option>
-                </select>
+                <>
+                  <select
+                    id="contact-status"
+                    className="mt-2 w-full rounded-lg border border-[#373e47] bg-[#0d1117] px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                    value={status}
+                    onChange={(event) => setStatus(event.target.value as LeadJobStatus)}
+                    disabled={isSubmitting}
+                  >
+                    <option value="scheduled">Scheduled</option>
+                    <option value="completed">Completed</option>
+                  </select>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Change job status as needed
+                  </p>
+                </>
               )}
             </div>
 
@@ -443,7 +451,7 @@ export default function JobModal(props: JobModalProps) {
                   }
                 }}
                 disabled={isSubmitting}
-                className="rounded-lg bg-blue-500/10 border border-blue-500/40 px-4 py-2 text-sm font-medium text-blue-300 transition-colors hover:bg-blue-500/20 disabled:cursor-not-allowed disabled:opacity-60 flex items-center gap-2"
+                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 flex items-center gap-2 shadow-sm"
                 title="Move to Cold Bucket"
               >
                 <span>❄️</span>
@@ -466,7 +474,7 @@ export default function JobModal(props: JobModalProps) {
                   }
                 }}
                 disabled={isSubmitting}
-                className="rounded-lg bg-red-500/10 border border-red-500/40 px-4 py-2 text-sm font-medium text-red-300 transition-colors hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60 shadow-sm"
               >
                 Remove from Calendar
               </button>
@@ -489,7 +497,7 @@ export default function JobModal(props: JobModalProps) {
                       }
                     }}
                     disabled={isSubmitting}
-                    className="rounded-lg bg-blue-500/10 border border-blue-500/40 px-4 py-2 text-sm font-medium text-blue-300 transition-colors hover:bg-blue-500/20 disabled:cursor-not-allowed disabled:opacity-60 flex items-center gap-2"
+                    className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60 flex items-center gap-2 shadow-sm"
                     title="Move to Cold Bucket"
                   >
                     <span>❄️</span>
@@ -512,7 +520,7 @@ export default function JobModal(props: JobModalProps) {
                       }
                     }}
                     disabled={isSubmitting}
-                    className="rounded-lg bg-red-500/10 border border-red-500/40 px-4 py-2 text-sm font-medium text-red-300 transition-colors hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60 shadow-sm"
                   >
                     Remove from Calendar
                   </button>
@@ -541,7 +549,7 @@ export default function JobModal(props: JobModalProps) {
                       }
                     }}
                     disabled={isSubmitting}
-                    className="rounded-lg bg-green-500/10 border border-green-500/40 px-4 py-2 text-sm font-medium text-green-300 transition-colors hover:bg-green-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60 shadow-sm"
                   >
                     Move to Completed
                   </button>

@@ -119,7 +119,7 @@ function parseLocalDate(dateStr: string): Date {
 
 export default function LeadsTab() {
   const { user } = useAuth();
-  const { selectedCampaignId, draggingItem, setDraggingItem, refreshSidebar } = useDashboardSidebar();
+  const { selectedCampaignId, draggingItem, setDraggingItem, refreshSidebar, registerSidebarRefresh } = useDashboardSidebar();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [jobs, setJobs] = useState<JobBuckets>({
     scheduled: [],
@@ -300,6 +300,12 @@ export default function LeadsTab() {
     loadData();
   }, [loadData]);
 
+  // Register refresh callback with context so sidebar can trigger refresh
+  useEffect(() => {
+    const unregister = registerSidebarRefresh(loadData);
+    return () => unregister();
+  }, [registerSidebarRefresh, loadData]);
+
   const refreshData = useCallback(async () => {
     if (isMutating) return;
     await loadData();
@@ -415,7 +421,7 @@ export default function LeadsTab() {
   );
 
   const updateLeadContactAttempt = useCallback(
-    async (leadId: string, attempt: number, isCold: boolean) => {
+    async (leadId: string, attempt: number, isCold: boolean, inspector?: string | null, internalNotes?: string | null) => {
       if (!user) return;
       setIsMutating(true);
       setError(null);
@@ -430,6 +436,8 @@ export default function LeadsTab() {
           body: JSON.stringify({
             contactAttempt: attempt,
             isColdLead: isCold,
+            inspector,
+            internalNotes,
           }),
         });
 
