@@ -12,6 +12,9 @@ interface DashboardSidebarContextType {
   registerSidebarRefresh: (callback: () => void) => () => void;
   draggingItem: { type: 'lead' | 'job'; id: string } | null;
   setDraggingItem: (item: { type: 'lead' | 'job'; id: string } | null) => void;
+  campaignDetailsModal: { campaignId: string | null; isOpen: boolean };
+  openCampaignDetails: (campaignId: string) => void;
+  closeCampaignDetails: () => void;
 }
 
 const DashboardSidebarContext = createContext<DashboardSidebarContextType | undefined>(undefined);
@@ -37,6 +40,10 @@ export function DashboardSidebarProvider({ children }: DashboardSidebarProviderP
   const [isInitialized, setIsInitialized] = useState(false);
   const [draggingItem, setDraggingItem] = useState<{ type: 'lead' | 'job'; id: string } | null>(null);
   const [sidebarRefreshCallbacks, setSidebarRefreshCallbacks] = useState<Set<() => void>>(new Set());
+  const [campaignDetailsModal, setCampaignDetailsModal] = useState<{ campaignId: string | null; isOpen: boolean }>({
+    campaignId: null,
+    isOpen: false,
+  });
 
   // Load collapsed state from localStorage on mount
   useEffect(() => {
@@ -77,6 +84,14 @@ export function DashboardSidebarProvider({ children }: DashboardSidebarProviderP
     sidebarRefreshCallbacks.forEach(callback => callback());
   }, [sidebarRefreshCallbacks]);
 
+  const openCampaignDetails = useCallback((campaignId: string) => {
+    setCampaignDetailsModal({ campaignId, isOpen: true });
+  }, []);
+
+  const closeCampaignDetails = useCallback(() => {
+    setCampaignDetailsModal({ campaignId: null, isOpen: false });
+  }, []);
+
   return (
     <DashboardSidebarContext.Provider
       value={{
@@ -89,6 +104,9 @@ export function DashboardSidebarProvider({ children }: DashboardSidebarProviderP
         registerSidebarRefresh,
         draggingItem,
         setDraggingItem,
+        campaignDetailsModal,
+        openCampaignDetails,
+        closeCampaignDetails,
       }}
     >
       {children}

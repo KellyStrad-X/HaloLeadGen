@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import { useDashboardTab } from './layout';
+import { useDashboardSidebar } from '@/lib/dashboard-sidebar-context';
 import CampaignMap from '@/components/CampaignMap';
 import CampaignsTab from '@/components/CampaignsTab';
 import AnalyticsTab from '@/components/AnalyticsTab';
@@ -34,6 +35,7 @@ interface RecentCampaign {
 export default function DashboardPage() {
   const { user } = useAuth();
   const { activeTab, setActiveTab } = useDashboardTab();
+  const { openCampaignDetails } = useDashboardSidebar();
   const [recentLeads, setRecentLeads] = useState<RecentLead[]>([]);
   const [recentCampaigns, setRecentCampaigns] = useState<RecentCampaign[]>([]);
   const [loading, setLoading] = useState(true);
@@ -168,10 +170,10 @@ export default function DashboardPage() {
           {recentCampaigns.length > 0 ? (
             <div className="space-y-3">
               {recentCampaigns.map((campaign) => (
-                <Link
+                <button
                   key={campaign.id}
-                  href={`/dashboard/campaigns/${campaign.id}`}
-                  className="block py-3 border-b border-[#373e47] last:border-0 hover:bg-[#373e47]/30 -mx-2 px-2 rounded transition-colors"
+                  onClick={() => openCampaignDetails(campaign.id)}
+                  className="block w-full text-left py-3 border-b border-[#373e47] last:border-0 hover:bg-[#373e47]/30 -mx-2 px-2 rounded transition-colors"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex-1 min-w-0">
@@ -217,7 +219,7 @@ export default function DashboardPage() {
                       <p className="text-gray-400 text-xs">leads</p>
                     </div>
                   </div>
-                </Link>
+                </button>
               ))}
               <button
                 onClick={() => setActiveTab('campaigns')}

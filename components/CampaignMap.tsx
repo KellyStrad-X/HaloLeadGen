@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import { APIProvider, Map, AdvancedMarker, Pin, InfoWindow } from '@vis.gl/react-google-maps';
 import { useAuth } from '@/lib/auth-context';
+import { useDashboardSidebar } from '@/lib/dashboard-sidebar-context';
 import MapModal from './MapModal';
 
 interface Location {
@@ -42,7 +42,7 @@ function getStatusText(campaign: Campaign): string {
 
 export default function CampaignMap() {
   const { user } = useAuth();
-  const router = useRouter();
+  const { openCampaignDetails } = useDashboardSidebar();
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
   const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID;
 
@@ -55,7 +55,7 @@ export default function CampaignMap() {
   const [hoverTimeout, setHoverTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
 
   const handleMarkerClick = (campaignId: string) => {
-    router.push(`/dashboard/campaigns/${campaignId}`);
+    openCampaignDetails(campaignId);
   };
 
   const handleMarkerHover = (campaignId: string) => {

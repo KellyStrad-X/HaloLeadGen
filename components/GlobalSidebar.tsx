@@ -107,6 +107,9 @@ export default function GlobalSidebar() {
     registerSidebarRefresh,
     refreshSidebar,
     setDraggingItem,
+    campaignDetailsModal,
+    openCampaignDetails,
+    closeCampaignDetails,
   } = useDashboardSidebar();
 
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -132,10 +135,6 @@ export default function GlobalSidebar() {
     job: Job | null;
     isOpen: boolean;
   }>({ job: null, isOpen: false });
-  const [campaignDetailsModalState, setCampaignDetailsModalState] = useState<{
-    campaignId: string | null;
-    isOpen: boolean;
-  }>({ campaignId: null, isOpen: false });
 
   // Data fetching
   const loadData = useCallback(async () => {
@@ -564,18 +563,15 @@ export default function GlobalSidebar() {
                             <span className="truncate text-sm font-medium text-white">
                               {option.name}
                             </span>
-                            <button
+                            <span
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setCampaignDetailsModalState({
-                                  campaignId: option.id,
-                                  isOpen: true,
-                                });
+                                openCampaignDetails(option.id);
                               }}
-                              className="flex-shrink-0 text-xs text-cyan-400 hover:text-cyan-300 transition-colors"
+                              className="flex-shrink-0 text-xs text-cyan-400 hover:text-cyan-300 transition-colors cursor-pointer"
                             >
                               Details
-                            </button>
+                            </span>
                           </div>
                           <div className="text-xs text-gray-400">
                             Leads: {option.leadCount}
@@ -896,11 +892,11 @@ export default function GlobalSidebar() {
       )}
 
       {/* Campaign Details Modal */}
-      {campaignDetailsModalState.isOpen && campaignDetailsModalState.campaignId && (
+      {campaignDetailsModal.isOpen && campaignDetailsModal.campaignId && (
         <CampaignDetailsModal
-          isOpen={campaignDetailsModalState.isOpen}
-          onClose={() => setCampaignDetailsModalState({ campaignId: null, isOpen: false })}
-          campaignId={campaignDetailsModalState.campaignId}
+          isOpen={campaignDetailsModal.isOpen}
+          onClose={closeCampaignDetails}
+          campaignId={campaignDetailsModal.campaignId}
           onCampaignUpdated={() => {
             loadData();
             refreshSidebar();

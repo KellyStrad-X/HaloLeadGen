@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
+import { useDashboardSidebar } from '@/lib/dashboard-sidebar-context';
 
 interface Campaign {
   id: string;
@@ -17,6 +18,7 @@ interface Campaign {
 
 export default function CampaignsTab() {
   const { user } = useAuth();
+  const { openCampaignDetails } = useDashboardSidebar();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<'date' | 'name' | 'leads'>('date');
@@ -220,12 +222,12 @@ export default function CampaignsTab() {
                     </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <div className="flex space-x-2">
-                          <Link
-                            href={`/dashboard/campaigns/${campaign.id}`}
+                          <button
+                            onClick={() => openCampaignDetails(campaign.id)}
                             className="text-cyan-400 hover:text-cyan-300"
                           >
                             Details
-                          </Link>
+                          </button>
                           <span className="text-gray-600">|</span>
                           <a
                             href={`/c/${campaign.pageSlug}`}
