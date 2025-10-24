@@ -15,6 +15,9 @@ interface DashboardSidebarContextType {
   campaignDetailsModal: { campaignId: string | null; isOpen: boolean };
   openCampaignDetails: (campaignId: string) => void;
   closeCampaignDetails: () => void;
+  createCampaignModal: { isOpen: boolean };
+  openCreateCampaign: () => void;
+  closeCreateCampaign: () => void;
 }
 
 const DashboardSidebarContext = createContext<DashboardSidebarContextType | undefined>(undefined);
@@ -42,6 +45,9 @@ export function DashboardSidebarProvider({ children }: DashboardSidebarProviderP
   const [sidebarRefreshCallbacks, setSidebarRefreshCallbacks] = useState<Set<() => void>>(new Set());
   const [campaignDetailsModal, setCampaignDetailsModal] = useState<{ campaignId: string | null; isOpen: boolean }>({
     campaignId: null,
+    isOpen: false,
+  });
+  const [createCampaignModal, setCreateCampaignModal] = useState<{ isOpen: boolean }>({
     isOpen: false,
   });
 
@@ -92,6 +98,14 @@ export function DashboardSidebarProvider({ children }: DashboardSidebarProviderP
     setCampaignDetailsModal({ campaignId: null, isOpen: false });
   }, []);
 
+  const openCreateCampaign = useCallback(() => {
+    setCreateCampaignModal({ isOpen: true });
+  }, []);
+
+  const closeCreateCampaign = useCallback(() => {
+    setCreateCampaignModal({ isOpen: false });
+  }, []);
+
   return (
     <DashboardSidebarContext.Provider
       value={{
@@ -107,6 +121,9 @@ export function DashboardSidebarProvider({ children }: DashboardSidebarProviderP
         campaignDetailsModal,
         openCampaignDetails,
         closeCampaignDetails,
+        createCampaignModal,
+        openCreateCampaign,
+        closeCreateCampaign,
       }}
     >
       {children}

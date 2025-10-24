@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/auth-context';
 interface PhotoUploadProps {
   campaignId: string;
   onUploadComplete: (photoUrls: string[]) => void;
+  onSuccess?: () => void;
 }
 
 interface PhotoFile {
@@ -18,6 +19,7 @@ interface PhotoFile {
 export default function PhotoUpload({
   campaignId,
   onUploadComplete,
+  onSuccess,
 }: PhotoUploadProps) {
   const router = useRouter();
   const { user } = useAuth();
@@ -184,6 +186,11 @@ export default function PhotoUpload({
 
       if (!qrResponse.ok) {
         throw new Error('Failed to generate QR code');
+      }
+
+      // Call onSuccess callback if provided
+      if (onSuccess) {
+        onSuccess();
       }
 
       // Navigate to success page

@@ -6,6 +6,7 @@ import { useDashboardSidebar } from '@/lib/dashboard-sidebar-context';
 import JobModal, { type LeadJobStatus } from './JobModal';
 import RestoreModal from './RestoreModal';
 import CampaignDetailsModal from './CampaignDetailsModal';
+import CreateCampaignModal from './CreateCampaignModal';
 
 type LegacyLeadStatus = 'new' | 'contacted' | 'scheduled' | 'completed';
 
@@ -110,6 +111,8 @@ export default function GlobalSidebar() {
     campaignDetailsModal,
     openCampaignDetails,
     closeCampaignDetails,
+    createCampaignModal,
+    closeCreateCampaign,
   } = useDashboardSidebar();
 
   const [leads, setLeads] = useState<Lead[]>([]);
@@ -898,6 +901,18 @@ export default function GlobalSidebar() {
           onClose={closeCampaignDetails}
           campaignId={campaignDetailsModal.campaignId}
           onCampaignUpdated={() => {
+            loadData();
+            refreshSidebar();
+          }}
+        />
+      )}
+
+      {/* Create Campaign Modal */}
+      {createCampaignModal.isOpen && (
+        <CreateCampaignModal
+          isOpen={createCampaignModal.isOpen}
+          onClose={closeCreateCampaign}
+          onSuccess={() => {
             loadData();
             refreshSidebar();
           }}

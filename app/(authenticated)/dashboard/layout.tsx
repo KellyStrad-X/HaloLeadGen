@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, createContext, useContext } from 'react';
 import SettingsModal from '@/components/SettingsModal';
-import { DashboardSidebarProvider } from '@/lib/dashboard-sidebar-context';
+import { DashboardSidebarProvider, useDashboardSidebar } from '@/lib/dashboard-sidebar-context';
 import GlobalSidebar from '@/components/GlobalSidebar';
 
 type DashboardTab = 'overview' | 'analytics' | 'campaigns' | 'leads';
@@ -17,6 +17,36 @@ interface DashboardContextType {
 }
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
+
+// Helper component to access sidebar context
+function CreateCampaignButton() {
+  const { openCreateCampaign } = useDashboardSidebar();
+
+  return (
+    <button
+      onClick={openCreateCampaign}
+      className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-600 text-black px-3 py-2 rounded-lg text-sm font-semibold transition-colors"
+    >
+      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+      </svg>
+      <span className="hidden lg:inline">New Campaign</span>
+    </button>
+  );
+}
+
+function CreateCampaignLink() {
+  const { openCreateCampaign } = useDashboardSidebar();
+
+  return (
+    <button
+      onClick={openCreateCampaign}
+      className="block w-full text-left px-3 py-2 rounded-lg text-sm font-medium text-gray-200 hover:bg-[#2d333b] hover:text-white transition-colors"
+    >
+      Create Campaign
+    </button>
+  );
+}
 
 export function useDashboardTab() {
   const context = useContext(DashboardContext);
@@ -129,15 +159,7 @@ export default function DashboardLayout({
               {/* Quick Actions - Only show on dashboard */}
               {showTabs && (
                 <>
-                  <Link
-                    href="/create-campaign"
-                    className="flex items-center gap-2 bg-cyan-500 hover:bg-cyan-600 text-black px-3 py-2 rounded-lg text-sm font-semibold transition-colors"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                    <span className="hidden lg:inline">New Campaign</span>
-                  </Link>
+                  <CreateCampaignButton />
                 </>
               )}
 
@@ -210,12 +232,7 @@ export default function DashboardLayout({
               >
                 Leads
               </button>
-              <Link
-                href="/create-campaign"
-                className="block px-3 py-2 rounded-lg text-sm font-medium text-gray-200 hover:bg-[#2d333b] hover:text-white transition-colors"
-              >
-                Create Campaign
-              </Link>
+              <CreateCampaignLink />
             </nav>
           </div>
         )}

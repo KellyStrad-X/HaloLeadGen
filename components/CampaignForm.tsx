@@ -27,7 +27,11 @@ interface FormErrors {
   [key: string]: string;
 }
 
-export default function CampaignForm() {
+interface CampaignFormProps {
+  onSuccess?: () => void;
+}
+
+export default function CampaignForm({ onSuccess }: CampaignFormProps = {}) {
   const router = useRouter();
   const { user } = useAuth();
   const [step, setStep] = useState(1);
@@ -458,6 +462,7 @@ export default function CampaignForm() {
         <PhotoUpload
           campaignId={campaignId}
           onUploadComplete={handlePhotosUploaded}
+          onSuccess={onSuccess}
         />
       )}
     </div>

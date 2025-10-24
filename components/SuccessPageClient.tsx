@@ -359,10 +359,10 @@ export default function SuccessPageClient({
       <section className="py-12 px-4 bg-halo-dark">
         <div className="max-w-4xl mx-auto text-center space-y-4">
           <a
-            href="/create-campaign"
+            href="/dashboard"
             className="inline-block px-8 py-4 bg-halo-ice text-black font-bold rounded-lg hover:bg-halo-ice/90 transition-colors"
           >
-            Create Another Campaign
+            Go to Dashboard
           </a>
         </div>
       </section>

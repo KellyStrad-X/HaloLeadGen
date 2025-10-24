@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import { useDashboardSidebar } from '@/lib/dashboard-sidebar-context';
 
@@ -18,7 +17,7 @@ interface Campaign {
 
 export default function CampaignsPage() {
   const { user } = useAuth();
-  const { openCampaignDetails } = useDashboardSidebar();
+  const { openCampaignDetails, openCreateCampaign } = useDashboardSidebar();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<'date' | 'name' | 'leads'>('date');
@@ -112,12 +111,12 @@ export default function CampaignsPage() {
             Manage your lead generation campaigns
           </p>
         </div>
-        <Link
-          href="/create-campaign"
+        <button
+          onClick={openCreateCampaign}
           className="bg-cyan-500 hover:bg-cyan-600 text-black font-semibold py-2 px-6 rounded-lg transition-colors"
         >
           Create Campaign
-        </Link>
+        </button>
       </div>
 
       {/* Filters and Sort */}
@@ -269,12 +268,12 @@ export default function CampaignsPage() {
               ? 'No campaigns yet'
               : `No ${filterStatus.toLowerCase()} campaigns`}
           </p>
-          <Link
-            href="/create-campaign"
+          <button
+            onClick={openCreateCampaign}
             className="inline-block bg-cyan-500 hover:bg-cyan-600 text-black font-semibold py-2 px-6 rounded-lg transition-colors"
           >
             Create Your First Campaign
-          </Link>
+          </button>
         </div>
       )}
     </div>

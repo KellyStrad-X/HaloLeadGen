@@ -35,7 +35,7 @@ interface RecentCampaign {
 export default function DashboardPage() {
   const { user } = useAuth();
   const { activeTab, setActiveTab } = useDashboardTab();
-  const { openCampaignDetails } = useDashboardSidebar();
+  const { openCampaignDetails, openCreateCampaign } = useDashboardSidebar();
   const [recentLeads, setRecentLeads] = useState<RecentLead[]>([]);
   const [recentCampaigns, setRecentCampaigns] = useState<RecentCampaign[]>([]);
   const [loading, setLoading] = useState(true);
@@ -231,12 +231,12 @@ export default function DashboardPage() {
           ) : (
             <div className="text-center py-8">
               <p className="text-gray-300 mb-4">No campaigns yet</p>
-              <Link
-                href="/create-campaign"
+              <button
+                onClick={openCreateCampaign}
                 className="inline-block bg-cyan-500 hover:bg-cyan-600 text-black font-semibold py-2 px-4 rounded-lg transition-colors"
               >
                 Create Your First Campaign
-              </Link>
+              </button>
             </div>
           )}
         </div>
