@@ -1,7 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import { X } from 'lucide-react';
 import CampaignForm from './CampaignForm';
+import CampaignSuccess from './CampaignSuccess';
 
 interface CreateCampaignModalProps {
   isOpen: boolean;
@@ -14,6 +16,22 @@ export default function CreateCampaignModal({
   onClose,
   onSuccess,
 }: CreateCampaignModalProps) {
+  const [completedCampaignId, setCompletedCampaignId] = useState<string | null>(null);
+
+  // Reset state when modal closes
+  const handleClose = () => {
+    setCompletedCampaignId(null);
+    onClose();
+  };
+
+  // Handle campaign completion
+  const handleCampaignComplete = (campaignId: string) => {
+    setCompletedCampaignId(campaignId);
+    if (onSuccess) {
+      onSuccess();
+    }
+  };
+
   if (!isOpen) {
     return null;
   }
@@ -29,14 +47,20 @@ export default function CreateCampaignModal({
         <div className="flex items-center justify-between border-b border-[#373e47] px-6 py-4 bg-[#2d333b] flex-shrink-0">
           <div>
             <h2 className="text-2xl font-semibold text-white">
-              Create New <span className="text-cyan-400">Campaign</span>
+              {completedCampaignId ? (
+                <>Your Campaign is <span className="text-cyan-400">Ready!</span></>
+              ) : (
+                <>Create New <span className="text-cyan-400">Campaign</span></>
+              )}
             </h2>
             <p className="text-sm text-gray-400 mt-1">
-              Set up a campaign to capture roofing leads from your showcase property
+              {completedCampaignId
+                ? 'Download your QR code and start generating leads'
+                : 'Set up a campaign to capture roofing leads from your showcase property'}
             </p>
           </div>
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="text-gray-400 hover:text-gray-200 transition-colors flex-shrink-0 ml-4"
             aria-label="Close modal"
           >
@@ -46,7 +70,11 @@ export default function CreateCampaignModal({
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-6 py-6">
-          <CampaignForm onSuccess={onSuccess} />
+          {completedCampaignId ? (
+            <CampaignSuccess campaignId={completedCampaignId} onClose={handleClose} />
+          ) : (
+            <CampaignForm onSuccess={handleCampaignComplete} />
+          )}
         </div>
       </div>
     </div>

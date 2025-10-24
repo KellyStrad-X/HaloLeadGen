@@ -28,10 +28,10 @@ interface FormErrors {
 }
 
 interface CampaignFormProps {
-  onSuccess?: () => void;
+  onSuccess: (campaignId: string) => void;
 }
 
-export default function CampaignForm({ onSuccess }: CampaignFormProps = {}) {
+export default function CampaignForm({ onSuccess }: CampaignFormProps) {
   const router = useRouter();
   const { user } = useAuth();
   const [step, setStep] = useState(1);
@@ -55,7 +55,6 @@ export default function CampaignForm({ onSuccess }: CampaignFormProps = {}) {
     },
   });
 
-  const [uploadedPhotos, setUploadedPhotos] = useState<string[]>([]);
   const [errors, setErrors] = useState<FormErrors>({});
 
   // Validate campaign info
@@ -175,11 +174,6 @@ export default function CampaignForm({ onSuccess }: CampaignFormProps = {}) {
     }
   };
 
-  // Handle photo upload completion
-  const handlePhotosUploaded = (photoUrls: string[]) => {
-    setUploadedPhotos(photoUrls);
-    setStep(3); // Move to review/completion
-  };
 
   // Render step 1: Campaign Info
   const renderStep1 = () => (
@@ -461,7 +455,6 @@ export default function CampaignForm({ onSuccess }: CampaignFormProps = {}) {
       {campaignId && (
         <PhotoUpload
           campaignId={campaignId}
-          onUploadComplete={handlePhotosUploaded}
           onSuccess={onSuccess}
         />
       )}

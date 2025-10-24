@@ -1,13 +1,11 @@
 'use client';
 
 import { useState, useRef, DragEvent } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 
 interface PhotoUploadProps {
   campaignId: string;
-  onUploadComplete: (photoUrls: string[]) => void;
-  onSuccess?: () => void;
+  onSuccess: (campaignId: string) => void;
 }
 
 interface PhotoFile {
@@ -18,10 +16,8 @@ interface PhotoFile {
 
 export default function PhotoUpload({
   campaignId,
-  onUploadComplete,
   onSuccess,
 }: PhotoUploadProps) {
-  const router = useRouter();
   const { user } = useAuth();
   const [photos, setPhotos] = useState<PhotoFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -188,13 +184,8 @@ export default function PhotoUpload({
         throw new Error('Failed to generate QR code');
       }
 
-      // Call onSuccess callback if provided
-      if (onSuccess) {
-        onSuccess();
-      }
-
-      // Navigate to success page
-      router.push(`/campaign/${campaignId}/success`);
+      // Call onSuccess callback with campaign ID
+      onSuccess(campaignId);
     } catch (err) {
       console.error('Upload error:', err);
       setError(err instanceof Error ? err.message : 'Failed to upload photos');
