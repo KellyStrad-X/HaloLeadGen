@@ -9,12 +9,6 @@ import CampaignsTab from '@/components/CampaignsTab';
 import AnalyticsTab from '@/components/AnalyticsTab';
 import LeadsTab from '@/components/LeadsTab';
 
-interface DashboardStats {
-  totalCampaigns: number;
-  activeCampaigns: number;
-  totalLeads: number;
-  recentLeads: number;
-}
 
 interface RecentLead {
   id: string;
@@ -40,12 +34,6 @@ interface RecentCampaign {
 export default function DashboardPage() {
   const { user } = useAuth();
   const { activeTab, setActiveTab } = useDashboardTab();
-  const [stats, setStats] = useState<DashboardStats>({
-    totalCampaigns: 0,
-    activeCampaigns: 0,
-    totalLeads: 0,
-    recentLeads: 0,
-  });
   const [recentLeads, setRecentLeads] = useState<RecentLead[]>([]);
   const [recentCampaigns, setRecentCampaigns] = useState<RecentCampaign[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,13 +42,8 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchSummary = async () => {
       if (!user) {
-        setStats({
-          totalCampaigns: 0,
-          activeCampaigns: 0,
-          totalLeads: 0,
-          recentLeads: 0,
-        });
         setRecentLeads([]);
+        setRecentCampaigns([]);
         setLoading(false);
         return;
       }
@@ -82,7 +65,6 @@ export default function DashboardPage() {
         }
 
         const data = await response.json();
-        setStats(data.stats);
         setRecentLeads(data.recentLeads);
         setRecentCampaigns(data.recentCampaigns || []);
       } catch (err) {
@@ -138,30 +120,6 @@ export default function DashboardPage() {
         <p className="text-gray-300 mt-2">
           Here's an overview of your lead generation campaigns
         </p>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard
-          title="Total Campaigns"
-          value={stats.totalCampaigns}
-          color="cyan"
-        />
-        <StatCard
-          title="Active Campaigns"
-          value={stats.activeCampaigns}
-          color="green"
-        />
-        <StatCard
-          title="Total Leads"
-          value={stats.totalLeads}
-          color="blue"
-        />
-        <StatCard
-          title="Recent Leads"
-          value={stats.recentLeads}
-          color="purple"
-        />
       </div>
 
       {/* Campaign Map */}
@@ -281,28 +239,6 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
-    </div>
-  );
-}
-
-interface StatCardProps {
-  title: string;
-  value: number;
-  color: 'cyan' | 'green' | 'blue' | 'purple';
-}
-
-function StatCard({ title, value, color }: StatCardProps) {
-  const colorClasses = {
-    cyan: 'text-cyan-400',
-    green: 'text-green-400',
-    blue: 'text-blue-400',
-    purple: 'text-purple-400',
-  };
-
-  return (
-    <div className="bg-[#2d333b] border border-[#373e47] rounded-lg p-6">
-      <p className="text-gray-400 text-sm font-medium mb-2">{title}</p>
-      <p className={`text-4xl font-bold ${colorClasses[color]}`}>{value}</p>
     </div>
   );
 }

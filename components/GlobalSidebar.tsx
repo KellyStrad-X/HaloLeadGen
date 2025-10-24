@@ -53,8 +53,8 @@ interface DashboardCampaign {
 interface CampaignSummary {
   id: string;
   name: string;
-  newLeadCount: number;
-  jobCount: number;
+  leadCount: number;
+  activeCampaignCount?: number; // Only for 'all' option
   campaignStatus?: 'Active' | 'Inactive';
 }
 
@@ -199,38 +199,37 @@ export default function GlobalSidebar() {
       map.set(campaign.id, {
         id: campaign.id,
         name: campaign.campaignName,
-        newLeadCount: 0,
-        jobCount: 0,
+        leadCount: 0,
         campaignStatus: campaign.campaignStatus,
       });
     });
 
+    // Count non-cold leads for each campaign
     leads.forEach((lead) => {
+      if (lead.isColdLead) return; // Skip cold leads
+
       if (!map.has(lead.campaignId)) {
         map.set(lead.campaignId, {
           id: lead.campaignId,
           name: lead.campaignName,
-          newLeadCount: 0,
-          jobCount: 0,
+          leadCount: 0,
         });
       }
       const entry = map.get(lead.campaignId)!;
-      entry.newLeadCount += 1;
+      entry.leadCount += 1;
     });
 
-    Object.values(jobs).forEach((list) => {
-      list.forEach((job) => {
-        if (!map.has(job.campaignId)) {
-          map.set(job.campaignId, {
-            id: job.campaignId,
-            name: job.campaignName,
-            newLeadCount: 0,
-            jobCount: 0,
-          });
-        }
-        const entry = map.get(job.campaignId)!;
-        entry.jobCount += 1;
-      });
+    // Count scheduled jobs for each campaign
+    jobs.scheduled.forEach((job) => {
+      if (!map.has(job.campaignId)) {
+        map.set(job.campaignId, {
+          id: job.campaignId,
+          name: job.campaignName,
+          leadCount: 0,
+        });
+      }
+      const entry = map.get(job.campaignId)!;
+      entry.leadCount += 1;
     });
 
     const result = Array.from(map.values());
@@ -239,11 +238,8 @@ export default function GlobalSidebar() {
         if (a.campaignStatus === 'Active') return -1;
         if (b.campaignStatus === 'Active') return 1;
       }
-      if (a.newLeadCount !== b.newLeadCount) {
-        return b.newLeadCount - a.newLeadCount;
-      }
-      if (a.jobCount !== b.jobCount) {
-        return b.jobCount - a.jobCount;
+      if (a.leadCount !== b.leadCount) {
+        return b.leadCount - a.leadCount;
       }
       return a.name.localeCompare(b.name);
     });
@@ -252,18 +248,25 @@ export default function GlobalSidebar() {
   }, [leads, jobs, allCampaigns]);
 
   const campaignOptions = useMemo(() => {
-    const totalJobs = jobs.scheduled.length + jobs.completed.length;
+    // Count active campaigns
+    const activeCampaignCount = allCampaigns.filter(
+      (c) => c.campaignStatus === 'Active'
+    ).length;
+
+    // Count total leads (non-cold leads + scheduled jobs)
+    const totalLeadCount =
+      leads.filter((l) => !l.isColdLead).length + jobs.scheduled.length;
 
     return [
       {
         id: 'all',
         name: 'All Campaigns',
-        newLeadCount: leads.length,
-        jobCount: totalJobs,
+        leadCount: totalLeadCount,
+        activeCampaignCount: activeCampaignCount,
       },
       ...campaignSummaries,
     ];
-  }, [campaignSummaries, leads.length, jobs]);
+  }, [campaignSummaries, leads, jobs, allCampaigns]);
 
   // Lead filtering
   const filteredLeads = useMemo(() => {
@@ -526,31 +529,6 @@ export default function GlobalSidebar() {
               <div className="max-h-[300px] space-y-2 overflow-y-auto pr-2 [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-700 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb:hover]:bg-gray-600">
                 {campaignOptions.map((option) => {
                   const isSelected = option.id === selectedCampaignId;
-                  const hasNoActivity = option.newLeadCount === 0 && option.jobCount === 0;
-                  const statusBadges: React.ReactNode[] = [];
-
-                  if (option.id !== 'all') {
-                    if (option.campaignStatus === 'Inactive') {
-                      statusBadges.push(
-                        <span key="inactive" className="inline-flex items-center rounded-full bg-gray-500/20 px-2 py-0.5 text-[10px] font-semibold text-gray-400">
-                          Inactive
-                        </span>
-                      );
-                    } else {
-                      statusBadges.push(
-                        <span key="active" className="inline-flex items-center rounded-full bg-blue-500/20 px-2 py-0.5 text-[10px] font-semibold text-blue-400">
-                          Active
-                        </span>
-                      );
-                      if (hasNoActivity) {
-                        statusBadges.push(
-                          <span key="no-leads" className="inline-flex items-center rounded-full bg-yellow-500/20 px-2 py-0.5 text-[10px] font-semibold text-yellow-400">
-                            No Leads
-                          </span>
-                        );
-                      }
-                    }
-                  }
 
                   return (
                     <button
@@ -563,24 +541,23 @@ export default function GlobalSidebar() {
                           : 'border-[#373e47] hover:border-cyan-500/40 hover:bg-[#161c22]'
                       }`}
                     >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="truncate text-sm font-medium text-white">{option.name}</span>
-                        {option.newLeadCount > 0 && (
-                          <span className="flex-shrink-0 rounded-full bg-cyan-500/20 px-2 py-0.5 text-[11px] font-semibold text-cyan-300">
-                            +{option.newLeadCount}
-                          </span>
-                        )}
-                      </div>
-                      <div className="mt-1 flex items-center justify-between gap-2">
-                        <p className="text-xs text-gray-500">
-                          {option.jobCount} {option.jobCount === 1 ? 'job' : 'jobs'}
-                        </p>
-                        {statusBadges.length > 0 && (
-                          <div className="flex gap-1">
-                            {statusBadges}
+                      {option.id === 'all' ? (
+                        // "All Campaigns" special format
+                        <div className="flex items-center justify-between gap-3 text-sm font-medium text-white">
+                          <span>Active Campaigns: {option.activeCampaignCount ?? 0}</span>
+                          <span>Leads: {option.leadCount}</span>
+                        </div>
+                      ) : (
+                        // Individual campaign format
+                        <>
+                          <div className="truncate text-sm font-medium text-white mb-1">
+                            {option.name}
                           </div>
-                        )}
-                      </div>
+                          <div className="text-xs text-gray-400">
+                            Leads: {option.leadCount}
+                          </div>
+                        </>
+                      )}
                     </button>
                   );
                 })}
