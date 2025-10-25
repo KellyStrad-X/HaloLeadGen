@@ -42,7 +42,7 @@ interface LeadsMapMetadata {
 function getLeadMarkerColor(status: 'unscheduled' | 'first_attempt' | 'second_attempt' | 'third_attempt' | 'contacted'): string {
   switch (status) {
     case 'unscheduled':
-      return '#3b82f6'; // Blue - no contact attempts yet
+      return '#06b6d4'; // Cyan - no contact attempts yet (matches calendar)
     case 'first_attempt':
       return '#eab308'; // Yellow - 1st contact attempt
     case 'second_attempt':
@@ -285,7 +285,7 @@ export default function CampaignMap() {
                 <div className="text-gray-400 mr-2">💡 Click H logo again to zoom out</div>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                <div className="w-3 h-3 rounded-full bg-cyan-400"></div>
                 <span className="text-gray-300">Unscheduled</span>
               </div>
               <div className="flex items-center gap-2">
@@ -358,7 +358,7 @@ export default function CampaignMap() {
                           </div>
                         )}
                         <div
-                          className="relative w-12 h-12 rounded-full bg-white shadow-lg flex items-center justify-center border-2 border-white cursor-pointer hover:scale-110 transition-transform"
+                          className="relative w-12 h-12 rounded-full bg-orange-500 shadow-lg flex items-center justify-center border-2 border-orange-600 cursor-pointer hover:scale-110 transition-transform"
                           style={{
                             opacity: campaign.campaignStatus === 'Active' ? 1.0 : 0.4,
                           }}
@@ -448,14 +448,14 @@ export default function CampaignMap() {
                 </AdvancedMarker>
               ))}
 
-              {/* Empty State Message - When campaign is selected but has no leads or no mappable leads */}
-              {selectedCampaignId && !loadingLeads && campaignLeads.length === 0 && leadsMetadata && (
+              {/* Lead Count Display - Always show when campaign selected */}
+              {selectedCampaignId && !loadingLeads && leadsMetadata && (
                 <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-[#1e2227] border border-[#373e47] rounded-lg px-4 py-2 shadow-lg max-w-sm">
                   {leadsMetadata.totalLeads === 0 ? (
                     <p className="text-gray-300 text-sm">
                       No leads yet for this campaign
                     </p>
-                  ) : (
+                  ) : campaignLeads.length === 0 ? (
                     <div className="text-gray-300 text-sm space-y-1">
                       <p className="font-medium">
                         {leadsMetadata.totalLeads} lead{leadsMetadata.totalLeads !== 1 ? 's' : ''}, but no addresses to map
@@ -468,6 +468,19 @@ export default function CampaignMap() {
                       {leadsMetadata.leadsWithFailedGeocode > 0 && (
                         <p className="text-xs text-gray-400">
                           • {leadsMetadata.leadsWithFailedGeocode} address{leadsMetadata.leadsWithFailedGeocode !== 1 ? 'es' : ''} could not be geocoded
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-gray-300 text-sm">
+                      <p className="font-medium">
+                        Showing {campaignLeads.length} of {leadsMetadata.totalLeads} lead{leadsMetadata.totalLeads !== 1 ? 's' : ''}
+                      </p>
+                      {leadsMetadata.totalLeads !== campaignLeads.length && (
+                        <p className="text-xs text-gray-400 mt-1">
+                          {leadsMetadata.leadsWithoutAddress > 0 && `${leadsMetadata.leadsWithoutAddress} without address`}
+                          {leadsMetadata.leadsWithoutAddress > 0 && leadsMetadata.leadsWithFailedGeocode > 0 && ', '}
+                          {leadsMetadata.leadsWithFailedGeocode > 0 && `${leadsMetadata.leadsWithFailedGeocode} failed to geocode`}
                         </p>
                       )}
                     </div>

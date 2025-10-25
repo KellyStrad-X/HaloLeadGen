@@ -46,6 +46,10 @@ export async function GET(
     const nonCompletedLeads = allLeads.filter(l => l.jobStatus !== 'completed');
     const adminDb = getAdminFirestore();
 
+    // TODO: REMOVE BEFORE PRODUCTION - Debug logging for map issue
+    console.log(`[Map API Debug] Total leads: ${allLeads.length}, Non-completed: ${nonCompletedLeads.length}`);
+    console.log('[Map API Debug] Lead statuses:', nonCompletedLeads.map(l => ({ id: l.id, jobStatus: l.jobStatus, contactAttempt: l.contactAttempt })));
+
     // Geocode addresses and determine status for map display
     const mapLeads: MapLead[] = await Promise.all(
       nonCompletedLeads.map(async (lead) => {
@@ -120,6 +124,10 @@ export async function GET(
     const totalLeads = nonCompletedLeads.length;
     const leadsWithoutAddress = nonCompletedLeads.filter(l => !l.address).length;
     const leadsWithFailedGeocode = mapLeads.filter(l => !l.location).length - leadsWithoutAddress;
+
+    // TODO: REMOVE BEFORE PRODUCTION - Debug logging for map issue
+    console.log(`[Map API Debug] Mapped leads: ${leadsWithLocations.length}, Without address: ${leadsWithoutAddress}, Failed geocode: ${leadsWithFailedGeocode}`);
+    console.log('[Map API Debug] Lead locations:', mapLeads.map(l => ({ id: l.id, hasLocation: !!l.location, status: l.status })));
 
     return NextResponse.json({
       leads: leadsWithLocations,
