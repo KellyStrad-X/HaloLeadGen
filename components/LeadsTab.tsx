@@ -6,6 +6,7 @@ import { useDashboardSidebar } from '@/lib/dashboard-sidebar-context';
 import LeadDetailsModal from './LeadDetailsModal';
 import JobModal, { type LeadJobStatus } from './JobModal';
 import CalendarView, { type CalendarEvent } from './CalendarView';
+import CalendarAgendaView from './CalendarAgendaView';
 
 type LegacyLeadStatus = 'new' | 'contacted' | 'scheduled' | 'completed';
 
@@ -898,9 +899,18 @@ export default function LeadsTab() {
         </div>
       )}
 
-      {/* Calendar - Full Width */}
+      {/* Calendar - Mobile: Agenda View, Desktop: Full Calendar */}
       <div>
-        <div className="relative -mx-16 lg:-mx-24">
+        {/* Mobile: Agenda View */}
+        <div className="md:hidden">
+          <CalendarAgendaView
+            events={calendarEvents}
+            onEventClick={handleCalendarEventClick}
+          />
+        </div>
+
+        {/* Desktop: Full Calendar with Drag & Drop */}
+        <div className="hidden md:block relative -mx-0 lg:-mx-16 xl:-mx-24">
           {draggingItem?.type === 'lead' && !draggingItem?.id?.startsWith('lead-') && (
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10 bg-cyan-500/10 border border-cyan-500/40 rounded-lg px-6 py-3 text-center text-sm text-cyan-300 pointer-events-none animate-pulse">
               <svg className="inline-block w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

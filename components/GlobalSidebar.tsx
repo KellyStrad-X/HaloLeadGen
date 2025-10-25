@@ -329,11 +329,15 @@ export default function GlobalSidebar() {
 
   const renderLeadCard = (lead: Lead) => {
     const badge = getLeadBadge(lead);
+    // Check if we're on mobile (window width < 768px)
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
     return (
       <div
         key={lead.id}
-        draggable
+        draggable={!isMobile} // Disable drag on mobile
         onDragStart={(event) => {
+          if (isMobile) return; // Skip drag on mobile
           setDraggingItem({ type: 'lead', id: lead.id });
           event.dataTransfer.setData('application/halo-lead', lead.id);
           event.dataTransfer.effectAllowed = 'move';
@@ -357,6 +361,7 @@ export default function GlobalSidebar() {
           });
         }}
         onDragEnd={() => {
+          if (isMobile) return;
           setTimeout(() => setDraggingItem(null), 150);
         }}
         onClick={() => {
@@ -486,10 +491,19 @@ export default function GlobalSidebar() {
 
   return (
     <>
+      {/* Mobile: Full-screen overlay */}
+      {!isSidebarCollapsed && (
+        <div className="md:hidden fixed inset-0 bg-black/50 z-40" onClick={toggleSidebar} />
+      )}
+
       <div
-        className={`flex-shrink-0 border-r border-[#373e47] bg-[#1e2227] flex flex-col h-[calc(100vh-64px)] overflow-hidden transition-all duration-300 ease-in-out ${
-          isSidebarCollapsed ? 'w-12' : 'w-[400px]'
-        }`}
+        className={`
+          flex-shrink-0 bg-[#1e2227] flex-col overflow-hidden transition-all duration-300 ease-in-out
+          md:border-r md:border-[#373e47] md:h-[calc(100vh-64px)]
+          ${isSidebarCollapsed
+            ? 'hidden md:flex md:w-12'
+            : 'flex md:flex md:w-[400px] fixed md:relative inset-0 md:inset-auto z-50 md:z-auto'}
+        `}
         style={{ maxHeight: 'calc(100vh - 64px)' }}
       >
         {isSidebarCollapsed ? (
@@ -506,7 +520,7 @@ export default function GlobalSidebar() {
         ) : (
           /* Expanded state - show all content */
           <>
-            {/* Collapse Button */}
+            {/* Header with Close/Collapse Button */}
             <div className="flex items-center justify-between border-b border-[#373e47] px-4 py-3 flex-shrink-0">
               <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400 whitespace-nowrap">
                 Campaigns & Leads
@@ -514,9 +528,13 @@ export default function GlobalSidebar() {
               <button
                 onClick={toggleSidebar}
                 className="text-gray-400 hover:text-cyan-400 transition-colors p-1 rounded hover:bg-[#2d333b]"
-                title="Collapse sidebar"
+                title="Close"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                {/* Mobile: Show X icon, Desktop: Show collapse arrow */}
+                <svg className="w-5 h-5 md:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+                <svg className="w-5 h-5 hidden md:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
