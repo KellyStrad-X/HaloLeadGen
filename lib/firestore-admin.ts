@@ -585,22 +585,24 @@ export async function getDashboardCampaignsAdmin(
     const campaign = toCampaignAdmin(campaignDoc);
     const data = campaignDoc.data() as Partial<AdminCampaign>;
 
+    // Count all leads for this campaign
     const countSnapshot = await adminDb
       .collection('leads')
       .where('campaignId', '==', campaignDoc.id)
       .count()
       .get();
 
-    const promotedCountSnapshot = await adminDb
+    // Only subtract COMPLETED jobs from lead count (scheduled jobs are still active leads)
+    const completedCountSnapshot = await adminDb
       .collection('leads')
       .where('campaignId', '==', campaignDoc.id)
-      .where('promotedToJob', '==', true)
+      .where('jobStatus', '==', 'completed')
       .count()
       .get();
 
     const rawLeadCount = countSnapshot.data().count;
-    const promotedCount = promotedCountSnapshot.data().count;
-    const availableLeadCount = Math.max(rawLeadCount - promotedCount, 0);
+    const completedCount = completedCountSnapshot.data().count;
+    const availableLeadCount = Math.max(rawLeadCount - completedCount, 0);
 
     const location = await resolveCampaignLocation(campaignDoc, campaign, data);
 
