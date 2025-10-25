@@ -26,7 +26,7 @@ interface MapLead {
   id: string;
   name: string;
   location: Location;
-  status: 'scheduled' | 'tentative' | 'uncontacted';
+  status: 'unscheduled' | 'first_attempt' | 'second_attempt' | 'third_attempt' | 'contacted';
   submittedAt: string;
   jobStatus: string;
 }
@@ -39,14 +39,18 @@ interface LeadsMapMetadata {
 }
 
 // Get lead marker color based on status
-function getLeadMarkerColor(status: 'scheduled' | 'tentative' | 'uncontacted'): string {
+function getLeadMarkerColor(status: 'unscheduled' | 'first_attempt' | 'second_attempt' | 'third_attempt' | 'contacted'): string {
   switch (status) {
-    case 'scheduled':
-      return '#10b981'; // Green - confirmed job
-    case 'tentative':
-      return '#eab308'; // Yellow - in progress/needs scheduling
-    case 'uncontacted':
-      return '#ef4444'; // Red - needs attention
+    case 'unscheduled':
+      return '#3b82f6'; // Blue - no contact attempts yet
+    case 'first_attempt':
+      return '#eab308'; // Yellow - 1st contact attempt
+    case 'second_attempt':
+      return '#f97316'; // Orange - 2nd contact attempt
+    case 'third_attempt':
+      return '#ef4444'; // Red - 3rd contact attempt
+    case 'contacted':
+      return '#10b981'; // Green - contacted or scheduled
     default:
       return '#6b7280'; // Gray fallback
   }
@@ -71,6 +75,7 @@ export default function CampaignMap() {
   const [campaignLeads, setCampaignLeads] = useState<MapLead[]>([]);
   const [leadsMetadata, setLeadsMetadata] = useState<LeadsMapMetadata | null>(null);
   const [loadingLeads, setLoadingLeads] = useState(false);
+  const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
 
   // Fetch leads for a selected campaign
   const fetchCampaignLeads = useCallback(async (campaignId: string) => {
@@ -105,7 +110,7 @@ export default function CampaignMap() {
 
   // Handle campaign marker click - toggle zoom in/out
   const handleCampaignClick = (campaign: Campaign) => {
-    if (!campaign.location) return;
+    if (!campaign.location || !mapInstance) return;
 
     if (selectedCampaignId === campaign.id) {
       // Level 3: Zoom out - return to overview
@@ -113,44 +118,21 @@ export default function CampaignMap() {
       setCampaignLeads([]);
       setLeadsMetadata(null);
 
-      // Recalculate center and zoom to fit all campaigns
+      // Fit bounds to show all campaigns
       if (campaigns.length > 0) {
-        const bounds = campaigns.reduce(
-          (acc, c) => ({
-            minLat: c.location ? Math.min(acc.minLat, c.location.lat) : acc.minLat,
-            maxLat: c.location ? Math.max(acc.maxLat, c.location.lat) : acc.maxLat,
-            minLng: c.location ? Math.min(acc.minLng, c.location.lng) : acc.minLng,
-            maxLng: c.location ? Math.max(acc.maxLng, c.location.lng) : acc.maxLng,
-          }),
-          {
-            minLat: campaigns[0].location?.lat || 0,
-            maxLat: campaigns[0].location?.lat || 0,
-            minLng: campaigns[0].location?.lng || 0,
-            maxLng: campaigns[0].location?.lng || 0,
+        const bounds = new google.maps.LatLngBounds();
+        campaigns.forEach((c) => {
+          if (c.location) {
+            bounds.extend(c.location);
           }
-        );
-
-        const centerLat = (bounds.minLat + bounds.maxLat) / 2;
-        const centerLng = (bounds.minLng + bounds.maxLng) / 2;
-        setMapCenter({ lat: centerLat, lng: centerLng });
-
-        // Calculate appropriate zoom level
-        const latDiff = bounds.maxLat - bounds.minLat;
-        const lngDiff = bounds.maxLng - bounds.minLng;
-        const maxDiff = Math.max(latDiff, lngDiff);
-
-        if (maxDiff < 0.01) setMapZoom(14);
-        else if (maxDiff < 0.05) setMapZoom(12);
-        else if (maxDiff < 0.1) setMapZoom(11);
-        else if (maxDiff < 0.5) setMapZoom(10);
-        else if (maxDiff < 1) setMapZoom(9);
-        else setMapZoom(8);
+        });
+        mapInstance.fitBounds(bounds);
       }
     } else {
       // Level 2: Zoom in - show leads for this campaign
       setSelectedCampaignId(campaign.id);
-      setMapCenter(campaign.location);
-      setMapZoom(14);
+      mapInstance.panTo(campaign.location);
+      mapInstance.setZoom(14);
 
       // Fetch leads for this campaign
       fetchCampaignLeads(campaign.id);
@@ -303,16 +285,24 @@ export default function CampaignMap() {
                 <div className="text-gray-400 mr-2">💡 Click H logo again to zoom out</div>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-green-400"></div>
-                <span className="text-gray-300">Scheduled</span>
+                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                <span className="text-gray-300">Unscheduled</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
-                <span className="text-gray-300">Tentative</span>
+                <span className="text-gray-300">1st Attempt</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-orange-400"></div>
+                <span className="text-gray-300">2nd Attempt</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-3 h-3 rounded-full bg-red-400"></div>
-                <span className="text-gray-300">Uncontacted</span>
+                <span className="text-gray-300">3rd Attempt</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                <span className="text-gray-300">Contacted</span>
               </div>
             </div>
           )}
@@ -341,10 +331,15 @@ export default function CampaignMap() {
         <div className="h-[400px] w-full rounded-lg overflow-hidden">
           <APIProvider apiKey={apiKey}>
             <Map
-              center={mapCenter}
-              zoom={mapZoom}
+              defaultCenter={mapCenter}
+              defaultZoom={mapZoom}
               {...(mapId && { mapId })}
               style={{ width: '100%', height: '100%' }}
+              onCameraChanged={(ev) => {
+                if (ev.map && !mapInstance) {
+                  setMapInstance(ev.map);
+                }
+              }}
             >
               {/* Campaign H Logo Markers */}
               {campaigns.map((campaign) =>
@@ -356,9 +351,14 @@ export default function CampaignMap() {
                       onMouseEnter={() => handleMarkerHover(campaign.id)}
                       onMouseLeave={handleMarkerLeave}
                     >
-                      <div className="relative cursor-pointer">
+                      <div className="relative">
+                        {selectedCampaignId === campaign.id && (
+                          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+                            <div className="pulse-ring"></div>
+                          </div>
+                        )}
                         <div
-                          className="relative w-10 h-10"
+                          className="relative w-12 h-12 rounded-full bg-white shadow-lg flex items-center justify-center border-2 border-white cursor-pointer hover:scale-110 transition-transform"
                           style={{
                             opacity: campaign.campaignStatus === 'Active' ? 1.0 : 0.4,
                           }}
@@ -366,15 +366,10 @@ export default function CampaignMap() {
                           <Image
                             src="/h-logo.png"
                             alt={campaign.campaignName}
-                            width={40}
-                            height={40}
-                            className="w-full h-full object-contain"
+                            width={32}
+                            height={32}
+                            className="w-8 h-8 object-contain"
                           />
-                          {selectedCampaignId === campaign.id && (
-                            <div className="absolute inset-0 -z-10">
-                              <div className="pulse-ring"></div>
-                            </div>
-                          )}
                         </div>
                       </div>
                     </AdvancedMarker>
@@ -498,15 +493,15 @@ export default function CampaignMap() {
       <style jsx>{`
         @keyframes pulse-ring {
           0% {
-            transform: scale(1);
+            transform: translate(-50%, -50%) scale(1);
             opacity: 0.8;
           }
           50% {
-            transform: scale(1.5);
+            transform: translate(-50%, -50%) scale(1.8);
             opacity: 0;
           }
           100% {
-            transform: scale(1);
+            transform: translate(-50%, -50%) scale(1);
             opacity: 0;
           }
         }
@@ -515,11 +510,10 @@ export default function CampaignMap() {
           position: absolute;
           top: 50%;
           left: 50%;
-          width: 100%;
-          height: 100%;
-          transform: translate(-50%, -50%);
+          width: 48px;
+          height: 48px;
           border-radius: 50%;
-          border: 2px solid #06b6d4;
+          border: 3px solid #06b6d4;
           animation: pulse-ring 2s infinite;
           pointer-events: none;
         }

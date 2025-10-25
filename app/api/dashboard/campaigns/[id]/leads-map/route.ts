@@ -7,7 +7,7 @@ interface MapLead {
   id: string;
   name: string;
   location: { lat: number; lng: number } | null;
-  status: 'scheduled' | 'tentative' | 'uncontacted';
+  status: 'unscheduled' | 'first_attempt' | 'second_attempt' | 'third_attempt' | 'contacted';
   submittedAt: string;
   jobStatus: string;
 }
@@ -41,13 +41,14 @@ export async function GET(
     const contractorId = decoded.uid;
     const { id: campaignId } = await params;
 
-    // Fetch leads for this campaign
+    // Fetch leads for this campaign (exclude completed jobs)
     const allLeads = await getAllLeadsAdmin(contractorId, { campaignId });
+    const nonCompletedLeads = allLeads.filter(l => l.jobStatus !== 'completed');
     const adminDb = getAdminFirestore();
 
     // Geocode addresses and determine status for map display
     const mapLeads: MapLead[] = await Promise.all(
-      allLeads.map(async (lead) => {
+      nonCompletedLeads.map(async (lead) => {
         // Check if we have a cached geocoded location
         let location: { lat: number; lng: number } | null = null;
 
@@ -83,22 +84,24 @@ export async function GET(
         }
 
         // Determine marker color based on lead status
-        let status: 'scheduled' | 'tentative' | 'uncontacted' = 'uncontacted';
 
-        if (lead.jobStatus === 'scheduled' || lead.jobStatus === 'completed') {
-          status = 'scheduled'; // Green - confirmed job
-        } else if (lead.tentativeDate || lead.jobStatus === 'contacted') {
-          status = 'tentative'; // Yellow - in progress
-        } else {
-          // Check if uncontacted for > 24 hours
-          const submittedDate = new Date(lead.submittedAt);
-          const hoursSinceSubmission = (Date.now() - submittedDate.getTime()) / (1000 * 60 * 60);
+        let status: 'unscheduled' | 'first_attempt' | 'second_attempt' | 'third_attempt' | 'contacted' = 'unscheduled';
 
-          if (hoursSinceSubmission > 24 && !lead.contactAttempt) {
-            status = 'uncontacted'; // Red - needs attention
-          } else {
-            status = 'tentative'; // Yellow - recent or being worked
-          }
+        // Green - Contacted or Scheduled
+        if (lead.jobStatus === 'contacted' || lead.jobStatus === 'scheduled') {
+          status = 'contacted';
+        }
+        // Contact attempts (Yellow = 1st, Orange = 2nd, Red = 3rd)
+        else if (lead.contactAttempt === 3) {
+          status = 'third_attempt';
+        } else if (lead.contactAttempt === 2) {
+          status = 'second_attempt';
+        } else if (lead.contactAttempt === 1) {
+          status = 'first_attempt';
+        }
+        // Blue - Unscheduled (no contact attempts yet)
+        else {
+          status = 'unscheduled';
         }
 
         return {
@@ -114,8 +117,8 @@ export async function GET(
 
     // Filter out leads without valid locations
     const leadsWithLocations = mapLeads.filter(lead => lead.location !== null);
-    const totalLeads = allLeads.length;
-    const leadsWithoutAddress = allLeads.filter(l => !l.address).length;
+    const totalLeads = nonCompletedLeads.length;
+    const leadsWithoutAddress = nonCompletedLeads.filter(l => !l.address).length;
     const leadsWithFailedGeocode = mapLeads.filter(l => !l.location).length - leadsWithoutAddress;
 
     return NextResponse.json({
