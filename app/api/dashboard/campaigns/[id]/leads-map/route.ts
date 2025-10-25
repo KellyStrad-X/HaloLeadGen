@@ -41,14 +41,23 @@ export async function GET(
     const contractorId = decoded.uid;
     const { id: campaignId } = await params;
 
-    // Fetch leads for this campaign (exclude completed jobs)
-    const allLeads = await getAllLeadsAdmin(contractorId, { campaignId });
+    // Fetch leads for this campaign
+    // Note: getAllLeadsAdmin skips promoted leads by default, so we need to fetch both:
+    // 1. Non-promoted leads (regular leads)
+    // 2. Promoted scheduled/in-progress leads (jobs on calendar)
+    const regularLeads = await getAllLeadsAdmin(contractorId, { campaignId });
+    const scheduledLeads = await getAllLeadsAdmin(contractorId, { campaignId, jobStatus: 'scheduled' });
+
+    // Merge and deduplicate (shouldn't be duplicates but just in case)
+    const leadMap = new Map();
+    [...regularLeads, ...scheduledLeads].forEach(lead => {
+      leadMap.set(lead.id, lead);
+    });
+    const allLeads = Array.from(leadMap.values());
+
+    // Exclude completed jobs from map
     const nonCompletedLeads = allLeads.filter(l => l.jobStatus !== 'completed');
     const adminDb = getAdminFirestore();
-
-    // TODO: REMOVE BEFORE PRODUCTION - Debug logging for map issue
-    console.log(`[Map API Debug] Total leads: ${allLeads.length}, Non-completed: ${nonCompletedLeads.length}`);
-    console.log('[Map API Debug] Lead statuses:', nonCompletedLeads.map(l => ({ id: l.id, jobStatus: l.jobStatus, contactAttempt: l.contactAttempt })));
 
     // Geocode addresses and determine status for map display
     const mapLeads: MapLead[] = await Promise.all(
@@ -88,7 +97,6 @@ export async function GET(
         }
 
         // Determine marker color based on lead status
-
         let status: 'unscheduled' | 'first_attempt' | 'second_attempt' | 'third_attempt' | 'contacted' = 'unscheduled';
 
         // Green - Contacted or Scheduled
@@ -103,7 +111,7 @@ export async function GET(
         } else if (lead.contactAttempt === 1) {
           status = 'first_attempt';
         }
-        // Blue - Unscheduled (no contact attempts yet)
+        // Cyan - Unscheduled (no contact attempts yet)
         else {
           status = 'unscheduled';
         }
@@ -124,10 +132,6 @@ export async function GET(
     const totalLeads = nonCompletedLeads.length;
     const leadsWithoutAddress = nonCompletedLeads.filter(l => !l.address).length;
     const leadsWithFailedGeocode = mapLeads.filter(l => !l.location).length - leadsWithoutAddress;
-
-    // TODO: REMOVE BEFORE PRODUCTION - Debug logging for map issue
-    console.log(`[Map API Debug] Mapped leads: ${leadsWithLocations.length}, Without address: ${leadsWithoutAddress}, Failed geocode: ${leadsWithFailedGeocode}`);
-    console.log('[Map API Debug] Lead locations:', mapLeads.map(l => ({ id: l.id, hasLocation: !!l.location, status: l.status })));
 
     return NextResponse.json({
       leads: leadsWithLocations,
