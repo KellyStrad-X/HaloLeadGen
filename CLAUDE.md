@@ -2,6 +2,22 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+---
+
+## 📚 Targeted Documentation
+
+**New agents**: See [`Claude.MD/`](./Claude.MD/) for area-specific guides!
+
+**Quick links**:
+- [Quick Start Guide](./Claude.MD/QUICK-START.md) - 5-minute onboarding
+- [Recent Changes](./Claude.MD/RECENT-CHANGES.md) - Latest implementations
+- [Area Guides](./Claude.MD/areas/) - Dashboard, Campaigns, Leads, Maps, Analytics
+- [Pattern Guides](./Claude.MD/patterns/) - API, Auth, Firebase, Components
+
+**Use case**: "Review `Claude.MD/areas/DASHBOARD.md` and get ready to work on dashboard features"
+
+---
+
 ## Project Overview
 
 **Halo Lead Generation** is a Next.js application that helps roofing contractors capture leads from homeowners after storms by creating neighborhood-specific landing pages accessed via QR codes. Contractors upload photos of local roof damage, distribute QR codes in the area, and homeowners scan to see real damage from their neighborhood and request free inspections.
