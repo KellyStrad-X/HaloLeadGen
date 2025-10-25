@@ -25,6 +25,7 @@ interface Campaign {
 interface MapLead {
   id: string;
   name: string;
+  address: string | null;
   location: Location;
   status: 'unscheduled' | 'first_attempt' | 'second_attempt' | 'third_attempt' | 'contacted';
   submittedAt: string;
@@ -512,6 +513,17 @@ export default function CampaignMap() {
                               {lead.status === 'unscheduled' && 'Unscheduled'}
                             </span>
                           </div>
+                          {lead.address && (
+                            <div className="text-gray-600 text-xs mt-1">
+                              <div className="flex items-start gap-1">
+                                <svg className="w-3 h-3 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                <span className="break-words">{lead.address}</span>
+                              </div>
+                            </div>
+                          )}
                           <div className="text-gray-500 text-xs mt-2 pt-2 border-t border-gray-200">
                             Submitted: {new Date(lead.submittedAt).toLocaleDateString()}
                           </div>

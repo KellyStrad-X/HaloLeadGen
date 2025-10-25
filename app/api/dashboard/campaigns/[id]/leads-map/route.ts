@@ -6,6 +6,7 @@ import { geocodeAddressServer } from '@/lib/geocoding';
 interface MapLead {
   id: string;
   name: string;
+  address: string | null;
   location: { lat: number; lng: number } | null;
   status: 'unscheduled' | 'first_attempt' | 'second_attempt' | 'third_attempt' | 'contacted';
   submittedAt: string;
@@ -119,6 +120,7 @@ export async function GET(
         return {
           id: lead.id,
           name: lead.name,
+          address: lead.address,
           location,
           status,
           submittedAt: lead.submittedAt,

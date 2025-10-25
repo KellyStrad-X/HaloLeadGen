@@ -7,7 +7,6 @@ import JobModal, { type LeadJobStatus } from './JobModal';
 import RestoreModal from './RestoreModal';
 import CampaignDetailsModal from './CampaignDetailsModal';
 import CreateCampaignModal from './CreateCampaignModal';
-import LeadDetailsModal from './LeadDetailsModal';
 
 type LegacyLeadStatus = 'new' | 'contacted' | 'scheduled' | 'completed';
 
@@ -130,6 +129,10 @@ export default function GlobalSidebar() {
   const [leadsPage, setLeadsPage] = useState(0);
   const [activeBucket, setActiveBucket] = useState<'leads' | 'cold' | 'completed'>('leads');
   const [leadModalState, setLeadModalState] = useState<{
+    lead: Lead | null;
+    isOpen: boolean;
+  }>({ lead: null, isOpen: false });
+  const [contextLeadModalState, setContextLeadModalState] = useState<{
     lead: Lead | null;
     isOpen: boolean;
   }>({ lead: null, isOpen: false });
@@ -320,6 +323,39 @@ export default function GlobalSidebar() {
   useEffect(() => {
     setLeadsPage(0);
   }, [selectedCampaignId, leadSortOrder, activeBucket]);
+
+  // Fetch lead data when context modal opens (from map click)
+  useEffect(() => {
+    const fetchLeadForContextModal = async () => {
+      if (!leadDetailsModal.isOpen || !leadDetailsModal.leadId || !user) {
+        setContextLeadModalState({ lead: null, isOpen: false });
+        return;
+      }
+
+      try {
+        const token = await user.getIdToken();
+        const response = await fetch('/api/dashboard/leads', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!response.ok) {
+          console.error('Failed to fetch leads for modal');
+          return;
+        }
+
+        const data = await response.json();
+        const lead = data.leads?.find((l: Lead) => l.id === leadDetailsModal.leadId);
+
+        if (lead) {
+          setContextLeadModalState({ lead, isOpen: true });
+        }
+      } catch (error) {
+        console.error('Error fetching lead for context modal:', error);
+      }
+    };
+
+    fetchLeadForContextModal();
+  }, [leadDetailsModal.isOpen, leadDetailsModal.leadId, user]);
 
   // Clamp page when total pages changes
   useEffect(() => {
@@ -940,16 +976,84 @@ export default function GlobalSidebar() {
         />
       )}
 
-      {/* Lead Details Modal (from map) */}
-      {leadDetailsModal.isOpen && leadDetailsModal.leadId && (
-        <LeadDetailsModal
-          isOpen={leadDetailsModal.isOpen}
-          onClose={closeLeadDetails}
-          leadId={leadDetailsModal.leadId}
-          campaignId={leadDetailsModal.campaignId || undefined}
-          onLeadUpdated={() => {
-            loadData();
-            refreshSidebar();
+      {/* Lead Management Modal (from map click) */}
+      {contextLeadModalState.isOpen && contextLeadModalState.lead && (
+        <JobModal
+          mode="promote"
+          isOpen
+          onClose={() => {
+            setContextLeadModalState({ lead: null, isOpen: false });
+            closeLeadDetails();
+          }}
+          lead={contextLeadModalState.lead}
+          defaultStatus="scheduled"
+          onContactAttempt={async (leadId: string, attempt: number, isCold?: boolean, inspector?: string | null, internalNotes?: string | null) => {
+            if (!user) return;
+            try {
+              const token = await user.getIdToken();
+              await fetch(`/api/dashboard/leads/${leadId}/contact-attempt`, {
+                method: 'PATCH',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                  contactAttempt: attempt,
+                  isColdLead: isCold || false,
+                  inspector,
+                  internalNotes
+                }),
+              });
+              await loadData();
+            } catch (error) {
+              console.error('Error updating contact attempt:', error);
+              throw error;
+            }
+          }}
+          onRemoveFromCalendar={async (leadId: string) => {
+            if (!user) return;
+            try {
+              const token = await user.getIdToken();
+              await fetch(`/api/dashboard/leads/${leadId}/tentative-date`, {
+                method: 'DELETE',
+                headers: { Authorization: `Bearer ${token}` },
+              });
+              await loadData();
+            } catch (error) {
+              console.error('Error removing from calendar:', error);
+            }
+          }}
+          onSubmit={async ({ status, scheduledInspectionDate, inspector, internalNotes }) => {
+            if (!user || !contextLeadModalState.lead) return;
+            try {
+              const token = await user.getIdToken();
+              const response = await fetch('/api/dashboard/jobs', {
+                method: 'POST',
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  leadId: contextLeadModalState.lead.id,
+                  status,
+                  scheduledInspectionDate,
+                  inspector,
+                  internalNotes,
+                }),
+              });
+
+              if (!response.ok) {
+                throw new Error('Failed to schedule job');
+              }
+
+              await loadData();
+              refreshSidebar();
+              setContextLeadModalState({ lead: null, isOpen: false });
+              closeLeadDetails();
+            } catch (error) {
+              console.error('Error saving:', error);
+              throw error;
+            }
           }}
         />
       )}
