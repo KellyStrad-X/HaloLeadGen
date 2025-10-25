@@ -14,6 +14,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - [Area Guides](./ClaudeDocs/areas/) - Dashboard, Campaigns, Leads, Maps, Analytics
 - [Pattern Guides](./ClaudeDocs/patterns/) - API, Auth, Firebase, Components
 
+> Heads up: ClaudeDocs/ replaced the legacy `Claude.MD/` directory so case-insensitive file systems stay happy.
+
 **Use case**: "Review `ClaudeDocs/areas/DASHBOARD.md` and get ready to work on dashboard features"
 
 ---
