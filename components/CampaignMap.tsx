@@ -5,6 +5,7 @@ import { APIProvider, Map, AdvancedMarker, Pin, InfoWindow } from '@vis.gl/react
 import { useAuth } from '@/lib/auth-context';
 import { useDashboardSidebar } from '@/lib/dashboard-sidebar-context';
 import MapModal from './MapModal';
+import Image from 'next/image';
 
 interface Location {
   lat: number;
@@ -21,23 +22,34 @@ interface Campaign {
   leadCount?: number;
 }
 
-// Get marker color based on campaign/job status
-function getMarkerColor(campaign: Campaign): string {
-  // Priority: Active campaigns (Cyan), Completed jobs (Green), Pending jobs (Orange), Inactive (Gray)
-  if (campaign.campaignStatus === 'Active') return '#00d4ff'; // Cyan
-  if (campaign.jobStatus === 'Completed') return '#22c55e'; // Green
-  if (campaign.jobStatus === 'Pending') return '#f97316'; // Orange
-  return '#6b7280'; // Gray (Inactive)
+interface MapLead {
+  id: string;
+  name: string;
+  location: Location;
+  status: 'scheduled' | 'tentative' | 'uncontacted';
+  submittedAt: string;
+  jobStatus: string;
 }
 
-// Get status text for tooltip
-function getStatusText(campaign: Campaign): string {
-  const parts = [];
-  parts.push(`Campaign: ${campaign.campaignStatus}`);
-  if (campaign.jobStatus) {
-    parts.push(`Job: ${campaign.jobStatus}`);
+interface LeadsMapMetadata {
+  totalLeads: number;
+  mappedLeads: number;
+  leadsWithoutAddress: number;
+  leadsWithFailedGeocode: number;
+}
+
+// Get lead marker color based on status
+function getLeadMarkerColor(status: 'scheduled' | 'tentative' | 'uncontacted'): string {
+  switch (status) {
+    case 'scheduled':
+      return '#10b981'; // Green - confirmed job
+    case 'tentative':
+      return '#eab308'; // Yellow - in progress/needs scheduling
+    case 'uncontacted':
+      return '#ef4444'; // Red - needs attention
+    default:
+      return '#6b7280'; // Gray fallback
   }
-  return parts.join(' • ');
 }
 
 export default function CampaignMap() {
@@ -54,8 +66,95 @@ export default function CampaignMap() {
   const [hoveredCampaign, setHoveredCampaign] = useState<string | null>(null);
   const [hoverTimeout, setHoverTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleMarkerClick = (campaignId: string) => {
-    openCampaignDetails(campaignId);
+  // New state for interactive zoom functionality
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
+  const [campaignLeads, setCampaignLeads] = useState<MapLead[]>([]);
+  const [leadsMetadata, setLeadsMetadata] = useState<LeadsMapMetadata | null>(null);
+  const [loadingLeads, setLoadingLeads] = useState(false);
+
+  // Fetch leads for a selected campaign
+  const fetchCampaignLeads = useCallback(async (campaignId: string) => {
+    if (!user) return;
+
+    setLoadingLeads(true);
+    try {
+      const token = await user.getIdToken();
+      const response = await fetch(`/api/dashboard/campaigns/${campaignId}/leads-map`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setCampaignLeads(data.leads || []);
+        setLeadsMetadata(data.metadata || null);
+      } else {
+        console.error('Failed to fetch campaign leads');
+        setCampaignLeads([]);
+        setLeadsMetadata(null);
+      }
+    } catch (error) {
+      console.error('Error fetching campaign leads:', error);
+      setCampaignLeads([]);
+      setLeadsMetadata(null);
+    } finally {
+      setLoadingLeads(false);
+    }
+  }, [user]);
+
+  // Handle campaign marker click - toggle zoom in/out
+  const handleCampaignClick = (campaign: Campaign) => {
+    if (!campaign.location) return;
+
+    if (selectedCampaignId === campaign.id) {
+      // Level 3: Zoom out - return to overview
+      setSelectedCampaignId(null);
+      setCampaignLeads([]);
+      setLeadsMetadata(null);
+
+      // Recalculate center and zoom to fit all campaigns
+      if (campaigns.length > 0) {
+        const bounds = campaigns.reduce(
+          (acc, c) => ({
+            minLat: c.location ? Math.min(acc.minLat, c.location.lat) : acc.minLat,
+            maxLat: c.location ? Math.max(acc.maxLat, c.location.lat) : acc.maxLat,
+            minLng: c.location ? Math.min(acc.minLng, c.location.lng) : acc.minLng,
+            maxLng: c.location ? Math.max(acc.maxLng, c.location.lng) : acc.maxLng,
+          }),
+          {
+            minLat: campaigns[0].location?.lat || 0,
+            maxLat: campaigns[0].location?.lat || 0,
+            minLng: campaigns[0].location?.lng || 0,
+            maxLng: campaigns[0].location?.lng || 0,
+          }
+        );
+
+        const centerLat = (bounds.minLat + bounds.maxLat) / 2;
+        const centerLng = (bounds.minLng + bounds.maxLng) / 2;
+        setMapCenter({ lat: centerLat, lng: centerLng });
+
+        // Calculate appropriate zoom level
+        const latDiff = bounds.maxLat - bounds.minLat;
+        const lngDiff = bounds.maxLng - bounds.minLng;
+        const maxDiff = Math.max(latDiff, lngDiff);
+
+        if (maxDiff < 0.01) setMapZoom(14);
+        else if (maxDiff < 0.05) setMapZoom(12);
+        else if (maxDiff < 0.1) setMapZoom(11);
+        else if (maxDiff < 0.5) setMapZoom(10);
+        else if (maxDiff < 1) setMapZoom(9);
+        else setMapZoom(8);
+      }
+    } else {
+      // Level 2: Zoom in - show leads for this campaign
+      setSelectedCampaignId(campaign.id);
+      setMapCenter(campaign.location);
+      setMapZoom(14);
+
+      // Fetch leads for this campaign
+      fetchCampaignLeads(campaign.id);
+    }
   };
 
   const handleMarkerHover = (campaignId: string) => {
@@ -184,24 +283,39 @@ export default function CampaignMap() {
       <div className="space-y-3">
         {/* Legend and Expand Button */}
         <div className="flex items-center justify-between">
-          <div className="flex flex-wrap gap-4 text-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-cyan-400"></div>
-              <span className="text-gray-300">Active</span>
+          {!selectedCampaignId ? (
+            <div className="flex flex-wrap gap-4 text-sm">
+              <div className="flex items-center gap-2">
+                <div className="text-gray-400 mr-2">💡 Click H logo to view leads</div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-cyan-400"></div>
+                <span className="text-gray-300">Active</span>
+              </div>
+              <div className="flex items-center gap-2 opacity-40">
+                <div className="w-3 h-3 rounded-full bg-gray-400"></div>
+                <span className="text-gray-300">Inactive</span>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-green-400"></div>
-              <span className="text-gray-300">Completed</span>
+          ) : (
+            <div className="flex flex-wrap gap-4 text-sm">
+              <div className="flex items-center gap-2">
+                <div className="text-gray-400 mr-2">💡 Click H logo again to zoom out</div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-green-400"></div>
+                <span className="text-gray-300">Scheduled</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+                <span className="text-gray-300">Tentative</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-red-400"></div>
+                <span className="text-gray-300">Uncontacted</span>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-orange-400"></div>
-              <span className="text-gray-300">Pending</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-gray-400"></div>
-              <span className="text-gray-300">Inactive</span>
-            </div>
-          </div>
+          )}
           <button
             onClick={() => setIsModalOpen(true)}
             className="flex items-center gap-2 text-sm text-cyan-400 hover:text-cyan-300 transition-colors"
@@ -227,40 +341,41 @@ export default function CampaignMap() {
         <div className="h-[400px] w-full rounded-lg overflow-hidden">
           <APIProvider apiKey={apiKey}>
             <Map
-              defaultCenter={mapCenter}
-              defaultZoom={mapZoom}
+              center={mapCenter}
+              zoom={mapZoom}
               {...(mapId && { mapId })}
               style={{ width: '100%', height: '100%' }}
             >
+              {/* Campaign H Logo Markers */}
               {campaigns.map((campaign) =>
                 campaign.location ? (
                   <div key={campaign.id}>
                     <AdvancedMarker
                       position={campaign.location}
-                      onClick={() => handleMarkerClick(campaign.id)}
+                      onClick={() => handleCampaignClick(campaign)}
                       onMouseEnter={() => handleMarkerHover(campaign.id)}
                       onMouseLeave={handleMarkerLeave}
                     >
                       <div className="relative cursor-pointer">
-                        <svg width="40" height="50" viewBox="0 0 40 50" fill="none">
-                          <defs>
-                            {/* Define a mask with a hole in the center */}
-                            <mask id={`marker-mask-${campaign.id}`}>
-                              {/* White area is visible */}
-                              <rect x="0" y="0" width="40" height="50" fill="white" />
-                              {/* Black area is transparent (the hole) */}
-                              <circle cx="20" cy="14" r="6" fill="black" />
-                            </mask>
-                          </defs>
-                          {/* Outer pin shape with mask applied */}
-                          <path
-                            d="M20 0C12.268 0 6 6.268 6 14c0 10.5 14 26 14 26s14-15.5 14-26c0-7.732-6.268-14-14-14z"
-                            fill={getMarkerColor(campaign)}
-                            stroke="#ffffff"
-                            strokeWidth="2"
-                            mask={`url(#marker-mask-${campaign.id})`}
+                        <div
+                          className="relative w-10 h-10"
+                          style={{
+                            opacity: campaign.campaignStatus === 'Active' ? 1.0 : 0.4,
+                          }}
+                        >
+                          <Image
+                            src="/h-logo.png"
+                            alt={campaign.campaignName}
+                            width={40}
+                            height={40}
+                            className="w-full h-full object-contain"
                           />
-                        </svg>
+                          {selectedCampaignId === campaign.id && (
+                            <div className="absolute inset-0 -z-10">
+                              <div className="pulse-ring"></div>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </AdvancedMarker>
 
@@ -323,6 +438,47 @@ export default function CampaignMap() {
                   </div>
                 ) : null
               )}
+
+              {/* Lead Markers - Only shown when a campaign is selected */}
+              {selectedCampaignId && campaignLeads.map((lead) => (
+                <AdvancedMarker
+                  key={lead.id}
+                  position={lead.location}
+                >
+                  <Pin
+                    background={getLeadMarkerColor(lead.status)}
+                    borderColor="#ffffff"
+                    glyphColor="#ffffff"
+                  />
+                </AdvancedMarker>
+              ))}
+
+              {/* Empty State Message - When campaign is selected but has no leads or no mappable leads */}
+              {selectedCampaignId && !loadingLeads && campaignLeads.length === 0 && leadsMetadata && (
+                <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-[#1e2227] border border-[#373e47] rounded-lg px-4 py-2 shadow-lg max-w-sm">
+                  {leadsMetadata.totalLeads === 0 ? (
+                    <p className="text-gray-300 text-sm">
+                      No leads yet for this campaign
+                    </p>
+                  ) : (
+                    <div className="text-gray-300 text-sm space-y-1">
+                      <p className="font-medium">
+                        {leadsMetadata.totalLeads} lead{leadsMetadata.totalLeads !== 1 ? 's' : ''}, but no addresses to map
+                      </p>
+                      {leadsMetadata.leadsWithoutAddress > 0 && (
+                        <p className="text-xs text-gray-400">
+                          • {leadsMetadata.leadsWithoutAddress} lead{leadsMetadata.leadsWithoutAddress !== 1 ? 's' : ''} without address
+                        </p>
+                      )}
+                      {leadsMetadata.leadsWithFailedGeocode > 0 && (
+                        <p className="text-xs text-gray-400">
+                          • {leadsMetadata.leadsWithFailedGeocode} address{leadsMetadata.leadsWithFailedGeocode !== 1 ? 'es' : ''} could not be geocoded
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
             </Map>
           </APIProvider>
         </div>
@@ -335,8 +491,39 @@ export default function CampaignMap() {
         campaigns={campaigns}
         center={mapCenter}
         zoom={mapZoom}
-        onMarkerClick={handleMarkerClick}
+        onMarkerClick={openCampaignDetails}
       />
+
+      {/* Pulsing Animation Styles */}
+      <style jsx>{`
+        @keyframes pulse-ring {
+          0% {
+            transform: scale(1);
+            opacity: 0.8;
+          }
+          50% {
+            transform: scale(1.5);
+            opacity: 0;
+          }
+          100% {
+            transform: scale(1);
+            opacity: 0;
+          }
+        }
+
+        .pulse-ring {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 100%;
+          height: 100%;
+          transform: translate(-50%, -50%);
+          border-radius: 50%;
+          border: 2px solid #06b6d4;
+          animation: pulse-ring 2s infinite;
+          pointer-events: none;
+        }
+      `}</style>
     </>
   );
 }
