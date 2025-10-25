@@ -6,15 +6,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 📚 Targeted Documentation
 
-**New agents**: See [`Claude.MD/`](./Claude.MD/) for area-specific guides!
+**New agents**: See [`ClaudeDocs/`](./ClaudeDocs/) for area-specific guides!
 
 **Quick links**:
-- [Quick Start Guide](./Claude.MD/QUICK-START.md) - 5-minute onboarding
-- [Recent Changes](./Claude.MD/RECENT-CHANGES.md) - Latest implementations
-- [Area Guides](./Claude.MD/areas/) - Dashboard, Campaigns, Leads, Maps, Analytics
-- [Pattern Guides](./Claude.MD/patterns/) - API, Auth, Firebase, Components
+- [Quick Start Guide](./ClaudeDocs/QUICK-START.md) - 5-minute onboarding
+- [Recent Changes](./ClaudeDocs/RECENT-CHANGES.md) - Latest implementations
+- [Area Guides](./ClaudeDocs/areas/) - Dashboard, Campaigns, Leads, Maps, Analytics
+- [Pattern Guides](./ClaudeDocs/patterns/) - API, Auth, Firebase, Components
 
-**Use case**: "Review `Claude.MD/areas/DASHBOARD.md` and get ready to work on dashboard features"
+**Use case**: "Review `ClaudeDocs/areas/DASHBOARD.md` and get ready to work on dashboard features"
 
 ---
 
