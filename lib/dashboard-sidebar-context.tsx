@@ -15,6 +15,9 @@ interface DashboardSidebarContextType {
   campaignDetailsModal: { campaignId: string | null; isOpen: boolean };
   openCampaignDetails: (campaignId: string) => void;
   closeCampaignDetails: () => void;
+  leadDetailsModal: { leadId: string | null; campaignId: string | null; isOpen: boolean };
+  openLeadDetails: (leadId: string, campaignId: string) => void;
+  closeLeadDetails: () => void;
   createCampaignModal: { isOpen: boolean };
   openCreateCampaign: () => void;
   closeCreateCampaign: () => void;
@@ -44,6 +47,11 @@ export function DashboardSidebarProvider({ children }: DashboardSidebarProviderP
   const [draggingItem, setDraggingItem] = useState<{ type: 'lead' | 'job'; id: string } | null>(null);
   const [sidebarRefreshCallbacks, setSidebarRefreshCallbacks] = useState<Set<() => void>>(new Set());
   const [campaignDetailsModal, setCampaignDetailsModal] = useState<{ campaignId: string | null; isOpen: boolean }>({
+    campaignId: null,
+    isOpen: false,
+  });
+  const [leadDetailsModal, setLeadDetailsModal] = useState<{ leadId: string | null; campaignId: string | null; isOpen: boolean }>({
+    leadId: null,
     campaignId: null,
     isOpen: false,
   });
@@ -98,6 +106,14 @@ export function DashboardSidebarProvider({ children }: DashboardSidebarProviderP
     setCampaignDetailsModal({ campaignId: null, isOpen: false });
   }, []);
 
+  const openLeadDetails = useCallback((leadId: string, campaignId: string) => {
+    setLeadDetailsModal({ leadId, campaignId, isOpen: true });
+  }, []);
+
+  const closeLeadDetails = useCallback(() => {
+    setLeadDetailsModal({ leadId: null, campaignId: null, isOpen: false });
+  }, []);
+
   const openCreateCampaign = useCallback(() => {
     setCreateCampaignModal({ isOpen: true });
   }, []);
@@ -121,6 +137,9 @@ export function DashboardSidebarProvider({ children }: DashboardSidebarProviderP
         campaignDetailsModal,
         openCampaignDetails,
         closeCampaignDetails,
+        leadDetailsModal,
+        openLeadDetails,
+        closeLeadDetails,
         createCampaignModal,
         openCreateCampaign,
         closeCreateCampaign,

@@ -58,7 +58,7 @@ function getLeadMarkerColor(status: 'unscheduled' | 'first_attempt' | 'second_at
 
 export default function CampaignMap() {
   const { user } = useAuth();
-  const { openCampaignDetails } = useDashboardSidebar();
+  const { openCampaignDetails, openLeadDetails } = useDashboardSidebar();
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
   const mapId = process.env.NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID;
 
@@ -68,6 +68,7 @@ export default function CampaignMap() {
   const [mapZoom, setMapZoom] = useState(10);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [hoveredCampaign, setHoveredCampaign] = useState<string | null>(null);
+  const [hoveredLead, setHoveredLead] = useState<string | null>(null);
   const [hoverTimeout, setHoverTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
 
   // New state for interactive zoom functionality
@@ -153,6 +154,28 @@ export default function CampaignMap() {
       setHoveredCampaign(null);
     }, 100);
     setHoverTimeout(timeout);
+  };
+
+  const handleLeadHover = (leadId: string) => {
+    // Clear any existing timeout
+    if (hoverTimeout) {
+      clearTimeout(hoverTimeout);
+    }
+    setHoveredLead(leadId);
+  };
+
+  const handleLeadLeave = () => {
+    // Add delay before hiding to prevent flicker
+    const timeout = setTimeout(() => {
+      setHoveredLead(null);
+    }, 100);
+    setHoverTimeout(timeout);
+  };
+
+  const handleLeadClick = (leadId: string) => {
+    if (selectedCampaignId) {
+      openLeadDetails(leadId, selectedCampaignId);
+    }
   };
 
   const fetchCampaigns = useCallback(async () => {
@@ -358,7 +381,7 @@ export default function CampaignMap() {
                           </div>
                         )}
                         <div
-                          className="relative w-12 h-12 rounded-full bg-orange-500/70 shadow-lg flex items-center justify-center border-2 border-orange-600/70 cursor-pointer hover:scale-110 transition-transform"
+                          className="relative w-10 h-10 rounded-full bg-orange-500/60 shadow-lg flex items-center justify-center border-2 border-orange-600/60 cursor-pointer hover:scale-110 transition-transform"
                           style={{
                             opacity: campaign.campaignStatus === 'Active' ? 1.0 : 0.4,
                           }}
@@ -366,9 +389,9 @@ export default function CampaignMap() {
                           <Image
                             src="/h-logo.png"
                             alt={campaign.campaignName}
-                            width={32}
-                            height={32}
-                            className="w-8 h-8 object-contain"
+                            width={28}
+                            height={28}
+                            className="w-7 h-7 object-contain"
                           />
                         </div>
                       </div>
@@ -436,16 +459,70 @@ export default function CampaignMap() {
 
               {/* Lead Markers - Only shown when a campaign is selected */}
               {selectedCampaignId && campaignLeads.map((lead) => (
-                <AdvancedMarker
-                  key={lead.id}
-                  position={lead.location}
-                >
-                  <Pin
-                    background={getLeadMarkerColor(lead.status)}
-                    borderColor="#ffffff"
-                    glyphColor="#ffffff"
-                  />
-                </AdvancedMarker>
+                <div key={lead.id}>
+                  <AdvancedMarker
+                    position={lead.location}
+                    onClick={() => handleLeadClick(lead.id)}
+                    onMouseEnter={() => handleLeadHover(lead.id)}
+                    onMouseLeave={handleLeadLeave}
+                  >
+                    <div className="cursor-pointer hover:scale-110 transition-transform">
+                      <Pin
+                        background={getLeadMarkerColor(lead.status)}
+                        borderColor="#ffffff"
+                        glyphColor="#ffffff"
+                      />
+                    </div>
+                  </AdvancedMarker>
+
+                  {hoveredLead === lead.id && (
+                    <InfoWindow
+                      position={lead.location}
+                      pixelOffset={[0, -35]}
+                      onCloseClick={() => setHoveredLead(null)}
+                    >
+                      <div
+                        className="p-2 min-w-[200px]"
+                        onMouseEnter={() => handleLeadHover(lead.id)}
+                        onMouseLeave={handleLeadLeave}
+                      >
+                        <h3 className="font-bold text-gray-900 mb-2">
+                          {lead.name}
+                        </h3>
+                        <div className="space-y-1 text-sm">
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-600">Status:</span>
+                            <span
+                              className={`px-2 py-0.5 rounded text-xs font-semibold ${
+                                lead.status === 'contacted'
+                                  ? 'bg-green-100 text-green-700'
+                                  : lead.status === 'third_attempt'
+                                  ? 'bg-red-100 text-red-700'
+                                  : lead.status === 'second_attempt'
+                                  ? 'bg-orange-100 text-orange-700'
+                                  : lead.status === 'first_attempt'
+                                  ? 'bg-yellow-100 text-yellow-700'
+                                  : 'bg-cyan-100 text-cyan-700'
+                              }`}
+                            >
+                              {lead.status === 'contacted' && 'Scheduled'}
+                              {lead.status === 'third_attempt' && '3rd Attempt'}
+                              {lead.status === 'second_attempt' && '2nd Attempt'}
+                              {lead.status === 'first_attempt' && '1st Attempt'}
+                              {lead.status === 'unscheduled' && 'Unscheduled'}
+                            </span>
+                          </div>
+                          <div className="text-gray-500 text-xs mt-2 pt-2 border-t border-gray-200">
+                            Submitted: {new Date(lead.submittedAt).toLocaleDateString()}
+                          </div>
+                          <div className="text-cyan-600 text-xs font-medium mt-2">
+                            Click to view details →
+                          </div>
+                        </div>
+                      </div>
+                    </InfoWindow>
+                  )}
+                </div>
               ))}
 
               {/* Lead Count Display - Always show when campaign selected */}
@@ -523,8 +600,8 @@ export default function CampaignMap() {
           position: absolute;
           top: 50%;
           left: 50%;
-          width: 48px;
-          height: 48px;
+          width: 40px;
+          height: 40px;
           border-radius: 50%;
           border: 3px solid #06b6d4;
           animation: pulse-ring 2s infinite;
